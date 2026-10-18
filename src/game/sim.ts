@@ -225,16 +225,22 @@ function stepPerson(g: Game, p: Person) {
       p.climb++
       const L = p.legs[p.leg]
       const conn = g.facilities.get(L.via)
-      const dur = conn?.kind === 'escalator' ? 28 : 55
+      const dur = climbSteps(conn?.kind)
       if (p.climb >= dur) {
         p.floor = L.to
         p.leg++
         p.state = 'walking'
         if (conn?.kind === 'stairs') p.tripStress += 4
+        if (conn?.kind === 'firePole') { p.mood = Math.max(0, p.mood - 6); if (Math.random() < 0.04) fx(g, p.x, p.floor, 'WHEEE! 🚒', '#ffa94d') }
       }
       break
     }
   }
+}
+
+/** Sim steps to cross one floor on a connector. */
+export function climbSteps(k?: FacilityKind) {
+  return k === 'escalator' ? 28 : k === 'firePole' ? 12 : 55
 }
 
 function beginLeg(g: Game, p: Person) {

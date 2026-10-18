@@ -35,6 +35,7 @@ export type FacilityKind =
   | 'cathedral'
   | 'stairs'
   | 'escalator'
+  | 'firePole'
   | 'iceCream'
   | 'arcade'
   | 'aquarium'
@@ -124,6 +125,8 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'Build it on the very top (floors 96-100) to earn TOWER rating!' },
   stairs: { kind: 'stairs', name: 'Stairs', emoji: '🪜', category: 'build', width: 8, height: 1, cost: 5000, stars: 1, pop: 0,
     blurb: 'Connects this floor to the one above. People only climb a few floors.' },
+  firePole: { kind: 'firePole', name: 'Fireman Pole', emoji: '🚒', category: 'build', width: 3, height: 1, cost: 3000, stars: 1, pop: 0,
+    blurb: 'Slide DOWN to the floor below, way faster than stairs! It only goes down. Stack them for a big drop.' },
   escalator: { kind: 'escalator', name: 'Escalator', emoji: '↗️', category: 'build', width: 8, height: 1, cost: 20000, stars: 3, pop: 0,
     blurb: 'Faster than stairs. Shoppers love them.' },
   iceCream: { kind: 'iceCream', name: 'Ice Cream Shop', emoji: '🍦', category: 'food', width: 10, height: 1, cost: 60000, stars: 1, pop: 3,
@@ -156,8 +159,8 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'Plates ride around on a conveyor belt. Fancy lunch and dinner.' },
   trampoline: { kind: 'trampoline', name: 'Trampoline Park', emoji: '🤸', category: 'fun', width: 20, height: 2, cost: 200000, stars: 1, pop: 10,
     blurb: 'Two floors tall so everyone can bounce SUPER high. Plus a foam pit!' },
-  climbing: { kind: 'climbing', name: 'Climbing Wall', emoji: '🧗', category: 'fun', width: 12, height: 3, cost: 180000, stars: 1, pop: 6,
-    blurb: 'Three floors of climbing. Ring the bell at the top!' },
+  climbing: { kind: 'climbing', name: 'Climbing & Zip Line', emoji: '🧗', category: 'fun', width: 12, height: 3, cost: 180000, stars: 1, pop: 6,
+    blurb: 'Climb three floors, ring the bell, then ride the zip line all the way down!' },
   miniGolf: { kind: 'miniGolf', name: 'Mini Golf', emoji: '⛳', category: 'fun', width: 20, height: 1, cost: 120000, stars: 1, pop: 6,
     blurb: 'Putt through the spinning windmill for a hole-in-one.' },
   bowling: { kind: 'bowling', name: 'Bowling Alley', emoji: '🎳', category: 'fun', width: 28, height: 1, cost: 250000, stars: 2, pop: 10,
@@ -284,7 +287,7 @@ export function isResidential(k: FacilityKind) {
   return k === 'condo' || isHotel(k)
 }
 export function isConnector(k: FacilityKind) {
-  return k === 'stairs' || k === 'escalator'
+  return k === 'stairs' || k === 'escalator' || k === 'firePole'
 }
 export function isLobbyFloor(f: number) {
   return f === 0 || (f > 0 && f % SKY_LOBBY_EVERY === 0)

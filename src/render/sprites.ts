@@ -324,6 +324,15 @@ const painters: Partial<Record<FacilityKind, Painter>> = {
     c.strokeStyle = '#495057'; c.lineWidth = 1
     c.beginPath(); c.moveTo(0, h - 10); c.lineTo(w, -6); c.stroke()
   },
+  firePole(c, w, h) {
+    // a hole in the ceiling and a shiny brass pole down to a little landing mat
+    r(c, '#c9b8a8', 0, 0, w, h); r(c, '#b5a291', 0, h - 10, w, 7); r(c, '#3a3a46', 0, 0, w, 2); r(c, '#6d7a86', 0, h - 3, w, 3)
+    r(c, '#e03131', 1, 6, 3, 3); r(c, '#fff', 1.5, 7, 2, 1)
+    c.fillStyle = '#111'; c.beginPath(); c.ellipse(w / 2, 1.5, w / 2 - 3, 1.6, 0, 0, Math.PI * 2); c.fill()
+    r(c, '#ffc078', w / 2 - 1, 0, 2, h - 3)
+    r(c, '#fff3bf', w / 2 - 1, 0, 1, h - 3)
+    r(c, '#e03131', 2, h - 4, w - 4, 2)
+  },
   escalator(c, w, h) {
     c.fillStyle = '#adb5bd'
     c.beginPath(); c.moveTo(0, h); c.lineTo(8, h); c.lineTo(w, 6); c.lineTo(w, 0); c.lineTo(w - 8, 0); c.lineTo(0, h - 6); c.fill()
@@ -640,15 +649,26 @@ Object.assign(painters, {
     r(c, '#e9ecef', 0, 0, w, h)
     r(c, '#3a3a46', 0, 0, w, 2)
     for (let f = 1; f < 3; f++) r(c, '#ced4da', 0, f * FH, w, 1)
-    r(c, '#5c7c9c', 8, 12, w - 16, h - 18)
-    for (let x = 8; x < w - 8; x += 20) r(c, '#4a6a8a', x, 12, 1, h - 18)
+    // the climbing wall (left side)
+    const wallTop = CLIMB_TOP
+    r(c, '#5c7c9c', 6, wallTop, 46, h - wallTop - 6)
+    for (let x = 6; x < 52; x += 15) r(c, '#4a6a8a', x, wallTop, 1, h - wallTop - 6)
     const holds = ['#ff6b6b', '#ffd43b', '#69db7c', '#4dabf7', '#da77f2', '#ff922b']
-    for (let i = 0; i < 46; i++) r(c, holds[i % 6], 10 + ((i * 37) % (w - 22)), 14 + ((i * 53) % (h - 26)), 3, 2)
-    // bell + anchors + crash mat
-    r(c, '#868e96', w / 2 - 20, 9, 40, 1)
-    r(c, '#fab005', w / 2 - 3, 5, 6, 5); r(c, '#e67700', w / 2 - 1, 10, 2, 1)
-    r(c, '#e03131', 4, h - 6, w - 8, 4)
-    sign(c, w, 'CLIMB', '#e8590c')
+    for (let i = 0; i < 40; i++) r(c, holds[i % 6], 8 + ((i * 37) % 40), wallTop + 2 + ((i * 53) % (h - wallTop - 12)), 3, 2)
+    // the top platform where the zip line starts, with a railing
+    r(c, '#8b5a2b', 2, wallTop - 2, 20, 3); r(c, '#5c4632', 2, wallTop - 8, 1, 6); r(c, '#5c4632', 2, wallTop - 8, 8, 1)
+    // bell hanging over the wall top
+    r(c, '#868e96', 40, 2, 1, wallTop - 9); r(c, '#fab005', 37, wallTop - 8, 7, 5); r(c, '#e67700', 39.5, wallTop - 3, 2, 1)
+    // zip line cable and its landing post
+    const [ax, ay, bx, by] = ZIP
+    r(c, '#495057', ax - 1, 2, 2, ay - 1)
+    r(c, '#495057', bx, by, 2, h - by - 3)
+    c.strokeStyle = '#343a40'; c.lineWidth = 1
+    c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke()
+    // crash mats
+    r(c, '#e03131', 4, h - 6, 50, 4)
+    r(c, '#1c7ed6', bx - 20, h - 6, 24, 4)
+    sign(c, w, 'CLIMB & ZIP', '#e8590c')
   },
   miniGolf(c: Ctx, w: number, h: number, look: Look) {
     const dark = look === 'night'
@@ -845,6 +865,10 @@ export const FAZ_OFFICE = 226
 
 export const METRO_TUNNEL = 44 // px from the bottom of the station that the track + platform take up
 export const METRO_BOARD = [150, 22, 62, 14] as const // x, y, w, h of the departure board
+
+/** Climbing room: top of the wall, and the zip line from (ax, ay) down to (bx, by), in sprite px. */
+export const CLIMB_TOP = 28
+export const ZIP = [14, 13, 88, 70] as const
 
 export const TRAMPS = 4
 export const GOLF_MILL = 112

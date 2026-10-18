@@ -30,7 +30,10 @@ export function personDoing(g: Game, p: Person) {
   const destName = dest ? FACILITIES[dest.kind].name.toLowerCase() : ''
   if (p.state === 'waiting') return `Waiting for the elevator (${Math.round(p.wait / 10)} min)`
   if (p.state === 'riding') return 'Riding the elevator'
-  if (p.state === 'climbing') return 'Taking the stairs'
+  if (p.state === 'climbing') {
+    const c = g.facilities.get(p.legs[p.leg]?.via ?? 0)
+    return c?.kind === 'firePole' ? 'Sliding down the fireman pole! 🚒' : c?.kind === 'escalator' ? 'Riding the escalator' : 'Taking the stairs'
+  }
   if (p.state === 'inside' && p.purpose === 'train') return 'Waiting on the platform for the train 🚇'
   if (p.state === 'inside') {
     const at = g.facilities.get(p.at)
@@ -82,7 +85,7 @@ const FUN_THOUGHTS: Partial<Record<string, string[]>> = {
   bookstore: ['A new dragon book! 🐉', 'I want to pet the shop cat.', 'Just ONE more chapter…'],
   library: ['Shhh… reading time 📖', 'I\'m going to read ALL the books.', 'Story time is the best time!'],
   trampoline: ['Watch me do a FLIP! 🤸', 'Higher! HIGHER!', 'Into the foam pit!'],
-  climbing: ['I\'m gonna ring that bell! 🧗', 'Don\'t look down… okay I looked down.', 'Spider-climber, go!'],
+  climbing: ['Zip line, here I come! 🪂', 'I\'m gonna ring that bell! 🧗', 'Don\'t look down… okay I looked down.', 'Spider-climber, go!'],
   miniGolf: ['Hole in one, here I come! ⛳', 'Through the windmill… NOW!', 'It\'s all in the wrist.'],
   bowling: ['STRIKE! 🎳', 'Bumpers up, please.', 'I picked the sparkly ball.'],
   rollerRink: ['Wheee! 🛼', 'I can skate backwards!', 'Don\'t fall, don\'t fall…'],

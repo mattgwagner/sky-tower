@@ -11,6 +11,7 @@ interface Node {
   staffOnly: boolean
   connLo: number // connector bottom floor
   isEsc: boolean
+  downOnly: boolean // fireman pole: you can slide down but not climb up
 }
 
 interface Graph {
@@ -30,6 +31,7 @@ const WAIT = 70 // expected elevator wait
 const TRANSFER = 40
 const STAIR = 90 // per floor
 const ESC = 45
+const POLE = 15
 
 function buildGraph(g: Game): Graph {
   const nodes: Node[] = []
@@ -47,15 +49,16 @@ function buildGraph(g: Game): Graph {
     const def = TRANSPORTS[s.kind]
     for (let f = s.lo; f <= s.hi; f++) {
       if (!s.stops[f]) continue
-      add({ via: s.id, floor: f, x: s.x + def.width / 2, kind: 'shaft', spf: def.stepsPerFloor, staffOnly: s.kind === 'serviceElevator', connLo: 0, isEsc: false })
+      add({ via: s.id, floor: f, x: s.x + def.width / 2, kind: 'shaft', spf: def.stepsPerFloor, staffOnly: s.kind === 'serviceElevator', connLo: 0, isEsc: false, downOnly: false })
     }
   }
   for (const fac of g.facilities.values()) {
     if (!isConnector(fac.kind)) continue
     const x = fac.x + FACILITIES[fac.kind].width / 2
     const isEsc = fac.kind === 'escalator'
-    add({ via: fac.id, floor: fac.floor, x, kind: 'conn', spf: 0, staffOnly: false, connLo: fac.floor, isEsc })
-    add({ via: fac.id, floor: fac.floor + 1, x, kind: 'conn', spf: 0, staffOnly: false, connLo: fac.floor, isEsc })
+    const downOnly = fac.kind === 'firePole'
+    add({ via: fac.id, floor: fac.floor, x, kind: 'conn', spf: 0, staffOnly: false, connLo: fac.floor, isEsc, downOnly })
+    add({ via: fac.id, floor: fac.floor + 1, x, kind: 'conn', spf: 0, staffOnly: false, connLo: fac.floor, isEsc, downOnly })
   }
   // walkable segments per floor
   const seg = new Map<number, Int32Array>()
@@ -174,8 +177,9 @@ function dijkstra(g: Game, gr: Graph, fromFloor: number, fromX: number, toFloor:
       if (j === i) continue
       const m = gr.nodes[j]
       let c: number
+      if (nd.downOnly && m.floor > nd.floor) continue
       if (nd.kind === 'shaft') c = WAIT * (staff && nd.staffOnly ? 0.5 : 1) + Math.abs(m.floor - nd.floor) * nd.spf * 0.6
-      else c = nd.isEsc ? ESC : STAIR
+      else c = nd.downOnly ? POLE : nd.isEsc ? ESC : STAIR
       const nd2 = d + c
       if (nd2 < dist[j]) { dist[j] = nd2; prev[j] = i; heap.push(nd2, j) }
     }

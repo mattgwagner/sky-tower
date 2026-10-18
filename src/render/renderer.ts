@@ -1,13 +1,13 @@
 // Canvas renderer: sky, city, ground, tower cut-away, elevators, people, effects.
-import { FACILITIES, TOWER_WIDTH, TRANSPORTS, isCommercial, isHotel, isLobbyFloor } from '../game/defs'
+import { FACILITIES, TOWER_WIDTH, TRANSPORTS, isCommercial, isConnector, isHotel, isLobbyFloor } from '../game/defs'
 import type { FacilityKind } from '../game/defs'
 import { carPos } from '../game/elevators'
-import { TRAIN_EVERY, TRAIN_IN, entityNow, hidingOn, isOpen, launchClock, trainPhase, ufoX } from '../game/sim'
+import { TRAIN_EVERY, TRAIN_IN, climbSteps, entityNow, hidingOn, isOpen, launchClock, trainPhase, ufoX } from '../game/sim'
 import type { Facility, Game, Person, Shaft } from '../game/state'
 import { dayOf, isWeekend, minuteOfDay } from '../game/state'
 import { hasPet } from '../game/people-info'
 import { topFloor } from '../game/world'
-import { INDIGO_LOOP, INDIGO_SCREEN, TOY_BELT, TOY_CASE, FAZ_COVE, FAZ_OFFICE, FAZ_STAGE, FAZ_TABLES, METRO_BOARD, METRO_TUNNEL, AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
+import { CLIMB_TOP, ZIP, INDIGO_LOOP, INDIGO_SCREEN, TOY_BELT, TOY_CASE, FAZ_COVE, FAZ_OFFICE, FAZ_STAGE, FAZ_TABLES, METRO_BOARD, METRO_TUNNEL, AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
 import type { Look } from './sprites'
 import { drawLightning, drawRainbow, drawShootingStars, weatherFor } from './sky-fx'
 import { pokeWobble } from './poke-fx'
@@ -47,9 +47,9 @@ export function personPos(g: Game, p: Person): { tile: number; floor: number } |
       const L = p.legs[p.leg]
       const conn = L && g.facilities.get(L.via)
       if (!conn) return { tile: p.x, floor: p.floor }
-      const k = Math.min(1, p.climb / (conn.kind === 'escalator' ? 28 : 55))
+      const k = Math.min(1, p.climb / climbSteps(conn.kind))
       const prog = L.to > L.from ? k : 1 - k
-      return { tile: conn.x + 0.5 + prog * (conn.width - 1), floor: conn.floor + prog }
+      return { tile: conn.kind === 'firePole' ? conn.x + conn.width / 2 : conn.x + 0.5 + prog * (conn.width - 1), floor: conn.floor + prog }
     }
     case 'riding':
       for (const s of g.shafts.values()) for (const c of s.cars) if (c.riders.includes(p.id)) return { tile: s.x + TRANSPORTS[s.kind].width / 2, floor: carPos(s, c) }
@@ -449,11 +449,11 @@ function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: 
     }
   }
   // mood view tint
-  if (ov.moodView && f.kind !== 'lobby' && f.kind !== 'stairs' && f.kind !== 'escalator') {
+  if (ov.moodView && f.kind !== 'lobby' && !isConnector(f.kind)) {
     c.fillStyle = f.happiness >= 60 ? 'rgba(64,192,87,0.45)' : f.happiness >= 35 ? 'rgba(250,176,5,0.5)' : 'rgba(240,62,62,0.55)'
     c.fillRect(p.x, p.y, w, h)
   }
-  if (!f.reachable && f.kind !== 'lobby' && f.kind !== 'stairs' && f.kind !== 'escalator' && f.kind !== 'parking' && Math.floor(now / 600) % 2 === 0) {
+  if (!f.reachable && f.kind !== 'lobby' && !isConnector(f.kind) && f.kind !== 'parking' && Math.floor(now / 600) % 2 === 0) {
     c.fillStyle = 'rgba(255,60,60,0.25)'
     c.fillRect(p.x, p.y, w, h)
     if (z >= 0.75) {
@@ -614,11 +614,10 @@ function drawPeople(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: numb
       const L = p.legs[p.leg]
       const conn = g.facilities.get(L?.via ?? 0)
       if (!conn) continue
-      const dur = conn.kind === 'escalator' ? 28 : 55
-      const k = Math.min(1, p.climb / dur)
+      const k = Math.min(1, p.climb / climbSteps(conn.kind))
       const up = L.to > L.from
       const prog = up ? k : 1 - k
-      const wx = (conn.x + 0.5 + prog * (conn.width - 1)) * T
+      const wx = (conn.kind === 'firePole' ? conn.x + conn.width / 2 - 0.15 : conn.x + 0.5 + prog * (conn.width - 1)) * T
       const wy = floorTop(conn.floor) + FH - 3 - prog * FH
       const s = S(wx, wy)
       drawPersonAt(c, s.x, s.y, z, personColor(p.shirt), Math.floor(now / 150) % 2, p.mood, p.shirt)
@@ -1160,19 +1159,42 @@ function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: nu
     }
     case 'climbing': {
       if (!isOpen(g, f) && f.inside === 0) return
+      // climb the wall, ring the bell, walk to the platform, ZIP down the line, land, walk back, repeat
+      const X = (sx: number) => p.x + sx * z
+      const Y = (sy: number) => p.y + sy * z
+      const H = h / z
+      const [ax, ay, bx, by] = ZIP
+      const lanes = [18, 32, 44]
+      const lerp = (a: number, b: number, t: number) => a + (b - a) * Math.max(0, Math.min(1, t))
+      c.font = `bold ${Math.round(6 * z)}px sans-serif`
       for (let i = 0; i < 3; i++) {
-        const period = 9000 + i * 2300
-        const k = ((now + i * 3100) % period) / period
-        const up = k < 0.8 ? k / 0.8 : 1 - (k - 0.8) / 0.2
-        const cx = p.x + (22 + i * 26) * z
-        const yb = p.y + h - 6 * z - up * (h - 22 * z)
-        c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = Math.max(0.5, 0.5 * z)
-        c.beginPath(); c.moveTo(cx + 0.5 * z, p.y + 10 * z); c.lineTo(cx + 0.5 * z, yb - 9 * z); c.stroke()
-        drawPersonAt(c, cx, yb, z, SHIRTS[(i + f.id) % SHIRTS.length], Math.floor(now / 250 + i) % 2, 0)
-        if (up > 0.98) {
-          c.fillStyle = '#ffe066'
-          c.font = `bold ${Math.round(7 * z)}px sans-serif`
-          c.fillText('DING!', p.x + w / 2 + 6 * z, p.y + 12 * z)
+        const period = 12000 + i * 1700
+        const k = ((now + i * 4300) % period) / period
+        const col = SHIRTS[(i + f.id) % SHIRTS.length]
+        const lane = lanes[i]
+        const walkFrame = Math.floor(now / 160 + i) % 2
+        if (k < 0.45) {
+          const yb = lerp(H - 6, CLIMB_TOP, k / 0.45)
+          c.strokeStyle = 'rgba(255,255,255,0.75)'; c.lineWidth = Math.max(0.5, 0.5 * z)
+          c.beginPath(); c.moveTo(X(lane + 0.5), Y(CLIMB_TOP - 2)); c.lineTo(X(lane + 0.5), Y(yb - 9)); c.stroke()
+          drawPersonAt(c, X(lane), Y(yb), z, col, walkFrame, 0)
+        } else if (k < 0.52) {
+          const t = (k - 0.45) / 0.07
+          drawPersonAt(c, X(lerp(lane, 10, t)), Y(CLIMB_TOP - 2), z, col, walkFrame, 0)
+          if (t < 0.4) { c.fillStyle = '#ffe066'; c.fillText('DING!', X(46), Y(CLIMB_TOP - 10)) }
+        } else if (k < 0.74) {
+          const t = ((k - 0.52) / 0.22) ** 1.5
+          const cx = lerp(ax, bx, t), cy = lerp(ay, by, t)
+          c.fillStyle = '#868e96'; c.fillRect(X(cx - 1.5), Y(cy - 1), 3 * z, 2 * z)
+          c.strokeStyle = '#212529'; c.lineWidth = Math.max(0.5, 0.6 * z)
+          c.beginPath(); c.moveTo(X(cx), Y(cy + 1)); c.lineTo(X(cx), Y(cy + 4)); c.stroke()
+          drawPersonAt(c, X(cx - 0.5), Y(cy + 13.5), z, col, 1, 0)
+          c.fillStyle = '#f1c27d'; c.fillRect(X(cx - 1), Y(cy + 3), 0.8 * z, 3 * z); c.fillRect(X(cx + 0.6), Y(cy + 3), 0.8 * z, 3 * z)
+          if (t > 0.1 && t < 0.9) { c.fillStyle = '#ffe066'; c.fillText('WHEEE!', X(cx + 4), Y(cy + 2)) }
+        } else if (k < 0.78) {
+          drawPersonAt(c, X(bx - 1), Y(lerp(by + 13.5, H - 6, (k - 0.74) / 0.04)), z, col, 0, 0)
+        } else {
+          drawPersonAt(c, X(lerp(bx - 1, lane, (k - 0.78) / 0.22)), Y(H - 6), z, col, walkFrame, 0)
         }
       }
       return

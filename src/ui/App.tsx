@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { audioPrefs, play, unlockAudio } from '../audio'
-import { CATEGORIES, FACILITIES, RENT_LABELS, TRANSPORTS, isCommercial, isHotel } from '../game/defs'
+import { CATEGORIES, FACILITIES, RENT_LABELS, TRANSPORTS, isCommercial, isConnector, isHotel } from '../game/defs'
 import type { Category, FacilityKind, Mode, ToolId, TransportKind } from '../game/defs'
 import { bombDecision, setRent, starProgress } from '../game/sim'
 import type { Facility, Shaft } from '../game/state'
@@ -355,7 +355,7 @@ function toolInfo(t: ToolId) {
 const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
   build: [
     { label: 'Floors', tools: ['lobby', 'floor'] },
-    { label: 'Getting around', tools: ['elevator', 'stairs', 'escalator', 'expressElevator', 'serviceElevator'] },
+    { label: 'Getting around', tools: ['elevator', 'stairs', 'firePole', 'escalator', 'expressElevator', 'serviceElevator'] },
   ],
   homes: [{ tools: ['office', 'condo'] }],
   hotel: [
@@ -511,7 +511,7 @@ function FacPanel({ f }: { f: Facility }) {
         <button className="x" onClick={() => { ctl.selected = 0; ctl.emit() }}>✕</button>
       </div>
       <div className="status">{status}</div>
-      {f.kind !== 'lobby' && f.kind !== 'stairs' && f.kind !== 'escalator' && (
+      {f.kind !== 'lobby' && !isConnector(f.kind) && (
         <div className="happy">
           <span>{happyFace(f.happiness)}</span>
           <div className="bar"><div style={{ width: `${f.happiness}%`, background: f.happiness >= 60 ? '#40c057' : f.happiness >= 35 ? '#fab005' : '#fa5252' }} /></div>

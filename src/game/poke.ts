@@ -18,7 +18,7 @@ const POKES: Partial<Record<FacilityKind, Poke>> = {
   iceCream: { says: ['Brain freeze! 🍦', 'Extra sprinkles! ✨', 'Two scoops!', 'Lick lick lick'], color: '#ffc9c9', sfx: 'ding' },
   park: { says: ['🐦 Tweet tweet!', '🦋', '🌸 Smell the flowers', '🐿️ A squirrel!'], color: '#8ce99a', sfx: 'twinkle' },
   trampoline: { says: ['BOING! 🤸', 'BOING BOING!', 'Backflip!! 🔄', 'Into the foam pit!'], color: '#ffd43b', sfx: 'boing' },
-  climbing: { says: ['DING! 🔔 Made it!', 'Don\'t look down…', 'Almost there! 🧗'], color: '#ffd43b', sfx: 'ding' },
+  climbing: { says: ['DING! 🔔 Made it!', 'ZIIIIIP! 🪂', 'WHEEEEE!', 'Don\'t look down…', 'Almost there! 🧗'], color: '#ffd43b', sfx: 'ding' },
   bowling: { says: ['STRIKE! 🎳', 'Gutter ball… 😅', 'SPARE!', 'Bumpers up!'], color: '#ffd43b', sfx: 'strike' },
   rollerRink: { says: ['Wheee! 🛼', 'Disco time! 🪩', 'Skate backwards!'], color: '#da77f2', sfx: 'arcade' },
   miniGolf: { says: ['HOLE IN ONE! ⛳', 'Through the windmill!', 'Fore! 🏌️'], color: '#8ce99a', sfx: 'pop' },
@@ -51,6 +51,7 @@ const POKES: Partial<Record<FacilityKind, Poke>> = {
   security: { says: ['All clear! 👮', '🚨 On it!', 'Nothing to see here'], color: '#74c0fc', sfx: 'alarm' },
   medical: { says: ['Say ahh 🩺', 'Just a tiny poke', 'All better! 🩹'], color: '#ffc9c9', sfx: 'ding' },
   recycling: { says: ['CRUNCH! ♻️', 'Reduce, reuse, recycle!', 'Clank clank'], color: '#8ce99a', sfx: 'build' },
+  firePole: { says: ['WHOOOSH! 🚒', 'Slide time!', 'Wee-oo wee-oo! 🚨', 'Fire drill!'], color: '#ffa94d', sfx: 'boing' },
   stairs: { says: ['Step step step', 'Phew! 😮‍💨', 'Race you up!'], color: '#ced4da', sfx: 'click' },
   escalator: { says: ['Weee ⬆️', 'Stand on the right!', 'Hold the rail!'], color: '#ced4da', sfx: 'move' },
 }
