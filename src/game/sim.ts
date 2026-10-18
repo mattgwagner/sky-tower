@@ -1,6 +1,6 @@
 // The simulation: people, schedules, hotel, economy, rating and events.
 import {
-  DAYS_PER_QUARTER, FACILITIES, HOTEL_NIGHT, MAX_FLOOR, MINUTES_PER_STEP, OFFICE_RENT, CONDO_PRICE,
+  ATTRACTIONS, DAYS_PER_QUARTER, FACILITIES, HOTEL_NIGHT, MAX_FLOOR, MINUTES_PER_STEP, OFFICE_RENT, CONDO_PRICE,
   RENT_HAPPY, RENT_MULT, SHOP_CAPACITY, SPEND, TRANSPORTS, isCommercial, isConnector, isHotel, isResidential, starRules,
 } from './defs'
 import type { FacilityKind } from './defs'
@@ -9,11 +9,11 @@ import type { ElevatorHooks } from './elevators'
 import { findRoute } from './routing'
 import type { Facility, Game, Person, PersonKind, Shaft } from './state'
 import { dayOf, floorLabel, isWeekend, minuteOfDay, quarterOf } from './state'
-import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today } from './world'
+import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
 
 // ---------- sound hook (set by UI) ----------
 export const sound = {
-  play: (_name: 'ding' | 'cash' | 'build' | 'star' | 'alarm' | 'boom' | 'party' | 'move' | 'bad') => {},
+  play: (_name: 'ding' | 'cash' | 'build' | 'star' | 'alarm' | 'boom' | 'party' | 'move' | 'bad' | 'rocket' | 'roar' | 'spooky' | 'ufo') => {},
 }
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a)
@@ -295,7 +295,7 @@ function arrive(g: Game, p: Person) {
         if (Math.random() < 0.35) fx(g, p.x, fac.floor, `+$${v}`)
         if (Math.random() < 0.04) sound.play('cash')
       }
-      const stay = fac.kind === 'cinema' ? 110 : fac.kind === 'partyHall' ? 130 : fac.kind === 'restaurant' ? rnd(45, 80) : fac.kind === 'shop' ? rnd(15, 40) : rnd(20, 40)
+      const stay = stayFor(g, fac.kind)
       schedule(p, g.time + stay, 'leaveShop')
       return
     }
@@ -458,12 +458,39 @@ const HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
   partyHall: [[at(11), at(21)]],
 }
 const SHOWS = [at(13), at(17), at(20)]
+const FUN_HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
+  iceCream: [[at(11), at(21)]],
+  arcade: [[at(12), at(23)]],
+  pool: [[at(8), at(20)]],
+  aquarium: [[at(9), at(19)]],
+  hauntedHouse: [[at(17), at(24)]],
+  dinoMuseum: [[at(9), at(18)]],
+  rocketPad: [[at(10), at(12, 30)]],
+}
+const LAUNCH = at(12)
+
+function stayFor(g: Game, k: FacilityKind) {
+  switch (k) {
+    case 'cinema': return 110
+    case 'partyHall': return 130
+    case 'restaurant': return rnd(45, 80)
+    case 'shop': return rnd(15, 40)
+    case 'iceCream': return rnd(10, 20)
+    case 'arcade': return rnd(30, 60)
+    case 'pool': return rnd(40, 90)
+    case 'aquarium': return rnd(40, 70)
+    case 'hauntedHouse': return rnd(25, 40)
+    case 'dinoMuseum': return rnd(50, 90)
+    case 'rocketPad': return Math.max(15, LAUNCH + 15 - minuteOfDay(g.time))
+    default: return rnd(20, 40)
+  }
+}
 
 export function isOpen(g: Game, f: Facility): boolean {
   if (f.fire > 0 || !f.reachable) return false
   const m = minuteOfDay(g.time)
   if (f.kind === 'partyHall' && !isWeekend(g.time)) return false
-  return (HOURS[f.kind] ?? []).some(([a, b]) => m >= a && m < b)
+  return (HOURS[f.kind] ?? FUN_HOURS[f.kind] ?? []).some(([a, b]) => m >= a && m < b)
 }
 
 function pickShop(g: Game, _p: Person, kinds: FacilityKind[], fromFloor: number): Facility | null {
@@ -503,7 +530,13 @@ function spawnVisitors(g: Game) {
       if (SHOWS.some((s) => m >= s - 60 && m < s - 5)) perHour = 30
     } else if (f.kind === 'partyHall') {
       if ((m >= at(11) && m < at(11, 50)) || (m >= at(17) && m < at(17, 50))) perHour = 45
-    }
+    } else if (f.kind === 'iceCream') perHour = m >= at(13) && m < at(18) ? 6 : 3
+    else if (f.kind === 'arcade') perHour = 4
+    else if (f.kind === 'pool') perHour = 5
+    else if (f.kind === 'aquarium') perHour = 8
+    else if (f.kind === 'hauntedHouse') perHour = m >= at(19) ? 10 : 5
+    else if (f.kind === 'dinoMuseum') perHour = 10
+    else if (f.kind === 'rocketPad') perHour = m >= at(10, 30) && m < at(11, 45) ? 30 : 0
     if (perHour <= 0) continue
     if (Math.random() < (perHour * demand * appeal) / 60) {
       const v = newPerson(g, 'visitor', 0)
@@ -549,6 +582,7 @@ function planDay(g: Game, p: Person, fromNow: boolean) {
           add(base + rnd(at(16, 30), at(19)), 'home')
         }
         if (Math.random() < 0.35) add(base + rnd(at(18, 30), at(20, 30)), 'eat')
+        else if (Math.random() < 0.25) add(base + rnd(at(17, 30), at(19, 30)), 'fun')
       } else {
         if (Math.random() < 0.6) add(base + rnd(at(10), at(14)), 'fun')
         if (Math.random() < 0.5) add(base + rnd(at(15), at(19)), 'fun')
@@ -600,7 +634,7 @@ function doAct(g: Game, p: Person, act: string) {
       return
     case 'fun':
       if (p.state !== 'inside') return
-      goShopping(g, p, ['shop', 'cinema', 'restaurant', 'fastFood'])
+      goShopping(g, p, ['shop', 'cinema', 'restaurant', 'fastFood', ...ATTRACTIONS.filter((k) => k !== 'rocketPad')])
       return
     case 'leaveShop':
       goBack(g, p)
@@ -694,6 +728,12 @@ function refreshEnvironment(g: Game) {
     f.reachable = !!e && findRoute(g, e.floor, e.x, f.floor, facCenter(f)) !== null
     if (f.kind === 'metro') f.reachable = true
     f.noisy = false
+    f.nearPark = false
+    if (f.kind === 'office' || isResidential(f.kind)) {
+      for (const pk of facilitiesOf(g, 'park')) {
+        if (pk.floor === f.floor && pk.x < f.x + f.width + 10 && pk.x + pk.width > f.x - 10) { f.nearPark = true; break }
+      }
+    }
     if (isResidential(f.kind)) {
       const r = g.floors.get(f.floor)!
       for (let i = Math.max(0, f.x - 3); i < Math.min(r.length, f.x + f.width + 3); i++) {
@@ -732,6 +772,7 @@ function evaluate(g: Game) {
     if (f.stressAvg > 25) c.push('Elevators are way too slow')
     else if (f.stressAvg > 12) c.push('Waiting a while for elevators')
     if (f.noisy) { h -= 18; c.push('Too noisy next door') }
+    if (f.nearPark) h += 12
     if (f.kind === 'office' && food === 0) { h -= 15; c.push('Nowhere to eat lunch') }
     if (isHotel(f.kind) && f.roaches) { h -= 45; c.push('Cockroaches!') }
     else if (isHotel(f.kind) && f.dirty) c.push('Waiting for housekeeping')
@@ -937,6 +978,7 @@ function minuteTick(g: Game) {
   hotelBookings(g)
   spawnVisitors(g)
   parties(g)
+  funEvents(g, m)
   stepFires(g)
   stepBomb(g)
   if (m % 15 === 0) {
@@ -967,6 +1009,66 @@ function hourTick(g: Game, m: number) {
     if (g.stars >= 3 && !g.bomb && Math.random() < 1 / (24 * 20)) startBomb(g)
   }
   if (quarterOf(g.time) === 4 && dayOf(g.time) % 3 === 2 && m === at(19)) g.flags.santaDay = dayOf(g.time)
+  maybeUfo(g, m)
+}
+
+// ---------- whimsy: rockets, dinosaurs, ghosts and aliens ----------
+
+/** Minutes since today's launch; the renderer uses this to fly the rocket. */
+export function launchClock(g: Game) {
+  return minuteOfDay(g.time) - LAUNCH
+}
+
+function funEvents(g: Game, m: number) {
+  const countdown: Record<number, string> = { [LAUNCH - 15]: '3…', [LAUNCH - 10]: '2…', [LAUNCH - 5]: '1…' }
+  for (const f of g.facilities.values()) {
+    if (!f.reachable || f.fire) continue
+    if (f.kind === 'rocketPad') {
+      if (countdown[m]) fx(g, facCenter(f), f.floor + 2, countdown[m], '#ffd43b')
+      if (m === LAUNCH) {
+        const v = earn(g, 25000 * (1 + f.inside / 10))
+        f.incomeToday += v
+        f.incomeTotal += v
+        fx(g, facCenter(f), f.floor + 2, `🚀 LIFTOFF! +$${v.toLocaleString()}`, '#ffd43b')
+        log(g, `🚀 3… 2… 1… LIFTOFF! The rocket blasted off from ${floorLabel(f.floor)} with ${f.inside} fans watching!`, 'event', f.floor + 1, facCenter(f))
+        sound.play('rocket')
+      }
+      if (m === LAUNCH + 150) fx(g, facCenter(f), f.floor + 2, 'Touchdown! 🛬', '#9ff')
+    }
+    if (f.kind === 'dinoMuseum' && (m === at(12) || m === at(16)) && isOpen(g, f)) {
+      fx(g, f.x + 12, f.floor + 2, 'ROAAAR! 🦖', '#ff922b')
+      sound.play('roar')
+    }
+    if (f.kind === 'hauntedHouse' && m === at(17)) {
+      fx(g, facCenter(f), f.floor + 1, 'Boo! 👻', '#e5dbff')
+      sound.play('spooky')
+    }
+  }
+}
+
+function maybeUfo(g: Game, m: number) {
+  const day = dayOf(g.time)
+  if (m === at(22) && g.flags.ufoDay !== day && topFloor(g) >= 4 && Math.random() < 0.3) {
+    g.flags.ufoDay = day
+    log(g, '🛸 A UFO is hovering over your tower! Quick, look up!', 'event', topFloor(g) + 2, ufoX(g))
+    sound.play('ufo')
+  }
+  if (m === at(23) && g.flags.ufoDay === day) {
+    const v = earn(g, 15000 + g.pop * 5)
+    log(g, `👽 The aliens loved your tower! They left $${v.toLocaleString()} in space money.`, 'good', topFloor(g) + 1, ufoX(g))
+    fx(g, ufoX(g), topFloor(g) + 1, `👽 +$${v.toLocaleString()}`, '#8ce99a')
+  }
+}
+
+/** The middle of the highest floor, where the UFO likes to hover. */
+export function ufoX(g: Game) {
+  const r = g.floors.get(topFloor(g))
+  if (!r) return 120
+  let a = 0
+  while (a < r.length && r[a] === -1) a++
+  let b = r.length - 1
+  while (b > 0 && r[b] === -1) b--
+  return (a + b + 1) / 2
 }
 
 function dayTick(g: Game) {

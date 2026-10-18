@@ -49,11 +49,40 @@ export function personDoing(g: Game, p: Person) {
   }
 }
 
-export function personThought(p: Person) {
+const PET_NAMES = ['Biscuit', 'Pickles', 'Waffles', 'Noodle', 'Sprinkles', 'Captain Fluff', 'Meatball', 'Pepper', 'Taco', 'Sir Barksalot', 'Mittens', 'Bean']
+
+/** Some residents and visitors bring a pet along. */
+export function hasPet(p: Person): 'dog' | 'cat' | null {
+  if ((p.kind !== 'resident' && p.kind !== 'visitor') || p.id % 5 !== 0) return null
+  return p.id % 10 === 0 ? 'cat' : 'dog'
+}
+
+export function petLine(p: Person) {
+  const pet = hasPet(p)
+  if (!pet) return ''
+  return `${pet === 'dog' ? '🐶' : '🐱'} With their ${pet} ${PET_NAMES[Math.floor(p.id / 5) % PET_NAMES.length]}`
+}
+
+const FUN_THOUGHTS: Partial<Record<string, string[]>> = {
+  iceCream: ['Sprinkles! EXTRA sprinkles! 🍦', 'Two scoops. No, THREE scoops!', 'Mint chocolate chip, here I come!'],
+  arcade: ['I\'m gonna beat the high score! 🕹️', 'I WILL win that plushie from the claw machine.', 'Got my lucky quarters!'],
+  pool: ['CANNONBALL!!! 🏊', 'Last one in is a rotten egg!', 'I hope the water\'s warm…'],
+  aquarium: ['I hope I see the shark! 🦈', 'Do fish ever get thirsty?', 'Finding all the fish!'],
+  hauntedHouse: ['I\'m not scared… 👻', 'Was that a ghost?!', 'I am a little bit scared.'],
+  dinoMuseum: ['RAWR! 🦖', 'T-Rex has such tiny arms!', 'Are there real dinosaur bones?!'],
+  rocketPad: ['To the moon! 🌕', '3… 2… 1… BLAST OFF!', 'I want to be an astronaut!'],
+  cinema: ['Popcorn time! 🍿'],
+  fastFood: ['Burger, fries, and a shake! 🍔'],
+}
+
+export function personThought(g: Game, p: Person) {
   if (p.kind === 'vip') return p.mood > 30 ? 'Hmph. This service is dreadful.' : 'Rather splendid, I must say.'
   if (p.mood > 70) return 'This elevator is SO slow! 😤'
   if (p.mood > 45) return 'Ugh, I\'ve been waiting forever…'
   if (p.mood > 25) return 'Come on, come on…'
+  const dest = g.facilities.get(p.goalFac) ?? g.facilities.get(p.at)
+  const fun = dest && FUN_THOUGHTS[dest.kind]
+  if (fun) return fun[p.id % fun.length]
   if (p.purpose === 'shop') return 'Yum, can\'t wait! 😋'
   if (p.purpose === 'exit') return 'What a day!'
   if (p.purpose === 'work') return 'Another day, another dollar.'

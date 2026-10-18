@@ -20,6 +20,14 @@ Production build: `npm run build && npm run preview`. The build in `dist/` is a 
 
 Optional starter tower and disasters (fires, bomb threats) are chosen on the title screen.
 
+## Fun Zone
+
+The 🎪 Fun Zone tab holds the whimsical stuff: Ice Cream Shop, Sky Park (makes rooms on its floor happier),
+Arcade, Swimming Pool, Aquarium (with a shark), Haunted House (opens at 5pm), Dino Museum (the T-Rex roars at
+noon and 4pm) and the Rocket Pad. The pad needs open sky above it and an elevator up to its floor. It launches
+every day at noon and lands again around 2:30pm. Some nights a UFO visits the roof. Name your tower on the title
+screen or in the ☰ menu; the name shows on a rooftop sign and on the blimp.
+
 ## Code map
 
 - `src/game/`: pure TypeScript simulation, no DOM.

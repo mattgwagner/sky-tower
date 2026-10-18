@@ -50,6 +50,15 @@ function isLobbyCell(g: Game, v: number) {
   return v > 0 && g.facilities.get(v)?.kind === 'lobby'
 }
 
+/** True when any cell in [x, x+w) on floor f is part of a rocket pad, whose sky must stay clear. */
+function rocketUnder(g: Game, f: number, x: number, w: number) {
+  for (let i = x; i < x + w; i++) {
+    const v = cell(g, f, i)
+    if (v > 0 && g.facilities.get(v)?.kind === 'rocketPad') return true
+  }
+  return false
+}
+
 /** Remove lobby cells in [x, x+w) on floor f, keeping the rest of the lobby as separate pieces. */
 function carveLobby(g: Game, f: number, x: number, w: number) {
   const r = row(g, f)
@@ -96,6 +105,13 @@ export function checkFacility(g: Game, kind: FacilityKind, x: number, floor: num
   // support: above ground needs floor below; underground needs floor above
   if (floor > 0) {
     for (let i = x; i < x + w; i++) if (cell(g, floor - 1, i) === -1) return { ok: false, cost: 0, reason: 'Needs a floor underneath' }
+    if (rocketUnder(g, floor - 1, x, w)) return { ok: false, cost: 0, reason: 'Keep the sky clear for the rocket! 🚀' }
+  }
+  if (kind === 'rocketPad') {
+    for (let f = floor + h; f <= MAX_FLOOR; f++) {
+      if (!g.floors.has(f)) continue
+      for (let i = x; i < x + w; i++) if (cell(g, f, i) !== -1) return { ok: false, cost: 0, reason: 'Needs open sky above — build it on a roof' }
+    }
   }
   const top = floor + h - 1
   if (top < 0) {
@@ -193,7 +209,7 @@ const BRIDGE_MAX = 16
 /** Fill short unbuilt gaps between [a, b) on floor f and the nearest built cells, so people can walk across. */
 function bridgeGaps(g: Game, f: number, a: number, b: number) {
   const r = row(g, f, true)!
-  const supported = (i: number) => f === 0 || (f > 0 ? cell(g, f - 1, i) !== -1 : cell(g, f + 1, i) !== -1)
+  const supported = (i: number) => f === 0 || (f > 0 ? cell(g, f - 1, i) !== -1 && !rocketUnder(g, f - 1, i, 1) : cell(g, f + 1, i) !== -1)
   for (const dir of [-1, 1]) {
     let i = dir < 0 ? a - 1 : b
     const gap: number[] = []
@@ -246,6 +262,7 @@ export function checkShaft(g: Game, kind: TransportKind, x: number, a: number, b
     }
   }
   if (lo > 0) for (let i = x; i < x + def.width; i++) if (cell(g, lo - 1, i) === -1) return { ok: false, cost: 0, reason: 'Needs a floor underneath' }
+  if (lo > 0 && rocketUnder(g, lo - 1, x, def.width)) return { ok: false, cost: 0, reason: 'Keep the sky clear for the rocket! 🚀' }
   if (hi < 0) for (let i = x; i < x + def.width; i++) if (cell(g, hi + 1, i) === -1) return { ok: false, cost: 0, reason: 'Dig down from the floor above' }
   const cost = def.cost + def.perFloorCost * (hi - lo + 1) + unbuilt * FLOOR_COST
   if (g.mode !== 'sandbox' && cost > g.money) return { ok: false, cost, reason: 'Not enough money' }
@@ -314,6 +331,7 @@ export function resizeShaft(g: Game, s: Shaft, end: 'top' | 'bottom', delta: 1 |
     if (end === 'top') s.hi = f
     else s.lo = f
     s.stops[f] = s.kind === 'expressElevator' ? expressStop(f) : true
+    bridgeGaps(g, f, s.x, s.x + def.width)
   } else {
     if (s.hi - s.lo <= 1) return 'Too short to shrink'
     const f = end === 'top' ? s.hi : s.lo

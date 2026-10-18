@@ -9,7 +9,7 @@ import { addCar, removeCar, resizeShaft, unlocked } from '../game/world'
 import { evict } from '../game/sim'
 import { totalWaiting } from '../game/elevators'
 import { Controller } from './controller'
-import { personDoing, personName, personRole, personThought } from '../game/people-info'
+import { personDoing, personName, personRole, personThought, petLine } from '../game/people-info'
 import type { Speed } from './controller'
 
 const ctl = new Controller()
@@ -40,8 +40,9 @@ function Title({ onStart }: { onStart: () => void }) {
   const [mode, setMode] = useState<Mode>('family')
   const [disasters, setDisasters] = useState(false)
   const [starter, setStarter] = useState(true)
+  const [name, setName] = useState('')
   const canContinue = ctl.hasSave()
-  const go = () => { unlockAudio(); play('star'); ctl.start(mode, disasters, starter); onStart() }
+  const go = () => { unlockAudio(); play('star'); ctl.start(mode, disasters, starter, name.trim().slice(0, 28)); onStart() }
   const cont = () => { unlockAudio(); if (ctl.load()) { play('move'); onStart() } }
   const modes: { id: Mode; name: string; emoji: string; text: string }[] = [
     { id: 'family', name: 'Family', emoji: '👨‍👩‍👧', text: 'Faster money and lower star goals. Great for playing together.' },
@@ -64,6 +65,10 @@ function Title({ onStart }: { onStart: () => void }) {
             </button>
           ))}
         </div>
+        <label className="name-field">
+          <span>🏷️ Name your tower</span>
+          <input value={name} maxLength={28} placeholder="The Mega Tower" onChange={(e) => setName(e.target.value)} />
+        </label>
         <div className="toggles">
           <label><input type="checkbox" checked={starter} onChange={(e) => setStarter(e.target.checked)} /> Start with a small tower already built</label>
           <label><input type="checkbox" checked={disasters} onChange={(e) => setDisasters(e.target.checked)} /> Disasters (fires 🔥 and bomb threats 💣)</label>
@@ -225,6 +230,10 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
         <Modal onClose={() => setMenu(false)}>
           <h2>Menu</h2>
           <div className="col">
+            <label className="name-field">
+              <span>🏷️ Tower name</span>
+              <input value={g.name ?? ''} maxLength={28} placeholder="The Mega Tower" onChange={(e) => { g.name = e.target.value; ctl.emit() }} />
+            </label>
             <button onClick={() => { ctl.save(); setMenu(false); setToast({ text: '💾 Saved!', id: Date.now() }) }}>💾 Save now</button>
             <button onClick={() => { ctl.toggleMusic() }}>{audioPrefs.music ? '🎵 Music: on' : '🎵 Music: off'}</button>
             <button onClick={() => { ctl.toggleSfx() }}>{audioPrefs.sfx ? '🔊 Sounds: on' : '🔇 Sounds: off'}</button>
@@ -264,7 +273,7 @@ function TopBar({ onHelp, onMenu }: { onHelp: () => void; onMenu: () => void }) 
   const day = dayOf(g.time) % 3
   return (
     <div className="topbar">
-      <div className="brand">SKY<span>TOWER</span></div>
+      <div className="brand">{g.name?.trim() ? <span className="tower-name">{g.name}</span> : <>SKY<span>TOWER</span></>}</div>
       <Stars n={g.stars} />
       <div className={`stat money ${g.money < 0 ? 'neg' : ''}`} title="Money">💰 {money(g.money)}</div>
       <div className="stat" title="Population">👥 {g.pop.toLocaleString()}</div>
@@ -293,6 +302,7 @@ const TOOL_LIST: Record<Category, ToolId[]> = {
   hotel: ['hotelSingle', 'hotelTwin', 'hotelSuite', 'housekeeping'],
   shops: ['fastFood', 'restaurant', 'shop', 'cinema', 'partyHall'],
   services: ['security', 'medical', 'recycling', 'parking', 'metro', 'cathedral'],
+  fun: ['iceCream', 'park', 'arcade', 'pool', 'aquarium', 'hauntedHouse', 'dinoMuseum', 'rocketPad'],
 }
 
 function toolInfo(t: ToolId) {
@@ -313,7 +323,7 @@ function Palette({ cat, setCat }: { cat: Category; setCat: (c: Category) => void
       </div>
       <div className="cats">
         {CATEGORIES.map((c) => (
-          <button key={c.id} className={`cat ${cat === c.id ? 'on' : ''}`} onClick={() => { setCat(c.id); play('click') }} title={c.name}>
+          <button key={c.id} className={`cat ${c.id} ${cat === c.id ? 'on' : ''}`} onClick={() => { setCat(c.id); play('click') }} title={c.name}>
             <span>{c.emoji}</span><small>{c.name}</small>
           </button>
         ))}
@@ -370,6 +380,7 @@ function Hint() {
   else if ([...g.facilities.values()].some((f) => !f.reachable && f.kind !== 'parking' && f.kind !== 'lobby')) hint = 'Rooms flashing 🚫 can\'t be reached. Connect them with an elevator or stairs.'
   else if (![...g.facilities.values()].some((f) => f.kind === 'fastFood' || f.kind === 'restaurant')) hint = 'Office workers need lunch! Build Fast Food.'
   else if ([...g.shafts.values()].some((s) => totalWaiting(s) > 25)) hint = 'Long lines! Click an elevator and add more cars.'
+  else if (![...g.facilities.values()].some((f) => FACILITIES[f.kind].category === 'fun')) hint = 'Try the 🎪 Fun Zone: ice cream, an aquarium with a shark, even a rocket!'
   if (!hint) return null
   return <div className="hint">💡 {hint}</div>
 }
@@ -502,8 +513,9 @@ function PersonPanel() {
         <div><b>{personName(p)}</b><small>{personRole(g, p)}</small></div>
         <button className="x" onClick={() => { ctl.person = 0; ctl.follow = false; ctl.emit() }}>✕</button>
       </div>
-      <div className="thought">{face} “{personThought(p)}”</div>
+      <div className="thought">{face} “{personThought(g, p)}”</div>
       <div className="status">{personDoing(g, p)}</div>
+      {petLine(p) && <div className="status">{petLine(p)}</div>}
       <button className={`wide ${ctl.follow ? 'on' : ''}`} onClick={() => { ctl.follow = !ctl.follow; ctl.emit() }}>{ctl.follow ? '📍 Following — tap to stop' : '📍 Follow'}</button>
     </div>
   )
@@ -542,8 +554,9 @@ function Help({ onClose }: { onClose: () => void }) {
         <p><b>4. Keep them happy.</b> Watch the colors: <span style={{ color: '#ff9f43' }}>orange</span> and <span style={{ color: '#ff2d2d' }}>red</span> people are fed up with waiting. Press 😊 to see how every room feels. Unhappy tenants move out.</p>
         <p><b>5. Food & fun.</b> Workers want lunch 🍔. Visitors come for restaurants, shops, and movies. More people means more customers.</p>
         <p><b>6. Hotels.</b> Guests check in at night and leave in the morning. Housekeeping 🧹 cleans rooms. Skip cleaning and you'll get cockroaches 🪳!</p>
-        <p><b>7. Go higher.</b> Put sky lobbies on floors 15, 30, 45… then use 🚀 Express elevators to zip between them.</p>
-        <p><b>8. Stars.</b> Hit the population goal and build what the goal card asks for. Each star unlocks new buildings. The Cathedral on top earns the TOWER rating.</p>
+        <p><b>7. Go higher.</b> Put sky lobbies on floors 15, 30, 45… then use ⚡ Express elevators to zip between them.</p>
+        <p><b>8. Fun Zone 🎪.</b> Ice cream, arcades, a pool, an aquarium with a shark, a haunted house and a dino museum. Put a 🚀 Rocket Pad on a roof and watch it blast off at noon! Name your tower in the ☰ menu.</p>
+        <p><b>9. Stars.</b> Hit the population goal and build what the goal card asks for. Each star unlocks new buildings. The Cathedral on top earns the TOWER rating.</p>
         <p className="keys">Controls: drag to move around · scroll or pinch to zoom · Space pause · 1–4 speed · B demolish · Esc stop building · M happiness view</p>
       </div>
       <button className="primary wide" onClick={onClose}>Let's build!</button>

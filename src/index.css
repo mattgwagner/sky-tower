@@ -189,3 +189,9 @@ input[type='checkbox'] { accent-color: var(--accent); width: 18px; height: 18px;
 .panel .wide { background: var(--panel-2); color: var(--text); }
 .panel .wide.danger { background: #5c1a26; }
 .modal button.primary, .row button.primary, .panel button.primary { background: linear-gradient(180deg, #ffe066, #fab005); color: #2b1d00; border-color: #b07a00; }
+
+.cat.fun { grid-column: span 3; flex-direction: row; justify-content: center; gap: 8px; background: linear-gradient(90deg, rgba(247,131,172,.18), rgba(116,192,252,.18)); }
+.cat.fun small { font-size: 12px; color: #ffdeeb; }
+.name-field { display: flex; flex-direction: column; gap: 4px; text-align: left; font-weight: 800; font-size: 13px; }
+.name-field input { font: inherit; font-size: 16px; padding: 8px 10px; border-radius: 10px; border: 2px solid var(--line); background: var(--panel-2); color: var(--text); }
+.tower-name { color: #ffd43b; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }

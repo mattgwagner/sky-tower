@@ -316,7 +316,189 @@ const painters: Partial<Record<FacilityKind, Painter>> = {
     c.strokeStyle = '#1c1c1c'; c.lineWidth = 1.5
     c.beginPath(); c.moveTo(0, h - 12); c.lineTo(w, -4); c.stroke()
   },
+  iceCream(c, w, h, look) {
+    const dark = look === 'night'
+    shell(c, w, h, '#ffdeeb', '#f8f0e3', dark)
+    for (let x = 0; x < w; x += 8) r(c, dark ? '#5a2a3a' : '#f06595', x, 2, 4, 4)
+    for (let x = 4; x < w; x += 8) r(c, dark ? '#666' : '#fff', x, 2, 4, 4)
+    sign(c, w, 'ICE CREAM', '#f06595')
+    // counter with tubs of flavours
+    r(c, '#e9ecef', 4, h - 13, 40, 10); r(c, '#adb5bd', 4, h - 14, 40, 1)
+    const flavours = ['#fff3bf', '#ffc9c9', '#b2f2bb', '#a5d8ff', '#d0bfff', '#8d6e4f']
+    flavours.forEach((col, i) => { r(c, col, 6 + i * 6, h - 17, 5, 3); r(c, '#fff', 6 + i * 6, h - 18, 5, 1) })
+    // giant cone
+    c.fillStyle = '#e8a85c'
+    c.beginPath(); c.moveTo(w - 20, h - 18); c.lineTo(w - 6, h - 18); c.lineTo(w - 13, h - 3); c.fill()
+    r(c, '#c97d32', w - 17, h - 14, 8, 1); r(c, '#c97d32', w - 15, h - 10, 4, 1)
+    c.fillStyle = '#f783ac'; c.beginPath(); c.arc(w - 13, h - 20, 6, 0, Math.PI * 2); c.fill()
+    c.fillStyle = '#96f2d7'; c.beginPath(); c.arc(w - 13, h - 26, 5, 0, Math.PI * 2); c.fill()
+    r(c, '#e03131', w - 14, h - 33, 3, 3)
+    for (const [dx, dy, col] of [[-3, -20, '#fff'], [2, -22, '#ffd43b'], [-1, -26, '#4dabf7'], [3, -27, '#e03131']] as const) r(c, col, w - 13 + dx, h + dy, 1, 1)
+    // tiny table
+    r(c, '#fff', 50, h - 10, 10, 2); r(c, '#ced4da', 54, h - 8, 2, 5)
+  },
+  park(c, w, h) {
+    const g = c.createLinearGradient(0, 0, 0, h)
+    g.addColorStop(0, '#c5f6fa'); g.addColorStop(1, '#e6fcf5')
+    c.fillStyle = g
+    c.fillRect(0, 0, w, h)
+    r(c, '#3a3a46', 0, 0, w, 2)
+    r(c, '#51cf66', 0, h - 5, w, 5); r(c, '#2f9e44', 0, h - 2, w, 2)
+    for (let x = 1; x < w; x += 3) r(c, '#69db7c', x, h - 6, 1, 1)
+    // trees
+    for (const tx of [10, w - 18]) {
+      r(c, '#8b5a2b', tx + 3, h - 15, 3, 10)
+      c.fillStyle = '#2f9e44'; c.beginPath(); c.arc(tx + 4.5, h - 19, 8, 0, Math.PI * 2); c.fill()
+      c.fillStyle = '#51cf66'; c.beginPath(); c.arc(tx + 2, h - 22, 4, 0, Math.PI * 2); c.fill()
+      r(c, '#e03131', tx + 7, h - 18, 2, 2); r(c, '#e03131', tx, h - 16, 2, 2)
+    }
+    // pond + bench + flowers
+    c.fillStyle = '#4dabf7'; c.beginPath(); c.ellipse(w / 2 + 4, h - 4, 12, 2.5, 0, 0, Math.PI * 2); c.fill()
+    r(c, '#8d6e4f', 28, h - 10, 14, 2); r(c, '#5c4632', 29, h - 8, 1, 3); r(c, '#5c4632', 40, h - 8, 1, 3); r(c, '#8d6e4f', 28, h - 13, 14, 1)
+    const fl = ['#ff6b6b', '#ffd43b', '#da77f2', '#fff']
+    for (let i = 0; i < 9; i++) { const x = 4 + i * 10 + (i % 2) * 3; r(c, '#2f9e44', x, h - 8, 1, 3); r(c, fl[i % 4], x - 1, h - 10, 3, 2) }
+  },
+  arcade(c, w, h) {
+    r(c, '#1a1033', 0, 0, w, h)
+    r(c, '#3a3a46', 0, 0, w, 2)
+    for (let x = 0; x < w; x += 4) r(c, (x / 4) % 2 ? '#f06595' : '#22b8cf', x, 2, 4, 1)
+    // checker carpet
+    for (let x = 0; x < w; x += 4) r(c, (x / 4) % 2 ? '#5f3dc4' : '#e64980', x, h - 3, 4, 3)
+    sign(c, w, 'ARCADE', '#7048e8', '#ffe066')
+    const bodies = ['#e03131', '#1c7ed6', '#2f9e44', '#f08c00', '#ae3ec9', '#0ca678']
+    for (let i = 0; i < ARCADE_CABS; i++) {
+      const x = ARCADE_X[i]
+      r(c, bodies[i % bodies.length], x, h - 23, 10, 20)
+      r(c, '#111', x + 2, h - 21, 6, 6)
+      r(c, '#212529', x + 1, h - 13, 8, 2)
+      r(c, '#fa5252', x + 3, h - 15, 1, 2); r(c, '#ffd43b', x + 6, h - 14, 1, 1)
+    }
+    // claw machine
+    const cx = w - 20
+    r(c, '#ffd43b', cx, h - 27, 16, 24); r(c, 'rgba(200,240,255,0.55)', cx + 2, h - 25, 12, 12)
+    r(c, '#868e96', cx + 7, h - 25, 1, 5); r(c, '#ced4da', cx + 5, h - 20, 5, 2)
+    for (const [dx, col] of [[3, '#ff8787'], [7, '#74c0fc'], [10, '#b2f2bb']] as const) r(c, col, cx + dx, h - 16, 3, 3)
+  },
+  pool(c, w, h, look) {
+    const dark = look === 'night'
+    shell(c, w, h, '#e3fafc', '#c5f6fa', dark)
+    for (let x = 0; x < w; x += 6) r(c, 'rgba(0,0,0,0.06)', x, 2, 1, h - 5)
+    sign(c, w, 'POOL', '#1098ad')
+    r(c, '#99e9f2', 14, h - 14, w - 28, 11)
+    r(c, '#1098ad', 14, h - 14, 2, 11); r(c, '#1098ad', w - 16, h - 14, 2, 11)
+    // diving board + lifeguard chair
+    r(c, '#868e96', 2, h - 20, 2, 17); r(c, '#fff', 2, h - 20, 22, 2)
+    r(c, '#e03131', w - 12, h - 26, 8, 3); r(c, '#fff', w - 12, h - 23, 1, 20); r(c, '#fff', w - 5, h - 23, 1, 20); r(c, '#fff', w - 12, h - 15, 8, 1)
+  },
+  aquarium(c, w, h) {
+    r(c, '#0b3d5c', 0, 0, w, h)
+    r(c, '#3a3a46', 0, 0, w, 2); r(c, '#2a2f3a', 0, h - 3, w, 3)
+    const g = c.createLinearGradient(0, 4, 0, h - 6)
+    g.addColorStop(0, '#74c0fc'); g.addColorStop(1, '#1864ab')
+    c.fillStyle = g
+    c.fillRect(AQ_PAD, 4, w - AQ_PAD * 2, h - 10)
+    // sand, rocks, seaweed, treasure
+    r(c, '#e9d8a6', AQ_PAD, h - 12, w - AQ_PAD * 2, 6)
+    for (let x = AQ_PAD + 4; x < w - AQ_PAD - 4; x += 13) {
+      for (let k = 0; k < 4; k++) r(c, k % 2 ? '#2f9e44' : '#40c057', x + (k % 2), h - 14 - k * 4, 2, 4)
+    }
+    r(c, '#868e96', 30, h - 15, 10, 4); r(c, '#adb5bd', 32, h - 17, 6, 2)
+    r(c, '#8b5a2b', w - 40, h - 17, 12, 7); r(c, '#ffd43b', w - 40, h - 15, 12, 1); r(c, '#f1c40f', w - 37, h - 19, 6, 2)
+    r(c, '#ffd43b', w - 36, h - 13, 2, 2)
+    r(c, 'rgba(255,255,255,0.25)', AQ_PAD + 2, 6, 2, h - 20)
+    r(c, '#212529', AQ_PAD - 2, 3, 2, h - 8); r(c, '#212529', w - AQ_PAD, 3, 2, h - 8)
+    sign(c, w, 'AQUARIUM', '#1971c2')
+  },
+  hauntedHouse(c, w, h) {
+    r(c, '#2b2140', 0, 0, w, h)
+    for (let x = 0; x < w; x += 10) r(c, '#33284d', x, 2, 5, h - 5)
+    r(c, '#3a3a46', 0, 0, w, 2)
+    for (let x = 0; x < w; x += 6) r(c, (x / 6) % 2 ? '#3d2b1f' : '#4a3426', x, h - 3, 6, 3)
+    // moonlit window
+    r(c, '#111', 18, 20, 20, 22); r(c, '#364fc7', 19, 21, 18, 20)
+    c.fillStyle = '#fff3bf'; c.beginPath(); c.arc(28, 28, 5, 0, Math.PI * 2); c.fill()
+    r(c, '#111', 27, 21, 2, 20); r(c, '#111', 19, 30, 18, 2)
+    // cobwebs
+    c.strokeStyle = 'rgba(230,230,240,0.5)'; c.lineWidth = 0.6
+    for (const [x0, sx] of [[2, 1], [w - 2, -1]] as const) {
+      c.beginPath()
+      for (let k = 0; k < 4; k++) { c.moveTo(x0, 2); c.lineTo(x0 + sx * (16 - k * 4), 2 + k * 5) }
+      c.moveTo(x0 + sx * 6, 2); c.quadraticCurveTo(x0 + sx * 5, 7, x0, 8)
+      c.moveTo(x0 + sx * 12, 2); c.quadraticCurveTo(x0 + sx * 10, 12, x0, 14)
+      c.stroke()
+    }
+    // coffin, candles, pumpkins
+    c.fillStyle = '#5c3d2e'
+    c.beginPath(); c.moveTo(60, h - 3); c.lineTo(56, h - 16); c.lineTo(62, h - 22); c.lineTo(76, h - 22); c.lineTo(82, h - 16); c.lineTo(78, h - 3); c.fill()
+    r(c, '#ced4da', 68, h - 18, 2, 10); r(c, '#ced4da', 65, h - 15, 8, 2)
+    for (const x of [95, 104]) { r(c, '#fff', x, h - 12, 2, 9); r(c, '#ffd43b', x, h - 15, 2, 3); r(c, '#ff922b', x, h - 14, 2, 1) }
+    for (const x of [44, 118, 136]) {
+      c.fillStyle = '#f76707'; c.beginPath(); c.ellipse(x, h - 8, 6, 5, 0, 0, Math.PI * 2); c.fill()
+      r(c, '#2b8a3e', x - 1, h - 15, 2, 3)
+      r(c, '#ffe066', x - 3, h - 10, 2, 2); r(c, '#ffe066', x + 1, h - 10, 2, 2); r(c, '#ffe066', x - 3, h - 6, 6, 1)
+    }
+    sign(c, w, 'HAUNTED', '#5f3dc4', '#b2f2bb')
+  },
+  dinoMuseum(c, w, h, look) {
+    const dark = look === 'night'
+    shell(c, w, h, '#efe3c8', '#9c7a54', dark)
+    sign(c, w, 'DINO MUSEUM', '#2b8a3e')
+    const bone = dark ? '#cfc6b0' : '#fbf6ea'
+    const B = (x: number, y: number, ww: number, hh: number) => { r(c, '#a89878', x - 1, y - 1, ww + 2, hh + 2) }
+    const parts: [number, number, number, number][] = []
+    const add = (x: number, y: number, ww: number, hh: number) => parts.push([x, y, ww, hh])
+    // T-Rex
+    r(c, '#8d6e4f', 16, h - 10, 118, 7); r(c, '#6b4f3a', 16, h - 4, 118, 1)
+    add(50, h - 42, 8, 16); add(52, h - 27, 5, 16); add(50, h - 12, 12, 3)
+    add(74, h - 44, 8, 18); add(76, h - 27, 5, 16); add(74, h - 12, 12, 3)
+    add(40, h - 62, 64, 4)
+    for (let i = 0; i < 8; i++) add(48 + i * 6, h - 58, 3, 14 - Math.abs(i - 4))
+    for (let i = 0; i < 7; i++) add(36 - i * 4, h - 60 + i * 4, 6, 3)
+    add(100, h - 70, 8, 10)
+    add(104, h - 84, 26, 12); add(108, h - 70, 20, 4)
+    add(96, h - 54, 8, 2); add(102, h - 54, 2, 5)
+    // Brontosaurus
+    for (const x of [166, 180, 206, 220]) add(x, h - 34, 5, 24)
+    add(160, h - 40, 70, 5)
+    for (let i = 0; i < 9; i++) add(166 + i * 7, h - 36, 3, 11)
+    for (let i = 0; i < 8; i++) add(160 - i * 3, h - 44 - i * 5, 5, 6)
+    add(132, h - 86, 12, 6)
+    for (let i = 0; i < 6; i++) add(230 + i * 4, h - 40 + i * 4, 5, 3)
+    for (const p of parts) B(...p)
+    for (const p of parts) r(c, bone, ...p)
+    r(c, '#5c4632', 113, h - 81, 4, 4)
+    for (let i = 0; i < 5; i++) r(c, '#fff', 110 + i * 4, h - 72, 2, 2)
+    r(c, '#5c4632', 135, h - 85, 2, 2)
+    // big egg + plaque
+    c.fillStyle = '#e9d8a6'; c.beginPath(); c.ellipse(150, h - 13, 6, 8, 0, 0, Math.PI * 2); c.fill()
+    r(c, '#ced4da', 143, h - 6, 14, 3)
+    for (const [x, y] of [[147, h - 16], [152, h - 12], [148, h - 9]]) r(c, '#adb5bd', x, y, 2, 1)
+  },
+  rocketPad(c, w, h) {
+    // open-air launch deck: concrete pad, hazard stripes, gantry tower
+    r(c, '#868e96', 0, h - 8, w, 8)
+    for (let x = 0; x < w; x += 8) r(c, '#ffd43b', x, h - 8, 4, 2)
+    for (let x = 4; x < w; x += 8) r(c, '#212529', x, h - 8, 4, 2)
+    r(c, '#495057', w / 2 - 10, h - 6, 20, 3)
+    const gx = 6
+    r(c, '#c92a2a', gx, 6, 3, h - 14); r(c, '#c92a2a', gx + 12, 6, 3, h - 14)
+    c.strokeStyle = '#e03131'; c.lineWidth = 1
+    c.beginPath()
+    for (let y = 8; y < h - 10; y += 8) { c.moveTo(gx + 1, y); c.lineTo(gx + 13, y + 8); c.moveTo(gx + 13, y); c.lineTo(gx + 1, y + 8) }
+    c.stroke()
+    r(c, '#c92a2a', gx, 6, 15, 2)
+    r(c, '#868e96', gx + 15, 20, ROCKET_X - gx - 22, 2)
+    r(c, '#fff3bf', gx + 6, 2, 3, 4)
+    // fuel tanks
+    for (const x of [w - 16, w - 8]) { r(c, '#dee2e6', x, h - 22, 6, 14); r(c, '#adb5bd', x, h - 22, 6, 2) }
+  },
 }
+
+export const ARCADE_X = [4, 17, 30, 82, 95]
+export const ARCADE_CABS = ARCADE_X.length
+export const AQ_PAD = 8
+/** Rocket centre, in sprite pixels from the pad's left edge. */
+export const ROCKET_X = 62
 
 function mess(c: Ctx, x: number, h: number) {
   r(c, '#868e96', x + 2, h - 6, 3, 2); r(c, '#e9ecef', x + 10, h - 5, 4, 2); r(c, '#a9a9a9', x + 16, h - 15, 5, 1)

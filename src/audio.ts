@@ -1,5 +1,5 @@
 // Tiny WebAudio synth: sound effects + an easygoing lobby-music loop.
-type Sfx = 'ding' | 'cash' | 'build' | 'star' | 'alarm' | 'boom' | 'party' | 'move' | 'bad' | 'click'
+type Sfx = 'ding' | 'cash' | 'build' | 'star' | 'alarm' | 'boom' | 'party' | 'move' | 'bad' | 'click' | 'rocket' | 'roar' | 'spooky' | 'ufo' | 'boing'
 
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
@@ -37,7 +37,7 @@ function tone(freq: number, start: number, dur: number, type: OscillatorType = '
   o.stop(start + dur + 0.05)
 }
 
-function noise(start: number, dur: number, vol = 0.3) {
+function noise(start: number, dur: number, vol = 0.3, cutoff = 900) {
   const c = ac()
   const buf = c.createBuffer(1, c.sampleRate * dur, c.sampleRate)
   const d = buf.getChannelData(0)
@@ -48,7 +48,7 @@ function noise(start: number, dur: number, vol = 0.3) {
   g.gain.value = vol
   const f = c.createBiquadFilter()
   f.type = 'lowpass'
-  f.frequency.value = 900
+  f.frequency.value = cutoff
   s.connect(f); f.connect(g); g.connect(master!)
   s.start(start)
 }
@@ -71,6 +71,11 @@ export function play(name: Sfx) {
     case 'alarm': for (let i = 0; i < 4; i++) { tone(880, t + i * 0.3, 0.14, 'square', 0.1); tone(660, t + i * 0.3 + 0.15, 0.14, 'square', 0.1) } break
     case 'boom': noise(t, 1.2, 0.8); tone(80, t, 1, 'sine', 0.5, undefined, 30); break
     case 'party': [523, 659, 784, 1046].forEach((f, i) => tone(f, t + i * 0.08, 0.2, 'square', 0.07)); break
+    case 'rocket': noise(t, 2.6, 0.7, 500); tone(70, t, 2.4, 'sawtooth', 0.12, undefined, 260); break
+    case 'roar': noise(t, 0.9, 0.5, 400); tone(190, t, 0.9, 'sawtooth', 0.18, undefined, 55); tone(140, t + 0.05, 0.9, 'square', 0.08, undefined, 45); break
+    case 'spooky': tone(392, t, 0.9, 'sine', 0.14, undefined, 262); tone(370, t + 0.7, 1.1, 'sine', 0.12, undefined, 220); break
+    case 'ufo': for (let i = 0; i < 6; i++) tone(i % 2 ? 900 : 620, t + i * 0.16, 0.18, 'sine', 0.1, undefined, i % 2 ? 620 : 900); break
+    case 'boing': tone(220, t, 0.3, 'sine', 0.2, undefined, 660); break
     case 'star': [523, 659, 784, 1046, 784, 1046, 1318].forEach((f, i) => tone(f, t + i * 0.11, i === 6 ? 0.6 : 0.16, 'square', 0.09)); break
   }
 }

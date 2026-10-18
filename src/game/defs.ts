@@ -35,12 +35,20 @@ export type FacilityKind =
   | 'cathedral'
   | 'stairs'
   | 'escalator'
+  | 'iceCream'
+  | 'arcade'
+  | 'aquarium'
+  | 'dinoMuseum'
+  | 'hauntedHouse'
+  | 'pool'
+  | 'park'
+  | 'rocketPad'
 
 export type TransportKind = 'elevator' | 'serviceElevator' | 'expressElevator'
 
 export type ToolId = FacilityKind | TransportKind | 'bulldoze' | 'inspect'
 
-export type Category = 'basics' | 'homes' | 'hotel' | 'shops' | 'services' | 'move'
+export type Category = 'basics' | 'homes' | 'hotel' | 'shops' | 'services' | 'move' | 'fun'
 
 export interface FacilityDef {
   kind: FacilityKind
@@ -102,6 +110,22 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'Connects this floor to the one above. People only climb a few floors.' },
   escalator: { kind: 'escalator', name: 'Escalator', emoji: '↗️', category: 'move', width: 8, height: 1, cost: 20000, stars: 3, pop: 0,
     blurb: 'Faster than stairs. Shoppers love them.' },
+  iceCream: { kind: 'iceCream', name: 'Ice Cream Shop', emoji: '🍦', category: 'fun', width: 10, height: 1, cost: 60000, stars: 1, pop: 3,
+    blurb: 'Sprinkles! Kids and families line up on sunny afternoons.' },
+  park: { kind: 'park', name: 'Sky Park', emoji: '🌳', category: 'fun', width: 12, height: 1, cost: 30000, stars: 1, pop: 0, upkeep: 2000,
+    blurb: 'Trees, flowers and butterflies. Makes rooms on the same floor happier.' },
+  arcade: { kind: 'arcade', name: 'Arcade', emoji: '🕹️', category: 'fun', width: 16, height: 1, cost: 120000, stars: 1, pop: 6,
+    blurb: 'Blinking games and a claw machine. A little noisy!' },
+  pool: { kind: 'pool', name: 'Swimming Pool', emoji: '🏊', category: 'fun', width: 24, height: 1, cost: 250000, stars: 2, pop: 6,
+    blurb: 'Cannonball! Splashy fun for residents and visitors.' },
+  aquarium: { kind: 'aquarium', name: 'Aquarium', emoji: '🐠', category: 'fun', width: 24, height: 2, cost: 400000, stars: 2, pop: 12,
+    blurb: 'A giant fish tank with a real shark. Visitors love it.' },
+  hauntedHouse: { kind: 'hauntedHouse', name: 'Haunted House', emoji: '👻', category: 'fun', width: 20, height: 2, cost: 300000, stars: 2, pop: 8,
+    blurb: 'Spooky ghosts and bats! Opens at 5pm. Busiest after dark.' },
+  dinoMuseum: { kind: 'dinoMuseum', name: 'Dino Museum', emoji: '🦖', category: 'fun', width: 32, height: 3, cost: 700000, stars: 2, pop: 15,
+    blurb: 'Giant dinosaur skeletons. The T-Rex roars at noon and 4pm!' },
+  rocketPad: { kind: 'rocketPad', name: 'Rocket Pad', emoji: '🚀', category: 'fun', width: 14, height: 2, cost: 1500000, stars: 3, pop: 10, underground: 'no',
+    blurb: 'Build it on a roof with open sky above. Blasts off every day at noon!' },
 }
 
 export interface TransportDef {
@@ -125,7 +149,7 @@ export const TRANSPORTS: Record<TransportKind, TransportDef> = {
     blurb: 'Drag up/down to build. Reaches up to 30 floors. Add cars when it gets busy.' },
   serviceElevator: { kind: 'serviceElevator', name: 'Service Elevator', emoji: '🧺', width: 4, cost: 100000, carCost: 50000, perFloorCost: 1000, maxSpan: 30, capacity: 21, stepsPerFloor: 9, stars: 2, upkeep: 3000,
     blurb: 'Staff only — housekeepers and guards use it so guests don\'t wait.' },
-  expressElevator: { kind: 'expressElevator', name: 'Express Elevator', emoji: '🚀', width: 6, cost: 400000, carCost: 150000, perFloorCost: 3000, maxSpan: 200, capacity: 42, stepsPerFloor: 3, stars: 3, upkeep: 15000,
+  expressElevator: { kind: 'expressElevator', name: 'Express Elevator', emoji: '⚡', width: 6, cost: 400000, carCost: 150000, perFloorCost: 3000, maxSpan: 200, capacity: 42, stepsPerFloor: 3, stars: 3, upkeep: 15000,
     blurb: 'Zooms between lobbies (0, 15, 30…) and basements only.' },
 }
 
@@ -136,6 +160,7 @@ export const CATEGORIES: { id: Category; name: string; emoji: string }[] = [
   { id: 'hotel', name: 'Hotel', emoji: '🛎️' },
   { id: 'shops', name: 'Food & Fun', emoji: '🍔' },
   { id: 'services', name: 'Services', emoji: '🏥' },
+  { id: 'fun', name: 'Fun Zone', emoji: '🎪' },
 ]
 
 export type Mode = 'family' | 'classic' | 'sandbox'
@@ -174,14 +199,23 @@ export const RENT_HAPPY = [15, 0, -12, -28]
 export const OFFICE_RENT = 10000 // per quarter, at average
 export const CONDO_PRICE = 150000 // one-time sale
 export const HOTEL_NIGHT: Partial<Record<FacilityKind, number>> = { hotelSingle: 3000, hotelTwin: 4500, hotelSuite: 9000 }
-export const SPEND: Partial<Record<FacilityKind, number>> = { fastFood: 400, restaurant: 1200, shop: 800, cinema: 1000, partyHall: 0, metro: 0 }
-export const SHOP_CAPACITY: Partial<Record<FacilityKind, number>> = { fastFood: 14, restaurant: 18, shop: 8, cinema: 60, partyHall: 40 }
+export const SPEND: Partial<Record<FacilityKind, number>> = {
+  fastFood: 400, restaurant: 1200, shop: 800, cinema: 1000, partyHall: 0, metro: 0,
+  iceCream: 200, arcade: 350, pool: 250, aquarium: 550, hauntedHouse: 450, dinoMuseum: 650, rocketPad: 1000,
+}
+export const SHOP_CAPACITY: Partial<Record<FacilityKind, number>> = {
+  fastFood: 14, restaurant: 18, shop: 8, cinema: 60, partyHall: 40,
+  iceCream: 10, arcade: 16, pool: 20, aquarium: 40, hauntedHouse: 24, dinoMuseum: 50, rocketPad: 40,
+}
+
+/** Fun Zone places people visit like shops. */
+export const ATTRACTIONS: FacilityKind[] = ['iceCream', 'arcade', 'pool', 'aquarium', 'hauntedHouse', 'dinoMuseum', 'rocketPad']
 
 export function isHotel(k: FacilityKind) {
   return k === 'hotelSingle' || k === 'hotelTwin' || k === 'hotelSuite'
 }
 export function isCommercial(k: FacilityKind) {
-  return k === 'fastFood' || k === 'restaurant' || k === 'shop' || k === 'cinema' || k === 'partyHall'
+  return k === 'fastFood' || k === 'restaurant' || k === 'shop' || k === 'cinema' || k === 'partyHall' || ATTRACTIONS.includes(k)
 }
 export function isResidential(k: FacilityKind) {
   return k === 'condo' || isHotel(k)

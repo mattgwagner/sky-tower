@@ -48,8 +48,8 @@ export class Controller {
   emit() { this.listeners.forEach((l) => l()) }
 
   // ---------- game lifecycle ----------
-  start(mode: Mode, disasters: boolean, starter: boolean) {
-    this.g = newGame(mode, disasters)
+  start(mode: Mode, disasters: boolean, starter: boolean, name = '') {
+    this.g = newGame(mode, disasters, name)
     if (starter) buildStarter(this.g)
     const zoom = starter ? 1.4 : 1.8
     this.cam = { x: (TOWER_WIDTH * T) / 2 - 90 / zoom, y: starter ? -FH * 5 : -FH * 2.5, zoom }

@@ -29,6 +29,7 @@ export interface Facility {
   noisy: boolean
   sad: number // consecutive unhappy days
   name?: string
+  nearPark?: boolean
 }
 
 export interface Car {
@@ -128,7 +129,7 @@ export interface Game {
   facilities: Map<number, Facility>
   shafts: Map<number, Shaft>
   people: Map<number, Person>
-  flags: { vip: boolean; vipVisit: number; goldFound: boolean; santaDay: number }
+  flags: { vip: boolean; vipVisit: number; goldFound: boolean; santaDay: number; ufoDay?: number }
   bomb: Bomb | null
   pop: number
   stats: { day: number; income: number; expense: number; lastQuarter: { income: number; expense: number } }
@@ -136,13 +137,15 @@ export interface Game {
   buildVersion: number
   fx: Fx[]
   starCelebration: number
+  name?: string
 }
 
 export const START_MONEY = 2_000_000
 
-export function newGame(mode: Mode, disasters: boolean): Game {
+export function newGame(mode: Mode, disasters: boolean, name = ''): Game {
   return {
     version: 1,
+    name,
     mode,
     disasters,
     money: mode === 'sandbox' ? 999_999_999 : START_MONEY,

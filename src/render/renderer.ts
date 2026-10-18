@@ -2,10 +2,12 @@
 import { FACILITIES, TOWER_WIDTH, TRANSPORTS, isCommercial, isHotel, isLobbyFloor } from '../game/defs'
 import type { FacilityKind } from '../game/defs'
 import { carPos } from '../game/elevators'
-import { isOpen } from '../game/sim'
+import { isOpen, launchClock, ufoX } from '../game/sim'
 import type { Facility, Game, Person, Shaft } from '../game/state'
 import { dayOf, isWeekend, minuteOfDay } from '../game/state'
-import { FH, SHIRTS, T, sprite } from './sprites'
+import { hasPet } from '../game/people-info'
+import { topFloor } from '../game/world'
+import { AQ_PAD, ARCADE_CABS, ARCADE_X, FH, ROCKET_X, SHIRTS, T, sprite } from './sprites'
 import type { Look } from './sprites'
 
 export interface Camera { x: number; y: number; zoom: number }
@@ -292,6 +294,8 @@ function personColor(shirt: number) {
 export function render(c: CanvasRenderingContext2D, W: number, H: number, g: Game, cam: Camera, ov: Overlay, now: number, dt: number) {
   c.imageSmoothingEnabled = false
   const night = drawSky(c, W, H, g, cam, now)
+  drawBalloons(c, W, H, now, night)
+  drawBlimp(c, W, H, g, now, night)
   drawSkyline(c, W, H, cam, night)
   drawBirds(c, W, H, g, now, night)
   drawFireworks(c, W, H, now, dt)
@@ -342,8 +346,11 @@ export function render(c: CanvasRenderingContext2D, W: number, H: number, g: Gam
   for (const f of visibleFacs) drawFacility(c, g, f, S, z, m, now, ov)
   // roof caps + floor labels
   drawRoofs(c, g, S, z, fBot, fTop, x0, x1)
+  drawTowerSign(c, g, S, z, night)
   for (const s of visibleShafts) drawShaft(c, g, s, S, z, fBot, fTop, now)
   drawPeople(c, g, S, z, fBot, fTop, now)
+  for (const f of g.facilities.values()) if (f.kind === 'rocketPad') drawRocket(c, g, f, S, z, now)
+  drawUfo(c, g, S, z, now)
   drawFires(c, g, visibleFacs, S, z, now)
   drawFlashes(c, S, z, dt)
   drawSelectedPerson(c, g, ov, S, z, now)
@@ -402,6 +409,7 @@ function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: 
   }
   if (f.kind === 'parking' && f.reachable) drawCar(c, p.x + 10 * z, p.y + h - 3 * z, z, f.id)
   if (f.kind === 'cathedral') drawSpire(c, p.x + w / 2, p.y, z)
+  if (z >= 0.6) drawFun(c, g, f, p, w, h, z, now, m)
   // people inside
   if (z >= 0.75 && f.inside > 0 && f.kind !== 'lobby' && f.kind !== 'parking') {
     const n = Math.min(f.inside, Math.max(1, Math.floor(f.width / 3)))
@@ -464,15 +472,16 @@ function drawCar(c: CanvasRenderingContext2D, x: number, yb: number, z: number, 
 }
 
 function drawRoofs(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: number) => { x: number; y: number }, z: number, fBot: number, fTop: number, x0: number, x1: number) {
+  const open = (v: number) => v === -1 || (v > 0 && g.facilities.get(v)?.kind === 'rocketPad')
   for (let f = Math.max(0, fBot); f <= fTop; f++) {
     const row = g.floors.get(f)
     if (!row) continue
     const above = g.floors.get(f + 1)
     let i = x0
     while (i <= x1) {
-      if (row[i] !== -1 && (!above || above[i] === -1)) {
+      if (!open(row[i]) && (!above || open(above[i]))) {
         let j = i
-        while (j <= x1 && row[j] !== -1 && (!above || above[j] === -1)) j++
+        while (j <= x1 && !open(row[j]) && (!above || open(above[j]))) j++
         const p = S(i * T - 2, floorTop(f))
         const w = ((j - i) * T + 4) * z
         c.fillStyle = '#495057'
@@ -485,11 +494,11 @@ function drawRoofs(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: numbe
     // side walls
     let i2 = x0
     while (i2 <= x1) {
-      if (row[i2] !== -1 && (i2 === 0 || row[i2 - 1] === -1)) {
+      if (!open(row[i2]) && (i2 === 0 || open(row[i2 - 1]))) {
         const p = S(i2 * T, floorTop(f))
         c.fillStyle = '#343a40'; c.fillRect(p.x - 2 * z, p.y, 2 * z, FH * z)
       }
-      if (row[i2] !== -1 && (i2 === TOWER_WIDTH - 1 || row[i2 + 1] === -1)) {
+      if (!open(row[i2]) && (i2 === TOWER_WIDTH - 1 || open(row[i2 + 1]))) {
         const p = S((i2 + 1) * T, floorTop(f))
         c.fillStyle = '#343a40'; c.fillRect(p.x, p.y, 2 * z, FH * z)
       }
@@ -575,6 +584,12 @@ function drawPeople(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: numb
       if (p.floor < fBot || p.floor > fTop) continue
       const s = S(p.x * T, floorTop(p.floor) + FH - 3)
       drawPersonAt(c, s.x, s.y, z, personColor(p.shirt), Math.floor(p.x * 1.5) % 2, p.mood, p.shirt)
+      const pet = hasPet(p)
+      if (pet && z >= 0.6) {
+        const tx = p.leg < p.legs.length ? p.legs[p.leg].x : p.goalX
+        const dir = tx >= p.x ? 1 : -1
+        drawPet(c, s.x - dir * 6 * z, s.y, z, pet, Math.floor(p.x * 2) % 2, dir)
+      }
     } else if (p.state === 'climbing') {
       const L = p.legs[p.leg]
       const conn = g.facilities.get(L?.via ?? 0)
@@ -908,4 +923,335 @@ function drawFireworks(c: CanvasRenderingContext2D, W: number, H: number, now: n
     c.fillRect(s.x, s.y, 2.5, 2.5)
   }
   c.globalAlpha = 1
+}
+
+// ---------- whimsy ----------
+type Pt = { x: number; y: number }
+
+function drawPet(c: CanvasRenderingContext2D, x: number, yb: number, z: number, kind: 'dog' | 'cat', frame: number, dir: number) {
+  const col = kind === 'dog' ? '#b07a45' : '#495057'
+  c.fillStyle = col
+  c.fillRect(x - 2 * z, yb - 3 * z, 4 * z, 2 * z) // body
+  c.fillRect(x + dir * 2 * z - (dir < 0 ? 2 * z : 0), yb - 4.5 * z, 2 * z, 2 * z) // head
+  if (kind === 'cat') { c.fillRect(x + dir * 2.2 * z - (dir < 0 ? 1.6 * z : 0), yb - 5.3 * z, 0.6 * z, 0.8 * z) }
+  else { c.fillStyle = '#7a4f2a'; c.fillRect(x + dir * 2.4 * z - (dir < 0 ? 1.2 * z : 0), yb - 4.5 * z, 0.8 * z, 1.4 * z) }
+  c.fillStyle = col
+  const tail = frame ? -0.6 : 0.6
+  c.fillRect(x - dir * 2.6 * z - (dir > 0 ? 0 : -0.4 * z), yb - (3.8 + tail) * z, 0.8 * z, 1.6 * z) // wagging tail
+  c.fillStyle = '#2b2b38'
+  c.fillRect(x - 1.6 * z, yb - 1 * z, 0.7 * z, (frame ? 1 : 0.6) * z)
+  c.fillRect(x + 1 * z, yb - 1 * z, 0.7 * z, (frame ? 0.6 : 1) * z)
+}
+
+/** Animated details for the Fun Zone rooms (drawn on top of the cached sprite). */
+function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: number, h: number, z: number, now: number, m: number) {
+  switch (f.kind) {
+    case 'arcade': {
+      if (!isOpen(g, f) && f.inside === 0) return
+      for (let i = 0; i < ARCADE_CABS; i++) {
+        const hue = (now / 8 + i * 70) % 360
+        c.fillStyle = `hsl(${hue},90%,${55 + 15 * Math.sin(now / 120 + i)}%)`
+        c.fillRect(p.x + (ARCADE_X[i] + 2) * z, p.y + h - 21 * z, 6 * z, 6 * z)
+        c.fillStyle = '#fff'
+        c.fillRect(p.x + (ARCADE_X[i] + 3 + ((now / 90 + i * 2) % 4)) * z, p.y + h - 18 * z, z, z)
+      }
+      return
+    }
+    case 'aquarium': {
+      const x0 = p.x + AQ_PAD * z, x1 = p.x + w - AQ_PAD * z
+      const top = p.y + 18 * z, bot = p.y + h - 14 * z
+      c.save()
+      c.beginPath(); c.rect(x0, p.y + 4 * z, x1 - x0, h - 10 * z); c.clip()
+      const span = x1 - x0 + 40 * z
+      for (let i = 0; i < 7; i++) {
+        const sp = (0.012 + (i % 3) * 0.006) * z
+        const dir = i % 2 ? 1 : -1
+        const k = (now * sp + i * 97 * z) % span
+        const fx = dir > 0 ? x0 - 20 * z + k : x1 + 20 * z - k
+        const fy = top + ((i * 37) % 100) / 100 * (bot - top) + Math.sin(now / 400 + i) * 2 * z
+        const col = ['#ff922b', '#ffd43b', '#f06595', '#20c997', '#cc5de8', '#ff6b6b', '#fff'][i]
+        fish(c, fx, fy, 3 * z, dir, col)
+      }
+      // the shark
+      const sk = (now * 0.008 * z) % (span + 80 * z)
+      const sx = x1 + 40 * z - sk
+      const sy = top + (bot - top) * 0.35 + Math.sin(now / 900) * 4 * z
+      c.fillStyle = '#868e96'
+      c.beginPath(); c.ellipse(sx, sy, 14 * z, 4 * z, 0, 0, Math.PI * 2); c.fill()
+      c.beginPath(); c.moveTo(sx - 2 * z, sy - 3 * z); c.lineTo(sx + 3 * z, sy - 10 * z); c.lineTo(sx + 5 * z, sy - 3 * z); c.fill()
+      c.beginPath(); c.moveTo(sx + 12 * z, sy); c.lineTo(sx + 19 * z, sy - 6 * z); c.lineTo(sx + 19 * z, sy + 5 * z); c.fill()
+      c.fillStyle = '#e9ecef'; c.beginPath(); c.ellipse(sx - 2 * z, sy + 2 * z, 9 * z, 1.6 * z, 0, 0, Math.PI * 2); c.fill()
+      c.fillStyle = '#111'; c.fillRect(sx - 10 * z, sy - 1.5 * z, 1.2 * z, 1.2 * z)
+      c.fillStyle = '#fff'; for (let t = 0; t < 4; t++) c.fillRect(sx - 12 * z + t * 1.5 * z, sy + 1 * z, 0.8 * z, 0.8 * z)
+      // jellyfish
+      const jx = x0 + (x1 - x0) * 0.72, jy = top + 6 * z + Math.sin(now / 700) * 6 * z
+      c.fillStyle = 'rgba(255,170,220,0.8)'
+      c.beginPath(); c.arc(jx, jy, 4 * z, Math.PI, 0); c.fill()
+      for (let t = 0; t < 4; t++) c.fillRect(jx - 3 * z + t * 2 * z, jy, 0.6 * z, (4 + Math.sin(now / 200 + t) * 1.5) * z)
+      // bubbles
+      c.fillStyle = 'rgba(255,255,255,0.6)'
+      for (let i = 0; i < 8; i++) {
+        const k2 = ((now / 2200 + i / 8) % 1)
+        c.fillRect(x0 + ((i * 53) % 100) / 100 * (x1 - x0), bot + 6 * z - k2 * (bot - p.y), 1.4 * z, 1.4 * z)
+      }
+      c.restore()
+      return
+    }
+    case 'hauntedHouse': {
+      for (let i = 0; i < 3; i++) {
+        const gx = p.x + w * (0.25 + i * 0.25) + Math.sin(now / 900 + i * 2) * 12 * z
+        const gy = p.y + h * 0.42 + Math.sin(now / 500 + i) * 6 * z
+        c.globalAlpha = 0.55 + 0.35 * Math.sin(now / 700 + i * 1.3)
+        c.fillStyle = '#f8f9fa'
+        c.beginPath()
+        c.arc(gx, gy, 5 * z, Math.PI, 0)
+        c.lineTo(gx + 5 * z, gy + 7 * z)
+        for (let k = 0; k < 3; k++) c.lineTo(gx + (3 - k * 3.3) * z, gy + (k % 2 ? 7 : 5) * z)
+        c.lineTo(gx - 5 * z, gy + 7 * z)
+        c.fill()
+        c.globalAlpha = 1
+        c.fillStyle = '#212529'
+        c.fillRect(gx - 2.5 * z, gy - 1 * z, 1.4 * z, 2 * z); c.fillRect(gx + 1 * z, gy - 1 * z, 1.4 * z, 2 * z)
+        c.fillRect(gx - 0.8 * z, gy + 2.5 * z, 1.6 * z, 1.6 * z)
+      }
+      c.strokeStyle = '#111'; c.lineWidth = Math.max(1, z)
+      for (let i = 0; i < 2; i++) {
+        const bx = p.x + ((now / 30 * z + i * 60 * z) % w)
+        const by = p.y + 12 * z + Math.sin(now / 200 + i * 3) * 4 * z
+        const flap = Math.sin(now / 60 + i) * 2 * z
+        c.beginPath(); c.moveTo(bx - 4 * z, by - flap); c.lineTo(bx, by); c.lineTo(bx + 4 * z, by - flap); c.stroke()
+      }
+      return
+    }
+    case 'pool': {
+      const x0 = p.x + 16 * z, x1 = p.x + w - 16 * z, wy = p.y + h - 14 * z
+      c.fillStyle = 'rgba(28,126,214,0.55)'
+      c.fillRect(x0, wy + 3 * z, x1 - x0, 8 * z)
+      c.fillStyle = 'rgba(255,255,255,0.7)'
+      for (let x = x0; x < x1; x += 10 * z) c.fillRect(x + ((now / 60) % 10) * z * 0.5, wy + 3 * z + Math.sin(now / 300 + x) * z, 4 * z, 0.8 * z)
+      const open = isOpen(g, f) || f.inside > 0
+      if (!open) return
+      for (let i = 0; i < Math.min(5, 2 + f.inside); i++) {
+        const sx = x0 + ((now / (40 + i * 13) * z + i * 40 * z) % (x1 - x0 - 4 * z))
+        const sy = wy + 3 * z + Math.sin(now / 250 + i) * 0.8 * z
+        c.fillStyle = '#f1c27d'; c.fillRect(sx, sy - 2 * z, 2.2 * z, 2.2 * z)
+        c.fillStyle = SHIRTS[i % SHIRTS.length]; c.fillRect(sx - 0.2 * z, sy - 2.6 * z, 2.6 * z, 0.8 * z)
+      }
+      // beach ball
+      const bx = x0 + (x1 - x0) * 0.5 + Math.sin(now / 1300) * 20 * z
+      const by = wy - Math.abs(Math.sin(now / 350)) * 9 * z
+      c.fillStyle = '#fff'; c.beginPath(); c.arc(bx, by, 2.5 * z, 0, Math.PI * 2); c.fill()
+      c.fillStyle = '#e03131'; c.beginPath(); c.arc(bx, by, 2.5 * z, 0, Math.PI / 1.5); c.lineTo(bx, by); c.fill()
+      c.fillStyle = '#1c7ed6'; c.beginPath(); c.arc(bx, by, 2.5 * z, Math.PI, Math.PI * 1.66); c.lineTo(bx, by); c.fill()
+      return
+    }
+    case 'park': {
+      if (m < 6 * 60 || m > 20 * 60) return
+      for (let i = 0; i < 2; i++) {
+        const bx = p.x + w * (0.3 + 0.4 * i) + Math.sin(now / 700 + i * 4) * 14 * z
+        const by = p.y + 12 * z + Math.sin(now / 330 + i) * 5 * z
+        const flap = Math.abs(Math.sin(now / 80 + i)) * 2 * z + 0.4 * z
+        c.fillStyle = i ? '#ffd43b' : '#f783ac'
+        c.fillRect(bx - flap, by - z, flap, 2 * z); c.fillRect(bx + 0.6 * z, by - z, flap, 2 * z)
+        c.fillStyle = '#212529'; c.fillRect(bx, by - z, 0.6 * z, 2 * z)
+      }
+      return
+    }
+  }
+}
+
+function fish(c: CanvasRenderingContext2D, x: number, y: number, s: number, dir: number, col: string) {
+  c.fillStyle = col
+  c.beginPath(); c.ellipse(x, y, s * 1.4, s * 0.8, 0, 0, Math.PI * 2); c.fill()
+  c.beginPath(); c.moveTo(x - dir * s * 1.2, y); c.lineTo(x - dir * s * 2.4, y - s * 0.9); c.lineTo(x - dir * s * 2.4, y + s * 0.9); c.fill()
+  c.fillStyle = '#111'
+  c.fillRect(x + dir * s * 0.6 - s * 0.2, y - s * 0.35, s * 0.4, s * 0.4)
+}
+
+function drawRocket(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: number, y: number) => Pt, z: number, now: number) {
+  const t = f.reachable ? launchClock(g) : -999
+  let lift = 0
+  let burn = false
+  if (t >= 0 && t < 60) { lift = (t / 60) ** 2 * 3200; burn = true }
+  else if (t >= 60 && t < 130) return
+  else if (t >= 130 && t < 150) { lift = ((150 - t) / 20) ** 2 * 1800; burn = true }
+  const baseW = S(f.x * T + ROCKET_X, floorTop(f.floor) + FH - 8 - lift)
+  const cx = baseW.x, yb = baseW.y
+  const u = z
+  // smoke at the pad during liftoff / countdown
+  const pad = S(f.x * T + ROCKET_X, floorTop(f.floor) + FH - 8)
+  if ((t > -15 && t < 20) || (t >= 130 && t < 160)) {
+    const k = t < 0 ? (t + 15) / 15 : t < 20 ? 1 - t / 20 : t < 150 ? 1 : 1 - (t - 150) / 10
+    c.fillStyle = `rgba(230,230,235,${0.75 * k})`
+    for (let i = 0; i < 7; i++) {
+      const sx = pad.x + (i - 3) * 9 * u + Math.sin(now / 300 + i) * 2 * u
+      c.beginPath(); c.arc(sx, pad.y - 3 * u, (5 + (i % 3) * 2 + (t > 0 && t < 20 ? 4 : 0)) * u, 0, Math.PI * 2); c.fill()
+    }
+  }
+  if (burn) {
+    const fl = (14 + Math.sin(now / 40) * 4) * u
+    c.fillStyle = '#ff922b'
+    c.beginPath(); c.moveTo(cx - 5 * u, yb); c.lineTo(cx, yb + fl); c.lineTo(cx + 5 * u, yb); c.fill()
+    c.fillStyle = '#ffe066'
+    c.beginPath(); c.moveTo(cx - 3 * u, yb); c.lineTo(cx, yb + fl * 0.6); c.lineTo(cx + 3 * u, yb); c.fill()
+    if (t < 60) {
+      c.fillStyle = 'rgba(220,220,225,0.5)'
+      for (let i = 1; i < 10; i++) { c.beginPath(); c.arc(cx + Math.sin(i * 3 + now / 500) * 3 * u, yb + fl + i * 14 * u, (3 + i) * u, 0, Math.PI * 2); c.fill() }
+    }
+  }
+  // body
+  c.fillStyle = '#c92a2a'
+  c.beginPath(); c.moveTo(cx - 6 * u, yb); c.lineTo(cx - 11 * u, yb + 1 * u); c.lineTo(cx - 6 * u, yb - 12 * u); c.fill()
+  c.beginPath(); c.moveTo(cx + 6 * u, yb); c.lineTo(cx + 11 * u, yb + 1 * u); c.lineTo(cx + 6 * u, yb - 12 * u); c.fill()
+  c.fillStyle = '#f8f9fa'
+  c.fillRect(cx - 6 * u, yb - 40 * u, 12 * u, 40 * u)
+  c.fillStyle = '#dee2e6'
+  c.fillRect(cx + 3 * u, yb - 40 * u, 3 * u, 40 * u)
+  c.fillStyle = '#c92a2a'
+  c.beginPath(); c.moveTo(cx - 6 * u, yb - 40 * u); c.quadraticCurveTo(cx, yb - 58 * u, cx + 6 * u, yb - 40 * u); c.fill()
+  c.fillRect(cx - 6 * u, yb - 14 * u, 12 * u, 2 * u)
+  c.fillStyle = '#1864ab'; c.beginPath(); c.arc(cx, yb - 30 * u, 3.2 * u, 0, Math.PI * 2); c.fill()
+  c.fillStyle = '#a5d8ff'; c.beginPath(); c.arc(cx, yb - 30 * u, 2.2 * u, 0, Math.PI * 2); c.fill()
+  c.fillStyle = '#495057'; c.fillRect(cx - 4 * u, yb, 8 * u, 2 * u)
+}
+
+function drawUfo(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: number) => Pt, z: number, now: number) {
+  if (g.flags.ufoDay !== dayOf(g.time)) return
+  const t = minuteOfDay(g.time) - 22 * 60
+  if (t < 0 || t >= 60) return
+  const roof = floorTop(topFloor(g))
+  let dx = 0, dy = 0
+  if (t < 8) dx = ((8 - t) / 8) ** 2 * 1600
+  if (t > 52) { dy = -(((t - 52) / 8) ** 2) * 1600; dx = -((t - 52) / 8) * 300 }
+  const hover = Math.sin(now / 400) * 3
+  const p = S(ufoX(g) * T + dx, roof - 70 + dy + hover)
+  const u = z
+  const beaming = t >= 10 && t < 50
+  if (beaming) {
+    const roofP = S(ufoX(g) * T, roof)
+    const grd = c.createLinearGradient(0, p.y, 0, roofP.y)
+    grd.addColorStop(0, 'rgba(180,255,170,0.55)'); grd.addColorStop(1, 'rgba(180,255,170,0.12)')
+    c.fillStyle = grd
+    c.beginPath(); c.moveTo(p.x - 8 * u, p.y + 4 * u); c.lineTo(p.x + 8 * u, p.y + 4 * u); c.lineTo(p.x + 26 * u, roofP.y); c.lineTo(p.x - 26 * u, roofP.y); c.fill()
+    // a very surprised cow floats up the beam
+    const k = Math.min(1, Math.max(0, (t - 14) / 30))
+    if (k < 1) {
+      const cy = roofP.y - 4 * u - k * (roofP.y - p.y - 8 * u)
+      const spin = Math.sin(now / 300) * 0.4
+      c.save(); c.translate(p.x, cy); c.rotate(spin)
+      c.fillStyle = '#fff'; c.fillRect(-6 * u, -4 * u, 12 * u, 6 * u)
+      c.fillStyle = '#212529'; c.fillRect(-4 * u, -4 * u, 3 * u, 3 * u); c.fillRect(2 * u, -1 * u, 3 * u, 3 * u)
+      c.fillStyle = '#fff'; c.fillRect(5 * u, -7 * u, 4 * u, 4 * u)
+      c.fillStyle = '#ffc9c9'; c.fillRect(7 * u, -5 * u, 2 * u, 2 * u)
+      c.fillStyle = '#212529'
+      for (const lx of [-5, -2, 2, 4]) c.fillRect(lx * u, 2 * u, 1.2 * u, 3 * u)
+      c.restore()
+    }
+  }
+  // saucer
+  c.fillStyle = 'rgba(165,216,255,0.85)'
+  c.beginPath(); c.ellipse(p.x, p.y - 4 * u, 9 * u, 8 * u, 0, Math.PI, 0); c.fill()
+  c.fillStyle = '#69db7c'; c.fillRect(p.x - 2 * u, p.y - 9 * u, 4 * u, 4 * u)
+  c.fillStyle = '#111'; c.fillRect(p.x - 1.4 * u, p.y - 8 * u, 1 * u, 1.2 * u); c.fillRect(p.x + 0.4 * u, p.y - 8 * u, 1 * u, 1.2 * u)
+  c.fillStyle = '#adb5bd'
+  c.beginPath(); c.ellipse(p.x, p.y, 22 * u, 6 * u, 0, 0, Math.PI * 2); c.fill()
+  c.fillStyle = '#868e96'
+  c.beginPath(); c.ellipse(p.x, p.y + 2 * u, 14 * u, 3 * u, 0, 0, Math.PI * 2); c.fill()
+  for (let i = 0; i < 6; i++) {
+    c.fillStyle = Math.floor(now / 150 + i) % 3 === 0 ? '#ffd43b' : i % 2 ? '#ff6b6b' : '#74c0fc'
+    c.fillRect(p.x + (-17 + i * 6.6) * u, p.y - 1 * u, 2.4 * u, 2.4 * u)
+  }
+}
+
+let signCache: { key: string; at: { floor: number; x: number } | null } = { key: '', at: null }
+
+/** The player's tower name on a little billboard on the highest roof that has room. */
+function drawTowerSign(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: number) => Pt, z: number, night: number) {
+  const name = (g.name ?? '').trim()
+  if (!name || g.floors.size === 0) return
+  const textW = name.length * 6.2 + 12
+  const tiles = Math.ceil(textW / T) + 2
+  const key = `${g.buildVersion}|${name}`
+  if (signCache.key !== key) {
+    signCache = { key, at: null }
+    const floors = [...g.floors.keys()].filter((f) => f >= 0).sort((a, b) => b - a)
+    search: for (const f of floors) {
+      const row = g.floors.get(f)!
+      const above = g.floors.get(f + 1)
+      let run = 0
+      for (let i = 0; i < TOWER_WIDTH; i++) {
+        const v = row[i]
+        const k = v > 0 ? g.facilities.get(v)?.kind : undefined
+        const ok = v !== -1 && (!above || above[i] === -1) && k !== 'rocketPad' && k !== 'cathedral'
+        run = ok ? run + 1 : 0
+        if (run >= tiles) { signCache.at = { floor: f, x: i - run + 1 }; break search }
+      }
+    }
+  }
+  const at = signCache.at
+  if (!at) return
+  const left = S((at.x + 1) * T, floorTop(at.floor) - 3)
+  const bw = textW * z, bh = 13 * z
+  const top = left.y - 8 * z - bh
+  c.fillStyle = '#343a40'
+  c.fillRect(left.x + 4 * z, top + bh, 2 * z, 8 * z)
+  c.fillRect(left.x + bw - 6 * z, top + bh, 2 * z, 8 * z)
+  c.fillStyle = '#1b1033'
+  c.fillRect(left.x, top, bw, bh)
+  c.strokeStyle = '#ffd43b'; c.lineWidth = Math.max(1, z)
+  c.strokeRect(left.x, top, bw, bh)
+  c.font = `900 ${Math.round(9 * z)}px "Nunito", sans-serif`
+  c.textAlign = 'center'
+  if (night > 0.3) { c.shadowColor = '#f783ac'; c.shadowBlur = 10 * z }
+  c.fillStyle = night > 0.3 ? '#ffdeeb' : '#ffd43b'
+  c.fillText(name, left.x + bw / 2, top + bh - 3.5 * z)
+  c.shadowBlur = 0
+  c.textAlign = 'left'
+}
+
+function drawBlimp(c: CanvasRenderingContext2D, W: number, H: number, g: Game, now: number, night: number) {
+  if (night > 0.5) return
+  const cycle = (now / 1000) % 75
+  if (cycle > 40) return
+  const k = cycle / 40
+  const raw = ((g.name ?? '').trim() || 'SKY TOWER').toUpperCase()
+  const text = raw.length > 18 ? raw.slice(0, 17) + '…' : raw
+  c.font = '900 13px "Nunito", sans-serif'
+  const rx = Math.max(70, c.measureText(text).width / 2 + 26)
+  const x = W + 160 - k * (W + 420)
+  const y = H * 0.13 + Math.sin(now / 1500) * 6
+  c.fillStyle = '#ced4da'
+  c.beginPath(); c.ellipse(x, y, rx, 20, 0, 0, Math.PI * 2); c.fill()
+  c.fillStyle = '#e9ecef'
+  c.beginPath(); c.ellipse(x - 6, y - 6, rx - 12, 9, 0, 0, Math.PI * 2); c.fill()
+  c.fillStyle = '#c92a2a'
+  c.beginPath(); c.moveTo(x + rx - 12, y - 4); c.lineTo(x + rx + 12, y - 20); c.lineTo(x + rx + 10, y - 2); c.fill()
+  c.beginPath(); c.moveTo(x + rx - 12, y + 4); c.lineTo(x + rx + 12, y + 20); c.lineTo(x + rx + 10, y + 2); c.fill()
+  c.fillStyle = '#495057'; c.fillRect(x - 12, y + 18, 24, 7)
+  c.fillStyle = '#a5d8ff'; for (let i = 0; i < 4; i++) c.fillRect(x - 10 + i * 6, y + 20, 3, 3)
+  c.textAlign = 'center'
+  c.fillStyle = '#c92a2a'
+  c.fillText(text, x - 4, y + 5)
+  c.textAlign = 'left'
+}
+
+const BALLOONS = [
+  { seed: 0.1, y: 0.2, s: 1, cols: ['#ff6b6b', '#ffd43b'] },
+  { seed: 0.55, y: 0.32, s: 0.7, cols: ['#4dabf7', '#fff'] },
+  { seed: 0.8, y: 0.12, s: 0.55, cols: ['#69db7c', '#da77f2'] },
+]
+function drawBalloons(c: CanvasRenderingContext2D, W: number, H: number, now: number, night: number) {
+  if (night > 0.6) return
+  for (const b of BALLOONS) {
+    const x = ((b.seed * (W + 200) + now * 0.006 * b.s) % (W + 200)) - 100
+    const y = H * b.y + Math.sin(now / 2000 + b.seed * 10) * 10
+    const r = 16 * b.s
+    for (let i = 0; i < 4; i++) {
+      c.fillStyle = b.cols[i % 2]
+      c.beginPath(); c.ellipse(x, y, r * (1 - i * 0.25), r * 1.15, 0, 0, Math.PI * 2); c.fill()
+    }
+    c.strokeStyle = '#5c4632'; c.lineWidth = 1
+    c.beginPath(); c.moveTo(x - r * 0.6, y + r); c.lineTo(x - r * 0.3, y + r * 1.6); c.moveTo(x + r * 0.6, y + r); c.lineTo(x + r * 0.3, y + r * 1.6); c.stroke()
+    c.fillStyle = '#8b5a2b'; c.fillRect(x - r * 0.3, y + r * 1.6, r * 0.6, r * 0.45)
+  }
 }
