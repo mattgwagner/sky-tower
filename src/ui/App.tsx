@@ -11,6 +11,7 @@ import { totalWaiting } from '../game/elevators'
 import { Controller } from './controller'
 import { personDoing, personName, personRole, personThought, petLine } from '../game/people-info'
 import type { Speed, TowerSummary } from './controller'
+import { makePostcard, savePostcard } from './postcard'
 
 function ago(t: number) {
   const m = Math.round((Date.now() - t) / 60000)
@@ -25,8 +26,8 @@ function ago(t: number) {
 const ctl = new Controller()
 ;(window as unknown as { skytower: Controller }).skytower = ctl
 if (import.meta.env.DEV) {
-  void Promise.all([import('../game/world'), import('../game/sim')]).then(([world, sim]) => {
-    ;(window as unknown as { api: unknown }).api = { ...world, ...sim }
+  void Promise.all([import('../game/world'), import('../game/sim'), import('../render/sky-fx')]).then(([world, sim, sky]) => {
+    ;(window as unknown as { api: unknown }).api = { ...world, ...sim, ...sky }
   })
 }
 
@@ -154,7 +155,8 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
     return true
   })
   const [menu, setMenu] = useState(false)
-  const [cat, setCat] = useState<Category>(ctl.tool === 'lobby' ? 'basics' : 'homes')
+  const [postcard, setPostcard] = useState<HTMLCanvasElement | null>(null)
+  const [cat, setCat] = useState<Category>(ctl.tool === 'lobby' ? 'build' : 'homes')
   const [celebrate, setCelebrate] = useState(0)
   const g = ctl.g
 
@@ -226,11 +228,12 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
   useEffect(() => { if (bombOpen) ctl.speed = 0 }, [bombOpen])
 
   const sel = ctl.selected ? g.facilities.get(ctl.selected) ?? g.shafts.get(ctl.selected) : undefined
+  const snap = () => { play('shutter'); setMenu(false); setPostcard(makePostcard(g)) }
 
   return (
     <div className="game">
       <canvas ref={canvasRef} className={`view tool-${ctl.tool}`} />
-      <TopBar onHelp={() => setHelp(true)} onMenu={() => setMenu(true)} />
+      <TopBar onHelp={() => setHelp(true)} onMenu={() => setMenu(true)} onSnap={snap} />
       <Palette cat={cat} setCat={setCat} />
       <Goals />
       <News />
@@ -261,6 +264,16 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
         <div className="bomb-timer">💣 {Math.max(0, Math.round((g.bomb.deadline - g.time) / 60 * 10) / 10)}h left · searched {g.bomb.searched.length}/{g.floors.size} floors</div>
       )}
       {celebrate > 0 && <Celebrate stars={celebrate} />}
+      {postcard && (
+        <Modal onClose={() => setPostcard(null)}>
+          <h2>📸 Postcard</h2>
+          <img className="postcard" src={postcard.toDataURL('image/png')} alt={`Postcard of ${g.name ?? 'my tower'}`} />
+          <div className="row">
+            <button className="primary" onClick={() => { void savePostcard(g, postcard).then((how) => { setToast({ text: how === 'shared' ? '📤 Sent!' : '💾 Saved to your downloads!', id: Date.now() }); setPostcard(null) }) }}>💾 Save picture</button>
+            <button onClick={() => setPostcard(null)}>Close</button>
+          </div>
+        </Modal>
+      )}
       {help && <Help onClose={() => setHelp(false)} />}
       {menu && (
         <Modal onClose={() => setMenu(false)}>
@@ -270,6 +283,7 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
               <span>🏷️ Tower name</span>
               <input value={g.name ?? ''} maxLength={28} placeholder="The Mega Tower" onChange={(e) => { g.name = e.target.value; ctl.emit() }} />
             </label>
+            <button onClick={snap}>📸 Postcard of my tower</button>
             <button onClick={() => { const ok = ctl.save(); setMenu(false); setToast({ text: ok ? `💾 Saved “${g.name}”!` : '⚠️ Couldn\'t save. Try deleting an old tower.', id: Date.now() }) }}>💾 Save now</button>
             <button onClick={() => { ctl.toggleMusic() }}>{audioPrefs.music ? '🎵 Music: on' : '🎵 Music: off'}</button>
             <button onClick={() => { ctl.toggleSfx() }}>{audioPrefs.sfx ? '🔊 Sounds: on' : '🔇 Sounds: off'}</button>
@@ -295,7 +309,7 @@ function Stars({ n }: { n: number }) {
   return <span className="stars">{'★'.repeat(n)}<span className="dim">{'★'.repeat(5 - n)}</span></span>
 }
 
-function TopBar({ onHelp, onMenu }: { onHelp: () => void; onMenu: () => void }) {
+function TopBar({ onHelp, onMenu, onSnap }: { onHelp: () => void; onMenu: () => void; onSnap: () => void }) {
   const g = ctl.g
   const m = minuteOfDay(g.time)
   const night = m < 6 * 60 || m >= 19 * 60
@@ -324,23 +338,12 @@ function TopBar({ onHelp, onMenu }: { onHelp: () => void; onMenu: () => void }) 
       </div>
       <div className="spacer" />
       <button className={`icon ${ctl.ov.moodView ? 'on' : ''}`} title="Happiness view (M)" onClick={() => { ctl.ov.moodView = !ctl.ov.moodView; ctl.emit() }}>😊</button>
+      <button className="icon" title="Postcard of my tower" onClick={onSnap}>📸</button>
       <button className="icon" title={audioPrefs.music ? 'Music on' : 'Music off'} onClick={() => ctl.toggleMusic()}>{audioPrefs.music ? '🎵' : '🎶'}</button>
       <button className="icon" title="How to play" onClick={onHelp}>❓</button>
       <button className="icon" title="Menu" onClick={onMenu}>☰</button>
     </div>
   )
-}
-
-const TOOL_LIST: Record<Category, ToolId[]> = {
-  basics: ['lobby', 'floor'],
-  move: ['stairs', 'elevator', 'escalator', 'expressElevator', 'serviceElevator'],
-  homes: ['office', 'condo'],
-  hotel: ['hotelSingle', 'hotelTwin', 'hotelSuite', 'housekeeping'],
-  shops: ['shop', 'bookstore', 'library', 'cinema', 'partyHall'],
-  play: ['trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink'],
-  food: ['fastFood', 'donuts', 'pancakes', 'tacos', 'pizza', 'candy', 'restaurant', 'sushi'],
-  services: ['security', 'medical', 'recycling', 'parking', 'metro', 'cathedral'],
-  fun: ['iceCream', 'park', 'arcade', 'pool', 'aquarium', 'hauntedHouse', 'dinoMuseum', 'rocketPad'],
 }
 
 function toolInfo(t: ToolId) {
@@ -349,39 +352,89 @@ function toolInfo(t: ToolId) {
   return { name: d.name, emoji: d.emoji, cost: d.cost, stars: d.stars, blurb: d.blurb, per: '+' }
 }
 
+const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
+  build: [
+    { label: 'Floors', tools: ['lobby', 'floor'] },
+    { label: 'Getting around', tools: ['elevator', 'stairs', 'escalator', 'expressElevator', 'serviceElevator'] },
+  ],
+  homes: [{ tools: ['office', 'condo'] }],
+  hotel: [
+    { label: 'Rooms', tools: ['hotelSingle', 'hotelTwin', 'hotelSuite'] },
+    { label: 'Staff', tools: ['housekeeping'] },
+  ],
+  food: [
+    { label: 'Breakfast & treats', tools: ['donuts', 'pancakes', 'iceCream', 'candy'] },
+    { label: 'Lunch & dinner', tools: ['fastFood', 'tacos', 'pizza', 'restaurant', 'sushi'] },
+  ],
+  shops: [
+    { label: 'Stores', tools: ['shop', 'bookstore', 'library'] },
+    { label: 'Shows', tools: ['cinema', 'partyHall'] },
+  ],
+  fun: [
+    { label: 'Chill out', tools: ['park', 'arcade', 'pool', 'aquarium'] },
+    { label: 'Get moving', tools: ['trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink'] },
+    { label: 'Wow!', tools: ['hauntedHouse', 'dinoMuseum', 'rocketPad'] },
+  ],
+  services: [
+    { label: 'Keep it safe', tools: ['security', 'medical'] },
+    { label: 'Keep it running', tools: ['recycling', 'parking', 'metro'] },
+    { label: 'The very top', tools: ['cathedral'] },
+  ],
+}
+
 function Palette({ cat, setCat }: { cat: Category; setCat: (c: Category) => void }) {
   const [hoverTool, setHoverTool] = useState<ToolId | null>(null)
   const g = ctl.g
   const info = hoverTool ? toolInfo(hoverTool) : ctl.tool !== 'inspect' && ctl.tool !== 'bulldoze' ? toolInfo(ctl.tool) : null
+  const current = CATEGORIES.find((c) => c.id === cat)!
+  const groups = TOOL_GROUPS[cat]
+  const lockedCount = (id: Category) => TOOL_GROUPS[id].flatMap((grp) => grp.tools).filter((t) => !unlocked(g, toolInfo(t).stars)).length
   return (
     <div className="palette">
       <div className="tools-top">
-        <button className={`tool-btn small ${ctl.tool === 'inspect' ? 'on' : ''}`} onClick={() => ctl.setTool('inspect')} title="Look & select (Esc)">👆<span>Look</span></button>
+        <button className={`tool-btn small ${ctl.tool === 'inspect' ? 'on' : ''}`} onClick={() => ctl.setTool('inspect')} title="Look, poke & select (Esc)">👆<span>Look</span></button>
         <button className={`tool-btn small ${ctl.tool === 'bulldoze' ? 'on danger' : ''}`} onClick={() => ctl.setTool('bulldoze')} title="Demolish (B)">💥<span>Demolish</span></button>
       </div>
-      <div className="cats">
-        {CATEGORIES.map((c) => (
-          <button key={c.id} className={`cat ${c.id} ${cat === c.id ? 'on' : ''}`} onClick={() => { setCat(c.id); play('click') }} title={c.name}>
-            <span>{c.emoji}</span><small>{c.name}</small>
-          </button>
-        ))}
-      </div>
-      <div className="tool-list">
-        {TOOL_LIST[cat].map((t) => {
-          const i = toolInfo(t)
-          const locked = !unlocked(g, i.stars)
+      <div className="cats" role="tablist" aria-label="What to build">
+        {CATEGORIES.map((c) => {
+          const n = TOOL_GROUPS[c.id].reduce((a, grp) => a + grp.tools.length, 0)
+          const locked = lockedCount(c.id)
           return (
-            <button key={t} className={`tool ${ctl.tool === t ? 'on' : ''} ${locked ? 'locked' : ''}`} disabled={locked}
-              onMouseEnter={() => setHoverTool(t)} onMouseLeave={() => setHoverTool(null)}
-              onClick={() => ctl.setTool(t)}>
-              <span className="tool-emoji">{locked ? '🔒' : i.emoji}</span>
-              <span className="tool-name">{i.name}</span>
-              <span className="tool-cost">{locked ? `${i.stars}★` : `${money(i.cost)}${i.per === '/tile' ? '/tile' : ''}`}</span>
+            <button key={c.id} role="tab" aria-selected={cat === c.id} className={`cat ${c.id} ${cat === c.id ? 'on' : ''}`} onClick={() => { setCat(c.id); play('click') }} title={c.blurb}>
+              <span className="cat-emoji">{c.emoji}</span>
+              <span className="cat-name">{c.name}</span>
+              <small>{locked ? `${n - locked} of ${n}` : n} {n === 1 ? 'thing' : 'things'}</small>
             </button>
           )
         })}
       </div>
-      {info && <div className="tool-tip"><b>{info.emoji} {info.name}</b><p>{info.blurb}</p></div>}
+      <div className="tool-pane">
+        <div className="cat-head">
+          <b>{current.emoji} {current.name}</b>
+          <p>{current.blurb}</p>
+        </div>
+        {groups.map((grp, gi) => (
+          <div key={gi} className="tool-group">
+            {grp.label && <div className="group-label">{grp.label}</div>}
+            <div className="tool-list">
+              {grp.tools.map((t) => {
+                const i = toolInfo(t)
+                const locked = !unlocked(g, i.stars)
+                return (
+                  <button key={t} className={`tool ${ctl.tool === t ? 'on' : ''} ${locked ? 'locked' : ''}`} disabled={locked}
+                    onMouseEnter={() => setHoverTool(t)} onMouseLeave={() => setHoverTool(null)}
+                    onClick={() => ctl.setTool(t)}>
+                    <span className="tool-emoji">{locked ? '🔒' : i.emoji}</span>
+                    <span className="tool-name">{i.name}</span>
+                    <span className="tool-cost">{locked ? `Unlocks at ${i.stars}★` : `${money(i.cost)}${i.per === '/tile' ? '/tile' : ''}`}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+        {info && <div className="tool-tip"><b>{info.emoji} {info.name}</b><p>{info.blurb}</p></div>}
+      </div>
     </div>
   )
 }
@@ -418,7 +471,7 @@ function Hint() {
   else if ([...g.facilities.values()].some((f) => !f.reachable && f.kind !== 'parking' && f.kind !== 'lobby')) hint = 'Rooms flashing 🚫 can\'t be reached. Connect them with an elevator or stairs.'
   else if (![...g.facilities.values()].some((f) => FACILITIES[f.kind].category === 'food')) hint = 'Office workers need lunch! Pick 🍕 Food and build a place to eat.'
   else if ([...g.shafts.values()].some((s) => totalWaiting(s) > 25)) hint = 'Long lines! Click an elevator and add more cars.'
-  else if (![...g.facilities.values()].some((f) => FACILITIES[f.kind].category === 'fun')) hint = 'Try the 🎪 Fun Zone: ice cream, an aquarium with a shark, even a rocket!'
+  else if (![...g.facilities.values()].some((f) => FACILITIES[f.kind].category === 'fun')) hint = 'Try the 🎪 Fun tab: a trampoline park, an aquarium with a shark, even a rocket!'
   if (!hint) return null
   return <div className="hint">💡 {hint}</div>
 }
@@ -593,7 +646,8 @@ function Help({ onClose }: { onClose: () => void }) {
         <p><b>5. Food & fun.</b> Workers want lunch 🍔 and families love breakfast 🥞. Find them all in the 🍕 Food tab. Visitors come for restaurants, shops, and movies. More people means more customers.</p>
         <p><b>6. Hotels.</b> Guests check in at night and leave in the morning. Housekeeping 🧹 cleans rooms. Skip cleaning and you'll get cockroaches 🪳!</p>
         <p><b>7. Go higher.</b> Put sky lobbies on floors 15, 30, 45… then use ⚡ Express elevators to zip between them.</p>
-        <p><b>8. Fun Zone 🎪.</b> Ice cream, arcades, a pool, an aquarium with a shark, a haunted house and a dino museum. Put a 🚀 Rocket Pad on a roof and watch it blast off at noon! Name your tower in the ☰ menu.</p>
+        <p><b>👆 Poke things!</b> In Look mode, tap any room to see what it does. The T-Rex roars, the shark splashes, the ghosts say boo. Press 📸 to make a postcard of your tower.</p>
+        <p><b>8. Fun 🎪.</b> A trampoline park, bowling, a pool, an aquarium with a shark, a haunted house and a dino museum. Put a 🚀 Rocket Pad on a roof and watch it blast off at noon! Name your tower in the ☰ menu.</p>
         <p><b>9. Stars.</b> Hit the population goal and build what the goal card asks for. Each star unlocks new buildings. The Cathedral on top earns the TOWER rating.</p>
         <p className="keys">Controls: drag to move around · scroll or pinch to zoom · Space pause · 1–4 speed · B demolish · Esc stop building · M happiness view</p>
       </div>

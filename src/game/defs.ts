@@ -61,7 +61,7 @@ export type TransportKind = 'elevator' | 'serviceElevator' | 'expressElevator'
 
 export type ToolId = FacilityKind | TransportKind | 'bulldoze' | 'inspect'
 
-export type Category = 'basics' | 'homes' | 'hotel' | 'shops' | 'services' | 'move' | 'food' | 'play' | 'fun'
+export type Category = 'build' | 'homes' | 'hotel' | 'food' | 'shops' | 'fun' | 'services'
 
 export interface FacilityDef {
   kind: FacilityKind
@@ -81,9 +81,9 @@ export interface FacilityDef {
 }
 
 export const FACILITIES: Record<FacilityKind, FacilityDef> = {
-  lobby: { kind: 'lobby', name: 'Lobby', emoji: '🚪', category: 'basics', width: 1, height: 1, cost: 2000, stars: 1, pop: 0, drag: true,
+  lobby: { kind: 'lobby', name: 'Lobby', emoji: '🚪', category: 'build', width: 1, height: 1, cost: 2000, stars: 1, pop: 0, drag: true,
     blurb: 'Everyone enters here. Ground floor first! Sky lobbies go on floors 15, 30, 45…' },
-  floor: { kind: 'floor', name: 'Floor', emoji: '⬜', category: 'basics', width: 1, height: 1, cost: FLOOR_COST, stars: 1, pop: 0, drag: true,
+  floor: { kind: 'floor', name: 'Floor', emoji: '⬜', category: 'build', width: 1, height: 1, cost: FLOOR_COST, stars: 1, pop: 0, drag: true,
     blurb: 'Empty floor space. Facilities add their own floor automatically.' },
   office: { kind: 'office', name: 'Office', emoji: '💼', category: 'homes', width: 9, height: 1, cost: 40000, stars: 1, pop: 6,
     blurb: '6 workers. Pays rent every quarter. Workers need lunch nearby.' },
@@ -119,11 +119,11 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'Brings crowds of visitors. Needed for 5★.' },
   cathedral: { kind: 'cathedral', name: 'Cathedral', emoji: '⛪', category: 'services', width: 40, height: 5, cost: 3000000, stars: 5, pop: 20,
     blurb: 'Build it on the very top (floors 96-100) to earn TOWER rating!' },
-  stairs: { kind: 'stairs', name: 'Stairs', emoji: '🪜', category: 'move', width: 8, height: 1, cost: 5000, stars: 1, pop: 0,
+  stairs: { kind: 'stairs', name: 'Stairs', emoji: '🪜', category: 'build', width: 8, height: 1, cost: 5000, stars: 1, pop: 0,
     blurb: 'Connects this floor to the one above. People only climb a few floors.' },
-  escalator: { kind: 'escalator', name: 'Escalator', emoji: '↗️', category: 'move', width: 8, height: 1, cost: 20000, stars: 3, pop: 0,
+  escalator: { kind: 'escalator', name: 'Escalator', emoji: '↗️', category: 'build', width: 8, height: 1, cost: 20000, stars: 3, pop: 0,
     blurb: 'Faster than stairs. Shoppers love them.' },
-  iceCream: { kind: 'iceCream', name: 'Ice Cream Shop', emoji: '🍦', category: 'fun', width: 10, height: 1, cost: 60000, stars: 1, pop: 3,
+  iceCream: { kind: 'iceCream', name: 'Ice Cream Shop', emoji: '🍦', category: 'food', width: 10, height: 1, cost: 60000, stars: 1, pop: 3,
     blurb: 'Sprinkles! Kids and families line up on sunny afternoons.' },
   park: { kind: 'park', name: 'Sky Park', emoji: '🌳', category: 'fun', width: 12, height: 1, cost: 30000, stars: 1, pop: 0, upkeep: 2000,
     blurb: 'Trees, flowers and butterflies. Makes rooms on the same floor happier.' },
@@ -151,15 +151,15 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'Lollipops and jars of sweets. Busy on weekends.' },
   sushi: { kind: 'sushi', name: 'Sushi Bar', emoji: '🍣', category: 'food', width: 18, height: 1, cost: 150000, stars: 2, pop: 6,
     blurb: 'Plates ride around on a conveyor belt. Fancy lunch and dinner.' },
-  trampoline: { kind: 'trampoline', name: 'Trampoline Park', emoji: '🤸', category: 'play', width: 20, height: 2, cost: 200000, stars: 1, pop: 10,
+  trampoline: { kind: 'trampoline', name: 'Trampoline Park', emoji: '🤸', category: 'fun', width: 20, height: 2, cost: 200000, stars: 1, pop: 10,
     blurb: 'Two floors tall so everyone can bounce SUPER high. Plus a foam pit!' },
-  climbing: { kind: 'climbing', name: 'Climbing Wall', emoji: '🧗', category: 'play', width: 12, height: 3, cost: 180000, stars: 1, pop: 6,
+  climbing: { kind: 'climbing', name: 'Climbing Wall', emoji: '🧗', category: 'fun', width: 12, height: 3, cost: 180000, stars: 1, pop: 6,
     blurb: 'Three floors of climbing. Ring the bell at the top!' },
-  miniGolf: { kind: 'miniGolf', name: 'Mini Golf', emoji: '⛳', category: 'play', width: 20, height: 1, cost: 120000, stars: 1, pop: 6,
+  miniGolf: { kind: 'miniGolf', name: 'Mini Golf', emoji: '⛳', category: 'fun', width: 20, height: 1, cost: 120000, stars: 1, pop: 6,
     blurb: 'Putt through the spinning windmill for a hole-in-one.' },
-  bowling: { kind: 'bowling', name: 'Bowling Alley', emoji: '🎳', category: 'play', width: 28, height: 1, cost: 250000, stars: 2, pop: 10,
+  bowling: { kind: 'bowling', name: 'Bowling Alley', emoji: '🎳', category: 'fun', width: 28, height: 1, cost: 250000, stars: 2, pop: 10,
     blurb: 'STRIKE! Busy in the evenings. A little noisy.' },
-  rollerRink: { kind: 'rollerRink', name: 'Roller Rink', emoji: '🛼', category: 'play', width: 24, height: 1, cost: 200000, stars: 2, pop: 10,
+  rollerRink: { kind: 'rollerRink', name: 'Roller Rink', emoji: '🛼', category: 'fun', width: 24, height: 1, cost: 200000, stars: 2, pop: 10,
     blurb: 'Disco lights and skaters zooming around in circles.' },
   bookstore: { kind: 'bookstore', name: 'Bookstore', emoji: '📚', category: 'shops', width: 14, height: 1, cost: 90000, stars: 1, pop: 4,
     blurb: 'Comics, mysteries and dragon books. There\'s a shop cat!' },
@@ -192,16 +192,14 @@ export const TRANSPORTS: Record<TransportKind, TransportDef> = {
     blurb: 'Zooms between lobbies (0, 15, 30…) and basements only.' },
 }
 
-export const CATEGORIES: { id: Category; name: string; emoji: string }[] = [
-  { id: 'basics', name: 'Basics', emoji: '🏗️' },
-  { id: 'move', name: 'Get Around', emoji: '🛗' },
-  { id: 'homes', name: 'Work & Live', emoji: '🏢' },
-  { id: 'hotel', name: 'Hotel', emoji: '🛎️' },
-  { id: 'shops', name: 'Shops & Shows', emoji: '🛍️' },
-  { id: 'services', name: 'Services', emoji: '🏥' },
-  { id: 'food', name: 'Food', emoji: '🍕' },
-  { id: 'play', name: 'Play', emoji: '🤸' },
-  { id: 'fun', name: 'Fun Zone', emoji: '🎪' },
+export const CATEGORIES: { id: Category; name: string; emoji: string; blurb: string }[] = [
+  { id: 'build', name: 'Build', emoji: '🏗️', blurb: 'Floors, lobbies, stairs and elevators. Every tower starts here.' },
+  { id: 'homes', name: 'Work & Live', emoji: '🏢', blurb: 'Offices pay rent. Condos sell to families. Both count as people.' },
+  { id: 'hotel', name: 'Hotel', emoji: '🛎️', blurb: 'Guests sleep over and pay each night. Housekeeping keeps rooms clean.' },
+  { id: 'food', name: 'Food', emoji: '🍕', blurb: 'Breakfast, lunch, dinner and treats. Workers need lunch nearby.' },
+  { id: 'shops', name: 'Shops', emoji: '🛍️', blurb: 'Stores, books, movies and parties. Visitors come to spend.' },
+  { id: 'fun', name: 'Fun', emoji: '🎪', blurb: 'Splash, bounce, roar and blast off. Visitors love it.' },
+  { id: 'services', name: 'Services', emoji: '🏥', blurb: 'What a big tower needs to earn more stars.' },
 ]
 
 export type Mode = 'family' | 'classic' | 'sandbox'

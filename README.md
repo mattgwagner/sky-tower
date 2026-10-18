@@ -20,26 +20,47 @@ Production build: `npm run build && npm run preview`. The build in `dist/` is a 
 
 Optional starter tower and disasters (fires, bomb threats) are chosen on the title screen.
 
-## Food, Play and Books
+## What you can build
 
-- 🍕 **Food**: Fast Food, Donut Shop and Pancake House (breakfast), Taco Stand, Pizza Place, Candy Shop, Restaurant,
-  Sushi Bar. Workers grab lunch and mid-morning snacks, families eat breakfast and dinner, and hotel guests eat
-  breakfast before checkout.
-- 🤸 **Play**: Trampoline Park, Climbing Wall, Mini Golf, Bowling Alley, Roller Rink.
-- 🛍️ **Shops & Shows** adds a Bookstore and a Library. The Library is quiet, so it doesn't count as noisy next to homes.
+The palette on the left has seven tabs. Each tab shows a one-line blurb and groups its things under small headings.
+
+- 🏗️ **Build**: lobbies and floors, then elevators, stairs, escalators, express and service elevators.
+- 🏢 **Work & Live**: offices (rent every quarter) and condos (sold to a family).
+- 🛎️ **Hotel**: single, twin and suite rooms, plus housekeeping.
+- 🍕 **Food**: breakfast and treats (Donut Shop, Pancake House, Ice Cream Shop, Candy Shop) and lunch and dinner (Fast
+  Food, Taco Stand, Pizza Place, Restaurant, Sushi Bar). Workers grab lunch and mid-morning snacks, families eat
+  breakfast and dinner, and hotel guests eat breakfast before checkout.
+- 🛍️ **Shops**: Shop, Bookstore, Library (quiet, so it doesn't bother neighbors), Cinema and Party Hall.
+- 🎪 **Fun**: chill out (Sky Park, Arcade, Swimming Pool, Aquarium), get moving (Trampoline Park, Climbing Wall,
+  Mini Golf, Bowling Alley, Roller Rink) and wow (Haunted House, Dino Museum, Rocket Pad).
+- 🏥 **Services**: Security, Medical Center, Recycling, Parking, Metro Station and the Cathedral at the very top.
+
+## Poke things
+
+In 👆 Look mode, tap any room and it reacts: the T-Rex roars, the ghosts say boo, the shark splashes, the cathedral
+bell rings, the parking garage honks. Every room has a few lines and a sound, and it wobbles when poked.
+
+## Postcards
+
+The 📸 button (also in the ☰ menu) renders the whole tower onto a postcard with the tower's name, stars and
+population. Save picture downloads a PNG, or opens the share sheet on an iPad or phone.
+
+## Sky
+
+Some days it rains from 10am to 6pm; a third of those are storms with lightning and thunder, and every rainy day ends
+with a rainbow. On winter days it snows. At night, shooting stars streak across the sky now and then.
 
 ## Saved towers
 
 Each tower saves under its own name. The title screen lists them (most recent first) with play and delete buttons.
 A save from before this change is moved into the list automatically the first time the title screen loads.
 
-## Fun Zone
+## Fun Zone extras
 
-The 🎪 Fun Zone tab holds the whimsical stuff: Ice Cream Shop, Sky Park (makes rooms on its floor happier),
-Arcade, Swimming Pool, Aquarium (with a shark), Haunted House (opens at 5pm), Dino Museum (the T-Rex roars at
-noon and 4pm) and the Rocket Pad. The pad needs open sky above it and an elevator up to its floor. It launches
-every day at noon and lands again around 2:30pm. Some nights a UFO visits the roof. Name your tower on the title
-screen or in the ☰ menu; the name shows on a rooftop sign and on the blimp.
+The Sky Park makes rooms on its floor happier. The Haunted House opens at 5pm. The T-Rex roars at noon and 4pm. The
+Rocket Pad needs open sky above it and an elevator up to its floor; it launches every day at noon and lands again
+around 2:30pm. Some nights a UFO visits the roof. Name your tower on the title screen or in the ☰ menu; the name
+shows on a rooftop sign, on the blimp and on postcards.
 
 ## Code map
 
@@ -49,7 +70,10 @@ screen or in the ☰ menu; the name shows on a rooftop sign and on the blimp.
   - `routing.ts`: Dijkstra over elevators, stairs and escalators.
   - `elevators.ts`: per-car SCAN logic.
   - `sim.ts`: people, schedules, hotel, commerce, rating, events.
-- `src/render/`: Canvas 2D renderer with procedural pixel-art sprites.
+- `src/render/`: Canvas 2D renderer with procedural pixel-art sprites. `sky-fx.ts` has the weather predicate, rainbow,
+  shooting stars and lightning; `poke-fx.ts` the poke wobble.
+- `src/game/poke.ts`: what each room says and plays when tapped.
+- `src/ui/postcard.ts`: renders the tower to a framed PNG and saves or shares it.
 - `src/ui/`: React HUD and input controller.
 - `scripts/simcheck.ts`, `scripts/simbig.ts`: headless smoke runs (`npx tsx scripts/simcheck.ts 3`).
 
