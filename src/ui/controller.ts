@@ -3,12 +3,14 @@ import { play, setMusic, audioPrefs } from '../audio'
 import { FACILITIES, STEPS_PER_SECOND, TOWER_WIDTH, TRANSPORTS } from '../game/defs'
 import type { FacilityKind, Mode, ToolId, TransportKind } from '../game/defs'
 import { afterBuild, evict, sound, step } from '../game/sim'
-import type { Game } from '../game/state'
+import type { Facility, Game } from '../game/state'
 import { deserialize, newGame, serialize } from '../game/state'
 import { buildStarter } from '../game/starter'
 import { checkFacility, checkShaft, demolish, occupantAt, paintRun, placeFacility, placeShaft } from '../game/world'
 import type { Camera, Overlay } from '../render/renderer'
 import { flashBuild, launchFireworks, personPos, render, screenToWorld } from '../render/renderer'
+import { registerPoke } from '../render/poke-fx'
+import { pokeFacility } from '../game/poke'
 import { FH, T } from '../render/sprites'
 
 const LEGACY_KEY = 'skytower.save.v1'
@@ -284,8 +286,18 @@ export class Controller {
       this.follow = false
       this.selected = id
       if (id) play('click')
+      if (o.fac) this.poke(o.fac)
       this.emit()
     }
+  }
+
+  /** Tap a room in Look mode and it does something silly. */
+  poke(f: Facility) {
+    const now = performance.now()
+    const sfx = pokeFacility(this.g, f, now)
+    if (sfx === null) return
+    registerPoke(f.id, now)
+    play(sfx)
   }
 
   /** For a single click with an elevator tool: reach up through every built floor above. */

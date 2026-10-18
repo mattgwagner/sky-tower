@@ -9,6 +9,8 @@ import { hasPet } from '../game/people-info'
 import { topFloor } from '../game/world'
 import { AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
 import type { Look } from './sprites'
+import { drawLightning, drawRainbow, drawShootingStars, weatherFor } from './sky-fx'
+import { pokeWobble } from './poke-fx'
 
 export interface Camera { x: number; y: number; zoom: number }
 
@@ -294,12 +296,15 @@ function personColor(shirt: number) {
 export function render(c: CanvasRenderingContext2D, W: number, H: number, g: Game, cam: Camera, ov: Overlay, now: number, dt: number) {
   c.imageSmoothingEnabled = false
   const night = drawSky(c, W, H, g, cam, now)
+  drawShootingStars(c, W, H, now, night)
+  drawRainbow(c, W, H, g)
   drawBalloons(c, W, H, now, night)
   drawBlimp(c, W, H, g, now, night)
   drawSkyline(c, W, H, cam, night)
   drawBirds(c, W, H, g, now, night)
   drawFireworks(c, W, H, now, dt)
   drawWeather(c, W, H, g, now)
+  drawLightning(c, W, H, g, now)
   drawSanta(c, W, H, g)
   drawGround(c, W, H, cam, g, night)
 
@@ -385,6 +390,8 @@ function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: 
   const w = f.width * T * z
   const h = f.height * FH * z
   const look = lookFor(g, f, m)
+  const wob = pokeWobble(f.id, now)
+  if (wob) { c.save(); c.translate(p.x + w / 2, p.y + h); c.scale(1 + wob.sx, 1 + wob.sy); c.rotate(wob.rot); c.translate(-(p.x + w / 2), -(p.y + h)) }
   if (f.kind === 'lobby') {
     const sky = f.floor > 0 ? 1 : 0
     const chunk = sprite('lobby', 8, 1, look, sky)
@@ -410,6 +417,7 @@ function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: 
   if (f.kind === 'parking' && f.reachable) drawCar(c, p.x + 10 * z, p.y + h - 3 * z, z, f.id)
   if (f.kind === 'cathedral') drawSpire(c, p.x + w / 2, p.y, z)
   if (z >= 0.6) drawFun(c, g, f, p, w, h, z, now, m)
+  if (wob) c.restore()
   // people inside
   if (z >= 0.75 && f.inside > 0 && f.kind !== 'lobby' && f.kind !== 'parking') {
     const n = Math.min(f.inside, Math.max(1, Math.floor(f.width / 3)))
@@ -839,21 +847,10 @@ function drawSelectedPerson(c: CanvasRenderingContext2D, g: Game, ov: Overlay, S
   c.stroke()
 }
 
-function dayHash(d: number) {
-  let x = (d + 1) * 2654435761
-  x ^= x >>> 13
-  return (x >>> 0) % 100
-}
-
 const DROPS = Array.from({ length: 160 }, (_, i) => ({ x: (i * 7919) % 1000 / 1000, y: (i * 3571) % 1000 / 1000, v: 0.6 + ((i * 13) % 10) / 20 }))
 
 function drawWeather(c: CanvasRenderingContext2D, W: number, H: number, g: Game, now: number) {
-  const d = dayOf(g.time)
-  const h = dayHash(d)
-  const q = Math.floor(d / 3) % 4
-  const m = minuteOfDay(g.time)
-  const snow = q === 3 && h < 55
-  const rain = !snow && h < 18 && m > 600 && m < 1080
+  const { rain, snow } = weatherFor(g)
   if (!snow && !rain) return
   if (rain) {
     c.fillStyle = 'rgba(40,50,70,0.18)'

@@ -1,5 +1,6 @@
 // Tiny WebAudio synth: sound effects + an easygoing lobby-music loop.
-type Sfx = 'ding' | 'cash' | 'build' | 'star' | 'alarm' | 'boom' | 'party' | 'move' | 'bad' | 'click' | 'rocket' | 'roar' | 'spooky' | 'ufo' | 'boing'
+export type Sfx = 'ding' | 'cash' | 'build' | 'star' | 'alarm' | 'boom' | 'party' | 'move' | 'bad' | 'click' | 'rocket' | 'roar' | 'spooky' | 'ufo' | 'boing'
+  | 'splash' | 'strike' | 'bell' | 'honk' | 'arcade' | 'thunder' | 'shutter' | 'twinkle' | 'meow' | 'woof' | 'train' | 'pop'
 
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
@@ -77,6 +78,18 @@ export function play(name: Sfx) {
     case 'ufo': for (let i = 0; i < 6; i++) tone(i % 2 ? 900 : 620, t + i * 0.16, 0.18, 'sine', 0.1, undefined, i % 2 ? 620 : 900); break
     case 'boing': tone(220, t, 0.3, 'sine', 0.2, undefined, 660); break
     case 'star': [523, 659, 784, 1046, 784, 1046, 1318].forEach((f, i) => tone(f, t + i * 0.11, i === 6 ? 0.6 : 0.16, 'square', 0.09)); break
+    case 'splash': noise(t, 0.35, 0.5, 1800); tone(900, t, 0.25, 'sine', 0.1, undefined, 200); for (let i = 0; i < 4; i++) tone(1400 + i * 300, t + 0.12 + i * 0.07, 0.1, 'sine', 0.05); break
+    case 'strike': tone(120, t, 0.18, 'triangle', 0.3, undefined, 60); for (let i = 0; i < 6; i++) { noise(t + 0.12 + i * 0.05, 0.08, 0.25, 3000); tone(1800 + (i * 530) % 900, t + 0.12 + i * 0.05, 0.09, 'square', 0.04) } break
+    case 'bell': for (let i = 0; i < 3; i++) { tone(392, t + i * 0.55, 1.4, 'sine', 0.16); tone(784, t + i * 0.55, 0.9, 'sine', 0.06); tone(1175, t + i * 0.55, 0.5, 'triangle', 0.03) } break
+    case 'honk': tone(330, t, 0.16, 'sawtooth', 0.1); tone(415, t, 0.16, 'sawtooth', 0.08); tone(330, t + 0.22, 0.22, 'sawtooth', 0.1); tone(415, t + 0.22, 0.22, 'sawtooth', 0.08); break
+    case 'arcade': [660, 880, 1100, 1320, 1760].forEach((f, i) => tone(f, t + i * 0.05, 0.08, 'square', 0.07)); tone(1760, t + 0.3, 0.3, 'square', 0.07, undefined, 2600); break
+    case 'thunder': noise(t, 2.4, 0.9, 220); noise(t + 0.3, 1.6, 0.5, 120); tone(45, t, 2, 'sine', 0.4, undefined, 25); break
+    case 'shutter': noise(t, 0.05, 0.4, 4000); tone(1400, t, 0.03, 'square', 0.08); noise(t + 0.09, 0.07, 0.3, 2500); break
+    case 'twinkle': [1568, 2093, 2637, 3136].forEach((f, i) => tone(f, t + i * 0.07, 0.35, 'sine', 0.05)); break
+    case 'meow': tone(700, t, 0.35, 'sawtooth', 0.06, undefined, 1100); tone(1100, t + 0.3, 0.3, 'sawtooth', 0.05, undefined, 600); break
+    case 'woof': tone(220, t, 0.12, 'sawtooth', 0.14, undefined, 140); noise(t, 0.1, 0.2, 600); tone(240, t + 0.18, 0.12, 'sawtooth', 0.12, undefined, 150); break
+    case 'train': for (let i = 0; i < 4; i++) noise(t + i * 0.13, 0.08, 0.3, 700); tone(440, t + 0.5, 0.5, 'square', 0.07); tone(554, t + 0.5, 0.5, 'square', 0.07); break
+    case 'pop': tone(500, t, 0.07, 'sine', 0.18, undefined, 1400); break
   }
 }
 
