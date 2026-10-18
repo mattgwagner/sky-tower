@@ -1,4 +1,5 @@
 // The simulation: people, schedules, hotel, economy, rating and events.
+import type { Sfx } from '../audio'
 import {
   ATTRACTIONS, BREAKFAST, DAYS_PER_QUARTER, DINNER, LUNCH, FACILITIES, HOTEL_NIGHT, MAX_FLOOR, MINUTES_PER_STEP, OFFICE_RENT, CONDO_PRICE,
   RENT_HAPPY, RENT_MULT, SHOP_CAPACITY, SPEND, TRANSPORTS, isCommercial, isConnector, isHotel, isResidential, starRules,
@@ -13,7 +14,7 @@ import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, to
 
 // ---------- sound hook (set by UI) ----------
 export const sound = {
-  play: (_name: 'ding' | 'cash' | 'build' | 'star' | 'alarm' | 'boom' | 'party' | 'move' | 'bad' | 'rocket' | 'roar' | 'spooky' | 'ufo') => {},
+  play: (_name: Sfx) => {},
 }
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a)
@@ -79,9 +80,13 @@ export function startTrip(g: Game, p: Person, goalFac: number, purpose: string, 
     // nearest reachable exit
     const ents = lobbyEntrances(g)
     let best: { floor: number; x: number; legs: ReturnType<typeof findRoute> } | null = null
+    // some people always ride the train home when there's a station
+    const rider = !staff && p.id % 10 < 4 && ents.some((e) => e.floor < 0)
     for (const e of ents) {
       const r = findRoute(g, from.floor, from.x, e.floor, e.x, staff)
-      if (r && (!best || r.length < (best.legs?.length ?? 99))) best = { floor: e.floor, x: e.x, legs: r }
+      if (!r) continue
+      const better = !best || (rider ? (e.floor < 0) !== (best.floor < 0) ? e.floor < 0 : r.length < (best.legs?.length ?? 99) : r.length < (best.legs?.length ?? 99))
+      if (better) best = { floor: e.floor, x: e.x, legs: r }
     }
     if (!best) return false
     goalFloor = best.floor; goalX = best.x; legs = best.legs
@@ -262,6 +267,14 @@ function arrive(g: Game, p: Person) {
   const fac = p.goalFac ? g.facilities.get(p.goalFac) : undefined
   switch (p.purpose) {
     case 'exit': {
+      const station = metroAt(g, p.floor, p.x)
+      if (station && trainSoon(g)) {
+        // wait on the platform for the next train
+        p.legs = []
+        p.purpose = 'train'
+        enterFacility(g, p, station)
+        return
+      }
       p.state = 'off'
       p.legs = []
       if (p.kind === 'visitor') g.people.delete(p.id)
@@ -1026,6 +1039,7 @@ function minuteTick(g: Game) {
   spawnVisitors(g)
   parties(g)
   funEvents(g, m)
+  trains(g, m)
   stepFires(g)
   stepBomb(g)
   if (m % 15 === 0) {
@@ -1057,6 +1071,68 @@ function hourTick(g: Game, m: number) {
   }
   if (quarterOf(g.time) === 4 && dayOf(g.time) % 3 === 2 && m === at(19)) g.flags.santaDay = dayOf(g.time)
   maybeUfo(g, m)
+}
+
+// ---------- metro trains ----------
+
+/** A train every TRAIN_EVERY minutes from 5am to midnight: pulls in, doors open, pulls out. */
+export const TRAIN_EVERY = 30
+export const TRAIN_IN = 5 // minutes to pull in
+export const TRAIN_DOORS = 8 // minutes doors stay open
+export const TRAIN_OUT = 5 // minutes to pull out
+const TRAIN_FIRST = at(5)
+
+/** Where today's train is: null when no train is in or near the station. `k` is 0..1 progress within the phase. */
+export function trainPhase(g: Game): { phase: 'in' | 'doors' | 'out'; k: number } | null {
+  const m = minuteOfDay(g.time)
+  if (m < TRAIN_FIRST) return null
+  const c = (m - TRAIN_FIRST) % TRAIN_EVERY
+  if (c < TRAIN_IN) return { phase: 'in', k: c / TRAIN_IN }
+  if (c < TRAIN_IN + TRAIN_DOORS) return { phase: 'doors', k: (c - TRAIN_IN) / TRAIN_DOORS }
+  if (c < TRAIN_IN + TRAIN_DOORS + TRAIN_OUT) return { phase: 'out', k: (c - TRAIN_IN - TRAIN_DOORS) / TRAIN_OUT }
+  return null
+}
+
+function trainSoon(g: Game) {
+  const m = minuteOfDay(g.time)
+  return m >= TRAIN_FIRST - TRAIN_EVERY && m < at(24) - TRAIN_EVERY + TRAIN_IN
+}
+
+function metroAt(g: Game, floor: number, x: number) {
+  for (const f of g.facilities.values()) if (f.kind === 'metro' && f.floor === floor && x >= f.x && x <= f.x + f.width) return f
+  return null
+}
+
+function trains(g: Game, m: number) {
+  if (m < TRAIN_FIRST || (m - TRAIN_FIRST) % TRAIN_EVERY !== TRAIN_IN) return
+  const stations = facilitiesOf(g, 'metro')
+  if (!stations.length) return
+  sound.play('train')
+  for (const st of stations) {
+    // everyone on the platform gets on
+    let boarded = 0
+    for (const p of [...g.people.values()]) {
+      if (p.at !== st.id || p.purpose !== 'train' || p.state !== 'inside') continue
+      leaveFacility(g, p)
+      boarded++
+      if (p.kind === 'visitor') g.people.delete(p.id)
+      else if (p.kind === 'guest' || p.kind === 'vip') { guestGone(g, p, true); g.people.delete(p.id) }
+      else p.state = 'off'
+    }
+    // and a crowd gets off, heading somewhere fun
+    const shops = [...g.facilities.values()].filter((f) => isCommercial(f.kind) && isOpen(g, f))
+    const n = shops.length ? Math.min(12, 4 + Math.floor(g.pop / 400)) : 0
+    let arrived = 0
+    for (let i = 0; i < n && g.people.size < 9000; i++) {
+      const v = newPerson(g, 'visitor', 0)
+      enterFacility(g, v, st)
+      v.returnTo = 0
+      const shop = pickShop(g, v, shops.map((s) => s.kind), st.floor)
+      if (shop && startTrip(g, v, shop.id, 'shop')) arrived++
+      else { leaveFacility(g, v); g.people.delete(v.id) }
+    }
+    if (arrived + boarded > 0) fx(g, st.x + st.width / 2, st.floor + st.height - 1, `🚇 ${arrived} off · ${boarded} on`, '#a5d8ff')
+  }
 }
 
 // ---------- whimsy: rockets, dinosaurs, ghosts and aliens ----------

@@ -2,6 +2,7 @@
 import type { Sfx } from '../audio'
 import type { FacilityKind } from './defs'
 import type { Facility, Game } from './state'
+import { trainPhase } from './sim'
 import { fx } from './world'
 
 interface Poke { says: string[]; color?: string; sfx?: Sfx }
@@ -63,7 +64,11 @@ export function pokeFacility(g: Game, f: Facility, now: number): Sfx | null {
   const last = lastPoke.get(f.id) ?? -1e9
   if (now - last < 350) return null
   lastPoke.set(f.id, now)
-  const text = p.says[Math.floor(Math.random() * p.says.length)]
+  const train = f.kind === 'metro' ? trainPhase(g) : null
+  const says = !train ? p.says
+    : train.phase === 'doors' ? ['Doors closing! 🚪', 'All aboard! 🚇', 'Tickets, please! 🎫', 'Mind the gap!']
+    : ['TOOT TOOT! 🚆', 'Here comes the train!', 'Clickety-clack!']
+  const text = says[Math.floor(Math.random() * says.length)]
   fx(g, f.x + f.width / 2, f.floor + f.height - 1, text, p.color)
   return p.sfx ?? null
 }

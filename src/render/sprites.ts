@@ -263,20 +263,35 @@ const painters: Partial<Record<FacilityKind, Painter>> = {
     r(c, '#ffd43b', 2, h - 3, 1, 3); r(c, '#ffd43b', w - 3, h - 3, 1, 3)
     r(c, '#868e96', 4, 6, 3, h - 9)
   },
-  metro(c, w, h, look) {
-    const dark = look === 'night'
+  metro(c, w, h) {
+    // tiled station wall
     r(c, '#e9ecef', 0, 0, w, h)
-    for (let x = 0; x < w; x += 6) for (let y = 4; y < h - 30; y += 6) r(c, (x + y) % 12 ? '#dee2e6' : '#f8f9fa', x, y, 5, 5)
+    for (let x = 0; x < w; x += 6) for (let y = 4; y < h - METRO_TUNNEL; y += 6) r(c, (x + y) % 12 ? '#dee2e6' : '#f8f9fa', x, y, 5, 5)
     r(c, '#3a3a46', 0, 0, w, 2)
+    r(c, '#1971c2', 0, h - METRO_TUNNEL - 4, w, 3) // stripe
+    // the track bed the train runs along, with dark tunnel mouths at each end
+    const top = h - METRO_TUNNEL
+    r(c, '#2b2f3a', 0, top, w, METRO_TUNNEL - 8)
+    for (let x = 0; x < w; x += 12) r(c, '#343a46', x, top + 4, 6, METRO_TUNNEL - 16)
+    for (const x0 of [0, w - 22]) {
+      r(c, '#868e96', x0, top - 2, 22, METRO_TUNNEL - 6)
+      r(c, '#0b0d12', x0 + 3, top + 2, 16, METRO_TUNNEL - 10)
+      c.fillStyle = '#0b0d12'; c.beginPath(); c.arc(x0 + 11, top + 3, 8, Math.PI, 0); c.fill()
+    }
+    r(c, '#868e96', 0, h - 11, w, 1) // rail
+    // platform the riders stand on
+    r(c, '#adb5bd', 0, h - 8, w, 5); r(c, '#ffd43b', 0, h - 8, w, 1)
+    for (let x = 2; x < w; x += 4) r(c, '#e0a800', x, h - 7, 2, 1)
+    r(c, '#868e96', 0, h - 3, w, 3)
+    // benches + route map
+    for (const x of [40, w - 70]) { r(c, '#8b5a2b', x, top - 14, 22, 3); r(c, '#5c4632', x + 2, top - 11, 2, 6); r(c, '#5c4632', x + 18, top - 11, 2, 6) }
+    r(c, '#fff', 80, 22, 50, 18); r(c, '#ced4da', 80, 22, 50, 1)
+    c.strokeStyle = '#e03131'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(84, 34); c.lineTo(100, 28); c.lineTo(126, 32); c.stroke()
+    c.strokeStyle = '#1971c2'; c.beginPath(); c.moveTo(84, 26); c.lineTo(104, 36); c.lineTo(126, 26); c.stroke()
+    for (const [x, y] of [[84, 34], [100, 28], [104, 36], [126, 32], [126, 26]]) r(c, '#212529', x - 1, y - 1, 2, 2)
+    // departure board frame (the renderer writes on it)
+    r(c, '#212529', METRO_BOARD[0] - 2, METRO_BOARD[1] - 2, METRO_BOARD[2] + 4, METRO_BOARD[3] + 4)
     sign(c, w, 'METRO', '#1971c2')
-    r(c, '#495057', 0, h - 26, w, 6) // platform edge
-    r(c, '#ffd43b', 0, h - 26, w, 1)
-    r(c, '#212529', 0, h - 20, w, 20)
-    r(c, '#868e96', 0, h - 6, w, 1); r(c, '#868e96', 0, h - 3, w, 1)
-    // train
-    r(c, '#1971c2', 16, h - 22, w - 32, 16); r(c, '#fff', 16, h - 16, w - 32, 2)
-    for (let x = 24; x < w - 40; x += 18) r(c, dark ? '#334' : '#d0ebff', x, h - 21, 10, 5)
-    r(c, '#a5d8ff', w - 30, h - 21, 14, 8)
   },
   cathedral(c, w, h, look) {
     const dark = look === 'night'
@@ -716,6 +731,9 @@ function shelf(c: Ctx, x: number, y: number, w: number, h: number) {
     r(c, '#4a3426', x, yy + 6, w, 1)
   }
 }
+
+export const METRO_TUNNEL = 44 // px from the bottom of the station that the track + platform take up
+export const METRO_BOARD = [150, 22, 62, 14] as const // x, y, w, h of the departure board
 
 export const TRAMPS = 4
 export const GOLF_MILL = 112

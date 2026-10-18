@@ -2,12 +2,12 @@
 import { FACILITIES, TOWER_WIDTH, TRANSPORTS, isCommercial, isHotel, isLobbyFloor } from '../game/defs'
 import type { FacilityKind } from '../game/defs'
 import { carPos } from '../game/elevators'
-import { isOpen, launchClock, ufoX } from '../game/sim'
+import { TRAIN_EVERY, TRAIN_IN, isOpen, launchClock, trainPhase, ufoX } from '../game/sim'
 import type { Facility, Game, Person, Shaft } from '../game/state'
 import { dayOf, isWeekend, minuteOfDay } from '../game/state'
 import { hasPet } from '../game/people-info'
 import { topFloor } from '../game/world'
-import { AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
+import { METRO_BOARD, METRO_TUNNEL, AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
 import type { Look } from './sprites'
 import { drawLightning, drawRainbow, drawShootingStars, weatherFor } from './sky-fx'
 import { pokeWobble } from './poke-fx'
@@ -1224,6 +1224,10 @@ function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: nu
       }
       return
     }
+    case 'metro': {
+      drawTrain(c, g, p, w, h, z, now)
+      return
+    }
     case 'library': {
       // the rolling ladder glides along the shelves
       const lx = p.x + (20 + (Math.sin(now / 2600) * 0.5 + 0.5) * (w / z - 40)) * z
@@ -1454,4 +1458,99 @@ function drawBalloons(c: CanvasRenderingContext2D, W: number, H: number, now: nu
     c.beginPath(); c.moveTo(x - r * 0.6, y + r); c.lineTo(x - r * 0.3, y + r * 1.6); c.moveTo(x + r * 0.6, y + r); c.lineTo(x + r * 0.3, y + r * 1.6); c.stroke()
     c.fillStyle = '#8b5a2b'; c.fillRect(x - r * 0.3, y + r * 1.6, r * 0.6, r * 0.45)
   }
+}
+
+// ---------- metro train ----------
+const TRAIN_CARS = 3
+const CAR_W = 62 // px per car
+
+function drawTrain(c: CanvasRenderingContext2D, g: Game, p: Pt, w: number, h: number, z: number, now: number) {
+  const tp = trainPhase(g)
+  // departure board
+  const [bx, by, bw, bh] = METRO_BOARD
+  c.fillStyle = '#111'
+  c.fillRect(p.x + bx * z, p.y + by * z, bw * z, bh * z)
+  const m = minuteOfDay(g.time)
+  let text = 'NO SERVICE'
+  if (tp?.phase === 'doors') text = Math.floor(now / 500) % 2 ? 'BOARDING' : 'ALL ABOARD!'
+  else if (tp?.phase === 'in') text = 'ARRIVING'
+  else if (m >= 5 * 60 - TRAIN_EVERY) {
+    const c0 = ((m - 5 * 60) % TRAIN_EVERY + TRAIN_EVERY) % TRAIN_EVERY
+    const wait = Math.max(1, Math.ceil(TRAIN_EVERY - c0))
+    if (m < 24 * 60 - TRAIN_EVERY + TRAIN_IN || m < 5 * 60) text = `NEXT ${wait} MIN`
+  }
+  c.fillStyle = '#ffa94d'
+  c.font = `bold ${Math.max(5, Math.round(6.5 * z))}px monospace`
+  c.textAlign = 'center'
+  c.fillText(text, p.x + (bx + bw / 2) * z, p.y + (by + bh / 2 + 2.5) * z)
+  c.textAlign = 'left'
+  if (!tp) return
+  const L = TRAIN_CARS * CAR_W * z
+  const stop = p.x + (w - L) / 2
+  let x = stop
+  if (tp.phase === 'in') { const e = 1 - (1 - tp.k) ** 2; x = p.x - L + (stop - (p.x - L)) * e }
+  else if (tp.phase === 'out') x = stop + (w + L) * tp.k ** 2
+  const top = p.y + h - (METRO_TUNNEL - 2) * z
+  const bodyH = (METRO_TUNNEL - 12) * z
+  const open = tp.phase === 'doors' ? Math.min(1, tp.k * 8, (1 - tp.k) * 8) : 0
+  c.save()
+  c.beginPath(); c.rect(p.x + 22 * z, p.y, w - 44 * z, h); c.clip() // emerge from the tunnel mouths
+  for (let i = 0; i < TRAIN_CARS; i++) {
+    const cx = x + i * CAR_W * z
+    const cw = (CAR_W - 2) * z
+    c.fillStyle = '#1971c2'
+    c.fillRect(cx, top, cw, bodyH)
+    c.fillStyle = '#e7f5ff'
+    c.fillRect(cx, top + bodyH * 0.62, cw, 2 * z)
+    c.fillStyle = '#145a9e'
+    c.fillRect(cx, top, cw, 2 * z)
+    // windows with riders
+    for (let wi = 0; wi < 3; wi++) {
+      const wx = cx + (6 + wi * 18) * z
+      c.fillStyle = '#d0ebff'
+      c.fillRect(wx, top + 5 * z, 10 * z, 8 * z)
+      if ((i * 3 + wi + Math.floor(g.time / TRAIN_EVERY)) % 3 !== 0) {
+        c.fillStyle = SHIRTS[(i * 3 + wi) % SHIRTS.length]
+        c.fillRect(wx + 3 * z, top + 9 * z, 4 * z, 4 * z)
+        c.fillStyle = '#f1c27d'
+        c.fillRect(wx + 3.5 * z, top + 6.5 * z, 3 * z, 3 * z)
+      }
+    }
+    // doors (slide open at the station)
+    for (const dx of [15, 51]) {
+      const dxp = cx + (dx - 6) * z
+      const dw = 10 * z
+      const dy = top + 4 * z, dh = bodyH - 5 * z
+      c.fillStyle = open > 0 ? '#fff3bf' : '#1864ab'
+      c.fillRect(dxp, dy, dw, dh)
+      if (open < 1) {
+        const leaf = (dw / 2) * (1 - open)
+        c.fillStyle = '#1864ab'
+        c.fillRect(dxp, dy, leaf, dh); c.fillRect(dxp + dw - leaf, dy, leaf, dh)
+        c.fillStyle = '#a5d8ff'
+        c.fillRect(dxp + 1 * z, dy + 2 * z, Math.max(0, leaf - 2 * z), 4 * z)
+        c.fillRect(dxp + dw - leaf + 1 * z, dy + 2 * z, Math.max(0, leaf - 2 * z), 4 * z)
+      } else if ((i + dx) % 2 === 0) {
+        // someone stepping out onto the platform
+        const step = (now / 900 + i) % 1
+        drawPersonAt(c, dxp + dw / 2 + (dx < 30 ? -1 : 1) * step * 12 * z, p.y + h - 8 * z, z, SHIRTS[(i + dx) % SHIRTS.length], Math.floor(now / 150) % 2, 0)
+      }
+    }
+    // wheels + coupler
+    c.fillStyle = '#212529'
+    for (const wx of [8, 18, cw / z - 18, cw / z - 8]) { c.beginPath(); c.arc(cx + wx * z, top + bodyH + 1 * z, 2.2 * z, 0, Math.PI * 2); c.fill() }
+    if (i < TRAIN_CARS - 1) { c.fillStyle = '#495057'; c.fillRect(cx + cw, top + bodyH * 0.5, 2 * z, 3 * z) }
+  }
+  // the nose with its headlight, at the front (right end)
+  const nx = x + L - 2 * z
+  c.fillStyle = '#1971c2'
+  c.beginPath(); c.moveTo(nx, top); c.quadraticCurveTo(nx + 10 * z, top + 2 * z, nx + 12 * z, top + bodyH); c.lineTo(nx, top + bodyH); c.fill()
+  c.fillStyle = '#a5d8ff'; c.fillRect(nx + 1 * z, top + 4 * z, 5 * z, 6 * z)
+  c.fillStyle = '#fff3bf'; c.fillRect(nx + 8 * z, top + bodyH - 6 * z, 3 * z, 2 * z)
+  if (tp.phase !== 'doors') {
+    const glow = c.createRadialGradient(nx + 12 * z, top + bodyH - 5 * z, 1, nx + 12 * z, top + bodyH - 5 * z, 26 * z)
+    glow.addColorStop(0, 'rgba(255,243,191,0.6)'); glow.addColorStop(1, 'rgba(255,243,191,0)')
+    c.fillStyle = glow; c.fillRect(nx, top - 10 * z, 40 * z, bodyH + 20 * z)
+  }
+  c.restore()
 }

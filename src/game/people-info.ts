@@ -31,6 +31,7 @@ export function personDoing(g: Game, p: Person) {
   if (p.state === 'waiting') return `Waiting for the elevator (${Math.round(p.wait / 10)} min)`
   if (p.state === 'riding') return 'Riding the elevator'
   if (p.state === 'climbing') return 'Taking the stairs'
+  if (p.state === 'inside' && p.purpose === 'train') return 'Waiting on the platform for the train 🚇'
   if (p.state === 'inside') {
     const at = g.facilities.get(p.at)
     return at ? `Inside the ${FACILITIES[at.kind].name.toLowerCase()}` : 'Hanging out'
@@ -93,6 +94,7 @@ export function personThought(g: Game, p: Person) {
   if (p.mood > 70) return 'This elevator is SO slow! 😤'
   if (p.mood > 45) return 'Ugh, I\'ve been waiting forever…'
   if (p.mood > 25) return 'Come on, come on…'
+  if (p.purpose === 'train') return ['Here it comes! 🚇', 'I hope I get a window seat.', 'Mind the gap!'][p.id % 3]
   const dest = g.facilities.get(p.goalFac) ?? g.facilities.get(p.at)
   const fun = dest && FUN_THOUGHTS[dest.kind]
   if (fun) return fun[p.id % fun.length]

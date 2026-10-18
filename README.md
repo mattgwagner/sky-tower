@@ -50,6 +50,12 @@ population. Save picture downloads a PNG, or opens the share sheet on an iPad or
 Some days it rains from 10am to 6pm; a third of those are storms with lightning and thunder, and every rainy day ends
 with a rainbow. On winter days it snows. At night, shooting stars streak across the sky now and then.
 
+## Metro trains
+
+A Metro Station gets a train every 30 game minutes from 5am to midnight: it pulls out of the tunnel, opens its doors
+for 8 minutes, and leaves. About four in ten people leave the tower by train when there is a station; they wait on
+the platform and board when the doors open, and each train drops off a crowd of visitors.
+
 ## Saved towers
 
 Each tower saves under its own name. The title screen lists them (most recent first) with play and delete buttons.
