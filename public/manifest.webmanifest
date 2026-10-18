@@ -1,0 +1,9 @@
+{
+  "name": "Sky Tower",
+  "short_name": "Sky Tower",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#14123a",
+  "theme_color": "#14123a",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
