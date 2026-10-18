@@ -490,6 +490,7 @@ const FUN_HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
   candy: [[at(10), at(20)]],
   bookstore: [[at(10), at(21)]],
   library: [[at(9), at(20)]],
+  fazbear: [[at(11), at(21)]],
   trampoline: [[at(10), at(20)]],
   climbing: [[at(10), at(20)]],
   miniGolf: [[at(10), at(21)]],
@@ -511,6 +512,7 @@ function stayFor(g: Game, k: FacilityKind) {
     case 'trampoline': case 'climbing': case 'miniGolf': return rnd(40, 70)
     case 'bookstore': return rnd(20, 45)
     case 'library': return rnd(45, 100)
+    case 'fazbear': return rnd(50, 90)
     case 'bowling': case 'rollerRink': return rnd(50, 90)
     case 'arcade': return rnd(30, 60)
     case 'pool': return rnd(40, 90)
@@ -574,6 +576,7 @@ function spawnVisitors(g: Game) {
     else if (f.kind === 'donuts') perHour = m < at(10) ? 6 : 2
     else if (f.kind === 'pancakes') perHour = m < at(10, 30) ? 7 : 3
     else if (f.kind === 'bookstore') perHour = 4
+    else if (f.kind === 'fazbear') perHour = isWeekend(g.time) ? 14 : m >= at(16) ? 9 : 5
     else if (f.kind === 'library') perHour = isWeekend(g.time) ? 8 : 5
     else if (f.kind === 'trampoline') perHour = isWeekend(g.time) ? 12 : 7
     else if (f.kind === 'climbing') perHour = 5
@@ -1161,6 +1164,10 @@ function funEvents(g: Game, m: number) {
     if (f.kind === 'dinoMuseum' && (m === at(12) || m === at(16)) && isOpen(g, f)) {
       fx(g, f.x + 12, f.floor + 2, 'ROAAAR! 🦖', '#ff922b')
       sound.play('roar')
+    }
+    if (f.kind === 'fazbear' && m === at(6)) {
+      fx(g, facCenter(f), f.floor + 1, '🔔 6 AM! You survived the night! 🎉', '#ffd43b')
+      sound.play('bell')
     }
     if (f.kind === 'hauntedHouse' && m === at(17)) {
       fx(g, facCenter(f), f.floor + 1, 'Boo! 👻', '#e5dbff')

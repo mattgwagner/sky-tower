@@ -8,7 +8,7 @@ import { deserialize, newGame, serialize } from '../game/state'
 import { buildStarter } from '../game/starter'
 import { checkFacility, checkShaft, demolish, occupantAt, paintRun, placeFacility, placeShaft } from '../game/world'
 import type { Camera, Overlay } from '../render/renderer'
-import { flashBuild, launchFireworks, personPos, render, screenToWorld } from '../render/renderer'
+import { flashBuild, jumpscare, launchFireworks, personPos, render, screenToWorld } from '../render/renderer'
 import { registerPoke } from '../render/poke-fx'
 import { pokeFacility } from '../game/poke'
 import { FH, T } from '../render/sprites'
@@ -297,6 +297,7 @@ export class Controller {
     const sfx = pokeFacility(this.g, f, now)
     if (sfx === null) return
     registerPoke(f.id, now)
+    if (sfx === 'scare') jumpscare(now)
     play(sfx)
   }
 

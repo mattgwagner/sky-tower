@@ -2,6 +2,7 @@
 import type { Sfx } from '../audio'
 import type { FacilityKind } from './defs'
 import type { Facility, Game } from './state'
+import { minuteOfDay } from './state'
 import { trainPhase } from './sim'
 import { fx } from './world'
 
@@ -35,6 +36,7 @@ const POKES: Partial<Record<FacilityKind, Poke>> = {
   cinema: { says: ['🍿 It\'s starting!', 'Shhh! 🤫', 'Best movie EVER'], color: '#f783ac', sfx: 'party' },
   partyHall: { says: ['PARTY! 🎉', '🎂 Make a wish!', '🎈🎈🎈'], color: '#ff7ad9', sfx: 'party' },
   cathedral: { says: ['DONG! 🔔', 'DING DONG!', '🕊️'], color: '#ffd43b', sfx: 'bell' },
+  fazbear: { says: ['Hurr hurr hurr! 🐻'], color: '#ffd43b', sfx: 'party' },
   metro: { says: ['Choo choo! 🚇', 'All aboard!', 'Mind the gap!'], color: '#a5d8ff', sfx: 'train' },
   parking: { says: ['Beep beep! 🚗', 'HONK!', 'Vroom vroom!'], color: '#ffd43b', sfx: 'honk' },
   lobby: { says: ['Welcome! 👋', 'Hello there!', 'Nice tower!', '👋'], color: '#ffd43b', sfx: 'ding' },
@@ -64,6 +66,13 @@ export function pokeFacility(g: Game, f: Facility, now: number): Sfx | null {
   const last = lastPoke.get(f.id) ?? -1e9
   if (now - last < 350) return null
   lastPoke.set(f.id, now)
+  if (f.kind === 'fazbear') {
+    const night = minuteOfDay(g.time) < 6 * 60
+    const says = night ? ['JUMPSCARE! 😱', 'Hurr hurr hurr…', 'Was that Foxy?! 🦊', 'Check the cameras! 📹', 'Close the door!! 🚪']
+      : ['Hurr hurr hurr! 🐻', 'Let\'s eat! 🐔', 'Arr, matey! 🦊', '🎸 Guitar solo!', 'Happy birthday! 🎂', 'Pizza time! 🍕']
+    fx(g, f.x + f.width / 2, f.floor + f.height - 1, says[Math.floor(Math.random() * says.length)], night ? '#ff6b6b' : '#ffd43b')
+    return night ? 'scare' : 'party'
+  }
   const train = f.kind === 'metro' ? trainPhase(g) : null
   const says = !train ? p.says
     : train.phase === 'doors' ? ['Doors closing! 🚪', 'All aboard! 🚇', 'Tickets, please! 🎫', 'Mind the gap!']

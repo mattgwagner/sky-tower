@@ -732,6 +732,57 @@ function shelf(c: Ctx, x: number, y: number, w: number, h: number) {
   }
 }
 
+Object.assign(painters, {
+  fazbear(c: Ctx, w: number, h: number) {
+    // checkerboard wainscot, party-star wallpaper
+    r(c, '#3b2a5a', 0, 0, w, h)
+    for (let i = 0; i < 40; i++) r(c, ['#ffd43b', '#ff8787', '#74c0fc', '#b2f2bb'][i % 4], (i * 53) % w, 18 + ((i * 29) % 22), 2, 2)
+    for (let x = 0; x < w; x += 4) for (let y = h - 14; y < h - 3; y += 4) r(c, ((x + y) / 4) % 2 ? '#111' : '#f1f3f5', x, y, 4, 4)
+    r(c, '#3a3a46', 0, 0, w, 2)
+    r(c, '#6b4f3a', 0, h - 3, w, 3)
+    // show stage with star curtains
+    const [s0, s1] = FAZ_STAGE
+    r(c, '#5c3d2e', s0, h - 18, s1 - s0, 15); r(c, '#8b5a2b', s0, h - 18, s1 - s0, 2)
+    for (const x of [s0, s1 - 10]) {
+      r(c, '#862e9c', x, 4, 10, h - 22)
+      for (let y = 8; y < h - 22; y += 8) r(c, '#ffd43b', x + 3 + ((y / 8) % 2) * 3, y, 2, 2)
+    }
+    r(c, '#862e9c', s0, 4, s1 - s0, 5)
+    for (let x = s0 + 12; x < s1 - 12; x += 8) r(c, '#ffd43b', x, 9, 3, 2)
+    // party tables: hats, pizza, balloons
+    for (const x of [FAZ_TABLES, FAZ_TABLES + 34]) {
+      r(c, '#fff', x, h - 22, 28, 2); r(c, '#adb5bd', x + 13, h - 20, 2, 6)
+      for (let k = 0; k < 3; k++) {
+        c.fillStyle = ['#e64980', '#4dabf7', '#40c057'][k]
+        c.beginPath(); c.moveTo(x + 3 + k * 9, h - 22); c.lineTo(x + 5.5 + k * 9, h - 29); c.lineTo(x + 8 + k * 9, h - 22); c.fill()
+      }
+      c.fillStyle = '#f4c05a'; c.beginPath(); c.ellipse(x + 14, h - 23, 4, 1.2, 0, 0, Math.PI * 2); c.fill()
+      for (let k = 0; k < 3; k++) { const bx = x + 4 + k * 10; r(c, ['#ff6b6b', '#ffd43b', '#da77f2'][k], bx, 12 + k * 3, 5, 6); r(c, '#ddd', bx + 2, 18 + k * 3, 1, h - 42 - k * 3) }
+    }
+    // Pirate Cove
+    const pc = FAZ_COVE
+    r(c, '#2b2140', pc, 10, 24, h - 13)
+    for (let x = pc; x < pc + 24; x += 4) r(c, '#5f3dc4', x, 12, 3, h - 16)
+    for (const [x, y] of [[pc + 5, 20], [pc + 14, 30], [pc + 8, 40]]) r(c, '#e5dbff', x, y, 2, 2)
+    r(c, '#212529', pc + 2, 4, 20, 6); c.fillStyle = '#fff'; c.font = 'bold 4px monospace'; c.fillText('PIRATE COVE', pc + 2.5, 8.5)
+    // night guard office
+    const of = FAZ_OFFICE
+    r(c, '#495057', of - 2, 6, 2, h - 9)
+    r(c, '#343a40', of, 6, w - of, h - 9)
+    r(c, '#8d6e4f', of + 2, h - 14, w - of - 4, 3)
+    r(c, '#212529', of + 4, h - 24, 8, 7); r(c, '#1b4332', of + 5, h - 23, 6, 5)
+    r(c, '#212529', of + 13, h - 22, 6, 5); r(c, '#1b4332', of + 14, h - 21, 4, 3)
+    r(c, '#adb5bd', of + 2, h - 18, 3, 4)
+    sign(c, w, "FREDDY FAZBEAR'S PIZZA", '#7a1f2b', '#ffd43b')
+  },
+} satisfies Partial<Record<FacilityKind, Painter>>)
+
+/** Freddy's layout, in sprite px: stage [left, right], tables, Pirate Cove, guard office. */
+export const FAZ_STAGE = [6, 112] as const
+export const FAZ_TABLES = 122
+export const FAZ_COVE = 196
+export const FAZ_OFFICE = 226
+
 export const METRO_TUNNEL = 44 // px from the bottom of the station that the track + platform take up
 export const METRO_BOARD = [150, 22, 62, 14] as const // x, y, w, h of the departure board
 

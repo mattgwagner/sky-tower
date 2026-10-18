@@ -364,7 +364,7 @@ const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
   ],
   food: [
     { label: 'Breakfast & treats', tools: ['donuts', 'pancakes', 'iceCream', 'candy'] },
-    { label: 'Lunch & dinner', tools: ['fastFood', 'tacos', 'pizza', 'restaurant', 'sushi'] },
+    { label: 'Lunch & dinner', tools: ['fastFood', 'tacos', 'pizza', 'fazbear', 'restaurant', 'sushi'] },
   ],
   shops: [
     { label: 'Stores', tools: ['shop', 'bookstore', 'library'] },

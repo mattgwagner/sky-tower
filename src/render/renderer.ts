@@ -7,7 +7,7 @@ import type { Facility, Game, Person, Shaft } from '../game/state'
 import { dayOf, isWeekend, minuteOfDay } from '../game/state'
 import { hasPet } from '../game/people-info'
 import { topFloor } from '../game/world'
-import { METRO_BOARD, METRO_TUNNEL, AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
+import { FAZ_COVE, FAZ_OFFICE, FAZ_STAGE, FAZ_TABLES, METRO_BOARD, METRO_TUNNEL, AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
 import type { Look } from './sprites'
 import { drawLightning, drawRainbow, drawShootingStars, weatherFor } from './sky-fx'
 import { pokeWobble } from './poke-fx'
@@ -362,6 +362,7 @@ export function render(c: CanvasRenderingContext2D, W: number, H: number, g: Gam
   drawFx(c, g, S, z, dt)
   drawOverlay(c, g, ov, S, z, W, H)
   drawRuler(c, g, cam, W, H)
+  drawJumpscare(c, W, H, now)
 }
 
 function drawBareFloor(c: CanvasRenderingContext2D, p: { x: number; y: number }, w: number, h: number, z: number, f: number) {
@@ -1224,6 +1225,10 @@ function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: nu
       }
       return
     }
+    case 'fazbear': {
+      drawFazbear(c, g, f, p, w, h, z, now, m)
+      return
+    }
     case 'metro': {
       drawTrain(c, g, p, w, h, z, now)
       return
@@ -1553,4 +1558,112 @@ function drawTrain(c: CanvasRenderingContext2D, g: Game, p: Pt, w: number, h: nu
     c.fillStyle = glow; c.fillRect(nx, top - 10 * z, 40 * z, bodyH + 20 * z)
   }
   c.restore()
+}
+
+// ---------- Freddy Fazbear's Pizza ----------
+type Bot = 'freddy' | 'bonnie' | 'chica' | 'foxy'
+let scareUntil = 0
+let scareStart = 0
+/** Full-screen cartoon jumpscare (poking Freddy's after midnight). */
+export function jumpscare(now: number) { scareStart = now; scareUntil = now + 650 }
+
+function drawBot(c: CanvasRenderingContext2D, bot: Bot, x: number, yb: number, u: number, o: { mouth: boolean; glow: boolean; bob: number; lean?: number }) {
+  const col = { freddy: '#8b5a2b', bonnie: '#6c63c9', chica: '#f6c90e', foxy: '#c0392b' }[bot]
+  const light = { freddy: '#c48b5c', bonnie: '#a5a0e6', chica: '#fff3bf', foxy: '#e8a598' }[bot]
+  const R = (x0: number, y0: number, w: number, hh: number, cc: string) => { c.fillStyle = cc; c.fillRect(x + x0 * u, yb + (y0 - o.bob) * u, w * u, hh * u) }
+  c.save()
+  if (o.lean) { c.translate(x, yb); c.rotate(o.lean); c.translate(-x, -yb) }
+  // legs, body, belly, arms
+  R(-4, -6, 3, 6, col); R(1, -6, 3, 6, col)
+  R(-5, -15, 10, 10, col); R(-3, -13, 6, 6, light)
+  R(-7, -14, 2, 7, col); R(5, -14, 2, 7, col)
+  // head
+  R(-5, -24, 10, 9, col); R(-3, -19, 6, 4, light)
+  if (bot === 'freddy') { R(-6, -26, 3, 3, col); R(3, -26, 3, 3, col); R(-3, -29, 6, 4, '#111'); R(-4, -26, 8, 1, '#111'); R(-2, -15, 4, 2, '#111'); R(6, -15, 1, 4, '#868e96'); R(5.5, -16.5, 2, 2, '#495057') }
+  if (bot === 'bonnie') { R(-4, -33, 2, 9, col); R(2, -33, 2, 9, col); R(-3.5, -31, 1, 6, light); R(2.5, -31, 1, 6, light); R(-2, -15, 4, 2, '#e03131'); R(-6, -11, 12, 3, '#e03131'); R(4, -13, 2, 6, '#c92a2a') }
+  if (bot === 'chica') { R(-3, -19, 6, 2, '#ff922b'); R(-3, -26, 1, 2, '#ff922b'); R(-1, -27, 1, 3, '#ff922b'); R(-4, -13, 8, 6, '#fff'); c.fillStyle = '#e64980'; c.font = `bold ${2.4 * u}px sans-serif`; c.fillText('EAT', x - 3.2 * u, yb + (-9 - o.bob) * u); R(6, -17, 3, 3, '#f783ac'); R(7, -18.5, 1, 1.5, '#fff') }
+  if (bot === 'foxy') { R(-6, -27, 3, 4, col); R(3, -27, 3, 4, col); R(-4, -22, 3, 2, '#111'); R(-7, -9, 2, 2, '#adb5bd'); R(-8, -11, 1, 2, '#adb5bd'); R(-3, -19, 6, 4, light); R(-6, -6, 3, 6, '#5c3d2e') }
+  // eyes + mouth
+  if (o.glow) {
+    c.shadowColor = '#fff'; c.shadowBlur = 6 * u
+    R(-3, -22, 1.4, 1.4, '#fff'); if (bot !== 'foxy') R(1.6, -22, 1.4, 1.4, '#fff'); else R(1.6, -22, 1.4, 1.4, '#ffd43b')
+    c.shadowBlur = 0
+  } else {
+    if (bot !== 'foxy') R(-3, -22, 1.5, 1.5, '#1c7ed6'); R(1.5, -22, 1.5, 1.5, bot === 'foxy' ? '#ffd43b' : '#1c7ed6')
+  }
+  R(-2, -17, 4, o.mouth ? 2 : 0.8, '#3a1d1d')
+  if (o.mouth) R(-1.5, -17, 1, 0.8, '#fff')
+  c.restore()
+}
+
+function drawFazbear(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: number, h: number, z: number, now: number, m: number) {
+  const night = m < 6 * 60
+  const show = isOpen(g, f)
+  const X = (sx: number) => p.x + sx * z
+  const stageY = p.y + h - 18 * z
+  const floorY = p.y + h - 3 * z
+  const beat = Math.floor(now / 260) % 2
+  const bob = show ? (beat ? 1 : 0) : 0
+  if (!night) {
+    const [s0, s1] = FAZ_STAGE
+    const mid = (s0 + s1) / 2
+    drawBot(c, 'bonnie', X(mid - 32), stageY, z, { mouth: false, glow: false, bob, lean: show ? Math.sin(now / 300) * 0.06 : 0 })
+    drawBot(c, 'freddy', X(mid), stageY, z, { mouth: show && beat === 1, glow: false, bob })
+    drawBot(c, 'chica', X(mid + 32), stageY, z, { mouth: show && beat === 0, glow: false, bob })
+    if (show) {
+      c.fillStyle = '#ffd43b'
+      c.font = `bold ${Math.round(7 * z)}px sans-serif`
+      for (let i = 0; i < 3; i++) {
+        const k = (now / 1600 + i / 3) % 1
+        c.globalAlpha = 1 - k
+        c.fillText(i % 2 ? '♪' : '♫', X(mid - 20 + i * 18) + Math.sin(now / 300 + i) * 3 * z, stageY - 34 * z - k * 16 * z)
+      }
+      c.globalAlpha = 1
+    }
+    // Foxy peeks out of Pirate Cove now and then
+    const peek = Math.max(0, Math.sin(now / 2300))
+    if (peek > 0.6) {
+      c.save(); c.beginPath(); c.rect(X(FAZ_COVE), p.y, (peek - 0.6) * 2.5 * 14 * z, h); c.clip()
+      drawBot(c, 'foxy', X(FAZ_COVE + 6), floorY, z, { mouth: true, glow: false, bob: 0 })
+      c.restore()
+    }
+    return
+  }
+  // ---- the night shift ----
+  c.fillStyle = 'rgba(5,5,20,0.78)'
+  c.fillRect(p.x, p.y, w, h)
+  // the animatronics move when you're not looking: each one hops to a new spot every few seconds
+  const spots: Record<Bot, number[]> = {
+    freddy: [(FAZ_STAGE[0] + FAZ_STAGE[1]) / 2, (FAZ_STAGE[0] + FAZ_STAGE[1]) / 2, FAZ_TABLES + 30],
+    bonnie: [FAZ_STAGE[0] + 20, FAZ_TABLES + 8, FAZ_OFFICE - 8],
+    chica: [FAZ_STAGE[1] - 20, FAZ_TABLES + 50, FAZ_TABLES + 64],
+    foxy: [FAZ_COVE + 12, FAZ_COVE + 12, FAZ_TABLES + 40],
+  }
+  ;(['freddy', 'bonnie', 'chica', 'foxy'] as Bot[]).forEach((b, i) => {
+    const slot = Math.floor(now / (3200 + i * 700) + i * 1.7) % spots[b].length
+    const sx = spots[b][slot]
+    const onStage = sx >= FAZ_STAGE[0] && sx <= FAZ_STAGE[1]
+    drawBot(c, b, X(sx), onStage ? stageY : floorY, z, { mouth: false, glow: true, bob: 0, lean: 0.08 * Math.sin(i) })
+  })
+  // the night guard and their sweeping flashlight
+  const gx = X(FAZ_OFFICE + 14)
+  c.fillStyle = 'rgba(255,240,170,0.18)'
+  const a = Math.sin(now / 1100) * 0.35
+  c.beginPath(); c.moveTo(gx, floorY - 10 * z); c.lineTo(gx - 90 * z, floorY - (16 + a * 40) * z - 14 * z); c.lineTo(gx - 90 * z, floorY - (16 + a * 40) * z + 14 * z); c.fill()
+  drawPersonAt(c, gx, floorY, z, '#4263eb', 0, 0, 60)
+  c.fillStyle = '#4dff88'
+  c.font = `bold ${Math.round(5 * z)}px monospace`
+  const hr = Math.floor(m / 60)
+  c.fillText(`${hr === 0 ? 12 : hr} AM`, X(FAZ_OFFICE + 3), p.y + 14 * z)
+  c.fillText(`Night ${(dayOf(g.time) % 5) + 1}`, X(FAZ_OFFICE + 3), p.y + 20 * z)
+}
+
+function drawJumpscare(c: CanvasRenderingContext2D, W: number, H: number, now: number) {
+  if (now > scareUntil) return
+  const k = (now - scareStart) / 650
+  const shake = (Math.random() - 0.5) * 24 * (1 - k)
+  c.fillStyle = `rgba(0,0,0,${0.85 * (1 - k * 0.5)})`
+  c.fillRect(0, 0, W, H)
+  const u = Math.min(W, H) / 40 * (0.8 + k * 0.6)
+  drawBot(c, 'freddy', W / 2 + shake, H / 2 + 22 * u, u, { mouth: true, glow: true, bob: 0 })
 }
