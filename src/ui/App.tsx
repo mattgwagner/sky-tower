@@ -69,7 +69,7 @@ function Title({ onStart }: { onStart: () => void }) {
           <label><input type="checkbox" checked={disasters} onChange={(e) => setDisasters(e.target.checked)} /> Disasters (fires 🔥 and bomb threats 💣)</label>
         </div>
         <button className="big primary" onClick={go}>{canContinue ? '✨ Start a new tower' : '✨ Start building'}</button>
-        <p className="fineprint">Inspired by SimTower (1994). Space pauses · 1–4 set speed · scroll to zoom · drag to look around</p>
+        <p className="fineprint">Inspired by SimTower (1994). Space pauses · 1–4 set speed · scroll to zoom · drag to look around · build {__BUILD__}</p>
       </div>
     </div>
   )
