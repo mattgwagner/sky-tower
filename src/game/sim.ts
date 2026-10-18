@@ -681,9 +681,11 @@ function moveOut(g: Game, f: Facility, why: string) {
 // ---------- evaluation ----------
 
 let envVersion = -1
+let envGame: Game | null = null
 
 function refreshEnvironment(g: Game) {
-  if (envVersion === g.buildVersion) return
+  if (envGame === g && envVersion === g.buildVersion) return
+  envGame = g
   envVersion = g.buildVersion
   const ents = lobbyEntrances(g).filter((e) => e.floor === 0)
   const e = ents[0]

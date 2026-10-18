@@ -14,6 +14,7 @@ interface Node {
 }
 
 interface Graph {
+  game: Game
   version: number
   nodes: Node[]
   byFloor: Map<number, number[]>
@@ -68,11 +69,11 @@ function buildGraph(g: Game): Graph {
     }
     seg.set(f, s)
   }
-  return { version: g.buildVersion, nodes, byFloor, byVia, seg }
+  return { game: g, version: g.buildVersion, nodes, byFloor, byVia, seg }
 }
 
 function ensure(g: Game): Graph {
-  if (!graph || graph.version !== g.buildVersion) {
+  if (!graph || graph.game !== g || graph.version !== g.buildVersion) {
     graph = buildGraph(g)
     cache.clear()
   }

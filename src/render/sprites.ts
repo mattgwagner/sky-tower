@@ -60,7 +60,14 @@ function plant(c: Ctx, x: number, base: number) {
   r(c, '#51cf66', x, base - 11, 4, 3)
 }
 
+let pendingSigns: [Ctx, number, string, string, string][] = []
+
+// Signs are queued and drawn after the room's furniture so they always sit on top.
 function sign(c: Ctx, w: number, text: string, bg: string, fg = '#fff') {
+  pendingSigns.push([c, w, text, bg, fg])
+}
+
+function drawSign(c: Ctx, w: number, text: string, bg: string, fg: string) {
   c.font = 'bold 7px monospace'
   const tw = Math.ceil(c.measureText(text).width) + 4
   const x = Math.floor((w - tw) / 2)
@@ -359,8 +366,11 @@ export function sprite(kind: FacilityKind, width: number, height: number, look: 
   const w = width * T
   const h = height * FH
   const [cv, c] = mk(w, h)
+  pendingSigns = []
   if (kind === 'lobby') lobbyChunk(c, w, h, look, variant === 1)
   else (painters[kind] ?? ((cc: Ctx) => r(cc, '#888', 0, 0, w, h)))(c, w, h, look, variant)
+  for (const [sc, sw, text, bg, fg] of pendingSigns) drawSign(sc, sw, text, bg, fg)
+  pendingSigns = []
   cache.set(key, cv)
   return cv
 }
