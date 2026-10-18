@@ -7,7 +7,7 @@ import type { Facility, Game, Person, Shaft } from '../game/state'
 import { dayOf, isWeekend, minuteOfDay } from '../game/state'
 import { hasPet } from '../game/people-info'
 import { topFloor } from '../game/world'
-import { AQ_PAD, ARCADE_CABS, ARCADE_X, FH, ROCKET_X, SHIRTS, T, sprite } from './sprites'
+import { AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
 import type { Look } from './sprites'
 
 export interface Camera { x: number; y: number; zoom: number }
@@ -1043,6 +1043,209 @@ function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: nu
       c.fillStyle = '#fff'; c.beginPath(); c.arc(bx, by, 2.5 * z, 0, Math.PI * 2); c.fill()
       c.fillStyle = '#e03131'; c.beginPath(); c.arc(bx, by, 2.5 * z, 0, Math.PI / 1.5); c.lineTo(bx, by); c.fill()
       c.fillStyle = '#1c7ed6'; c.beginPath(); c.arc(bx, by, 2.5 * z, Math.PI, Math.PI * 1.66); c.lineTo(bx, by); c.fill()
+      return
+    }
+    case 'pizza': {
+      // oven fire, and dough spinning up into the air
+      for (let i = 0; i < 3; i++) {
+        c.fillStyle = i % 2 ? '#ff922b' : '#ffd43b'
+        const fh = (3 + Math.sin(now / 90 + i * 2) * 1.5) * z
+        c.beginPath(); c.moveTo(p.x + (12 + i * 3) * z, p.y + h - 3 * z); c.lineTo(p.x + (13.5 + i * 3) * z, p.y + h - 3 * z - fh); c.lineTo(p.x + (15 + i * 3) * z, p.y + h - 3 * z); c.fill()
+      }
+      if (!isOpen(g, f)) return
+      const toss = Math.abs(Math.sin(now / 420))
+      const dx = p.x + 56 * z, dy = p.y + h - 20 * z - toss * 9 * z
+      c.fillStyle = '#f1c27d'; c.fillRect(dx - 1.5 * z, p.y + h - 17 * z, 3 * z, 3 * z)
+      c.fillStyle = SHIRTS[0]; c.fillRect(dx - 1.5 * z, p.y + h - 14 * z, 3 * z, 4 * z)
+      c.fillStyle = '#fff'; c.fillRect(dx - 1.5 * z, p.y + h - 18.5 * z, 3 * z, 1.5 * z)
+      c.fillStyle = '#f4dfb0'
+      c.beginPath(); c.ellipse(dx, dy, 5 * z, (1 + 1.2 * Math.abs(Math.cos(now / 160))) * z, 0, 0, Math.PI * 2); c.fill()
+      return
+    }
+    case 'tacos': {
+      if (!isOpen(g, f)) return
+      c.fillStyle = 'rgba(255,255,255,0.55)'
+      for (let i = 0; i < 3; i++) {
+        const k = (now / 1200 + i / 3) % 1
+        c.beginPath(); c.arc(p.x + (10 + i * 8) * z + Math.sin(now / 300 + i) * z, p.y + h - 15 * z - k * 12 * z, (1 + k * 2) * z, 0, Math.PI * 2); c.fill()
+      }
+      return
+    }
+    case 'sushi': {
+      // plates riding the conveyor belt
+      const x0 = p.x + 6 * z, len = w - 12 * z
+      const cols: [string, string][] = [['#ff8787', '#fff'], ['#ff922b', '#fff'], ['#212529', '#fff'], ['#ffd43b', '#fff'], ['#69db7c', '#fff']]
+      const n = Math.floor(len / (12 * z))
+      for (let i = 0; i < n; i++) {
+        const x = x0 + ((now / 70 * z + i * 12 * z) % len)
+        const [fish, rice] = cols[i % cols.length]
+        c.fillStyle = i % 2 ? '#4dabf7' : '#fff'; c.fillRect(x, p.y + h - 16 * z, 6 * z, 1 * z)
+        c.fillStyle = rice; c.fillRect(x + 1 * z, p.y + h - 18 * z, 4 * z, 2 * z)
+        c.fillStyle = fish; c.fillRect(x + 1 * z, p.y + h - 19 * z, 4 * z, 1.2 * z)
+      }
+      return
+    }
+    case 'donuts': {
+      // a giant spinning donut with sprinkles
+      const cx = p.x + w - 12 * z, cy = p.y + h - 14 * z
+      c.fillStyle = '#d9a03f'; c.beginPath(); c.arc(cx, cy, 8 * z, 0, Math.PI * 2); c.fill()
+      c.fillStyle = '#f783ac'; c.beginPath(); c.arc(cx, cy, 6.8 * z, 0, Math.PI * 2); c.fill()
+      const sp = ['#fff', '#ffd43b', '#4dabf7', '#69db7c', '#ff6b6b']
+      for (let i = 0; i < 10; i++) {
+        const a = now / 900 + i * 0.63
+        c.fillStyle = sp[i % sp.length]
+        c.fillRect(cx + Math.cos(a) * 5 * z, cy + Math.sin(a) * 5 * z, 1.2 * z, 1.2 * z)
+      }
+      c.fillStyle = '#fff3f8'; c.beginPath(); c.arc(cx, cy, 2.6 * z, 0, Math.PI * 2); c.fill()
+      return
+    }
+    case 'pancakes': {
+      if (!isOpen(g, f)) return
+      // flip! and a stack with melting butter + steam
+      const t = (now % 1600) / 1600
+      const fx = p.x + 18 * z, fy = p.y + h - 14 * z - Math.sin(t * Math.PI) * 10 * z
+      c.save(); c.translate(fx, fy); c.rotate(t * Math.PI * 2)
+      c.fillStyle = '#e8b04f'; c.fillRect(-4 * z, -1 * z, 8 * z, 2 * z)
+      c.fillStyle = '#c98a2c'; c.fillRect(-4 * z, 0.4 * z, 8 * z, 0.6 * z)
+      c.restore()
+      const sx = p.x + 40 * z, sb = p.y + h - 13 * z
+      for (let i = 0; i < 5; i++) { c.fillStyle = i % 2 ? '#e8b04f' : '#d9982f'; c.fillRect(sx - 4 * z, sb - (i + 1) * 1.6 * z, 8 * z, 1.6 * z) }
+      c.fillStyle = '#ffec99'; c.fillRect(sx - 1.5 * z, sb - 9.4 * z, 3 * z, 1.4 * z)
+      c.fillStyle = '#b5651d'; c.fillRect(sx - 4 * z, sb - 8 * z, 8 * z, 0.8 * z); c.fillRect(sx + 3 * z, sb - 8 * z, 0.8 * z, (3 + Math.sin(now / 500) * 1) * z)
+      c.fillStyle = 'rgba(255,255,255,0.5)'
+      for (let i = 0; i < 2; i++) {
+        const k = (now / 1400 + i / 2) % 1
+        c.beginPath(); c.arc(sx + Math.sin(now / 400 + i * 3) * 2 * z, sb - 10 * z - k * 8 * z, (0.8 + k * 1.5) * z, 0, Math.PI * 2); c.fill()
+      }
+      return
+    }
+    case 'candy': {
+      // spinning lollipop swirls
+      CANDY_POPS.forEach((lx, i) => {
+        const cx = p.x + (lx + 0.5) * z, cy = p.y + h - 17 * z, rad = 5 * z
+        c.fillStyle = '#fff'; c.beginPath(); c.arc(cx, cy, rad, 0, Math.PI * 2); c.fill()
+        for (let k = 0; k < 6; k++) {
+          const a = (i ? -1 : 1) * now / 500 + (k * Math.PI) / 3
+          c.fillStyle = i ? (k % 2 ? '#4dabf7' : '#da77f2') : (k % 2 ? '#ff6b6b' : '#ffd43b')
+          c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, rad, a, a + Math.PI / 6); c.fill()
+        }
+      })
+      return
+    }
+    case 'trampoline': {
+      const open = isOpen(g, f) || f.inside > 0
+      if (!open) return
+      for (let i = 0; i < TRAMPS; i++) {
+        const period = 700 + i * 90
+        const ph = ((now + i * 260) % period) / period
+        const hop = Math.sin(ph * Math.PI)
+        const cx = p.x + (6 + i * 26 + 11) * z
+        const yb = p.y + h - 8 * z - hop * 34 * z
+        const flip = i % 2 === 1 && Math.floor(now / period + i) % 3 === 0
+        c.save(); c.translate(cx, yb - 4 * z)
+        if (flip) c.rotate(ph * Math.PI * 2)
+        drawPersonAt(c, 0, 4 * z, z, SHIRTS[(i * 3 + f.id) % SHIRTS.length], hop > 0.6 ? 1 : 0, 0)
+        c.restore()
+      }
+      return
+    }
+    case 'climbing': {
+      if (!isOpen(g, f) && f.inside === 0) return
+      for (let i = 0; i < 3; i++) {
+        const period = 9000 + i * 2300
+        const k = ((now + i * 3100) % period) / period
+        const up = k < 0.8 ? k / 0.8 : 1 - (k - 0.8) / 0.2
+        const cx = p.x + (22 + i * 26) * z
+        const yb = p.y + h - 6 * z - up * (h - 22 * z)
+        c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = Math.max(0.5, 0.5 * z)
+        c.beginPath(); c.moveTo(cx + 0.5 * z, p.y + 10 * z); c.lineTo(cx + 0.5 * z, yb - 9 * z); c.stroke()
+        drawPersonAt(c, cx, yb, z, SHIRTS[(i + f.id) % SHIRTS.length], Math.floor(now / 250 + i) % 2, 0)
+        if (up > 0.98) {
+          c.fillStyle = '#ffe066'
+          c.font = `bold ${Math.round(7 * z)}px sans-serif`
+          c.fillText('DING!', p.x + w / 2 + 6 * z, p.y + 12 * z)
+        }
+      }
+      return
+    }
+    case 'miniGolf': {
+      // windmill blades
+      const mx = p.x + GOLF_MILL * z, my = p.y + h - 20 * z
+      c.fillStyle = '#fff'
+      for (let k = 0; k < 4; k++) {
+        const a = now / 600 + (k * Math.PI) / 2
+        c.save(); c.translate(mx, my); c.rotate(a); c.fillRect(-1 * z, 0, 2 * z, 9 * z); c.restore()
+      }
+      if (!isOpen(g, f) && f.inside === 0) return
+      // golfer and a ball rolling to the hole
+      drawPersonAt(c, p.x + 12 * z, p.y + h - 6 * z, z, SHIRTS[(f.id + 2) % SHIRTS.length], 0, 0)
+      const k = (now % 7000) / 7000
+      const bx = p.x + (16 + Math.min(1, k * 1.15) * (GOLF_HOLE - 16)) * z
+      const hill = Math.max(0, 1 - Math.abs(bx - (p.x + 52 * z)) / (14 * z)) * 3 * z
+      if (k < 0.87) { c.fillStyle = '#fff'; c.fillRect(bx - z, p.y + h - 8 * z - hill, 2 * z, 2 * z) }
+      else { c.fillStyle = '#ffe066'; c.font = `bold ${Math.round(6 * z)}px sans-serif`; c.fillText('Hole in one!', p.x + (GOLF_HOLE - 24) * z, p.y + h - 22 * z) }
+      return
+    }
+    case 'bowling': {
+      const k = (now % 4500) / 4500
+      const hit = k > 0.62
+      // pins: standing, then scattered, then reset
+      const pinsX = p.x + BOWL_PINS * z, py = p.y + h - 8 * z
+      for (let i = 0; i < 4; i++) {
+        const dx = (i % 2) * 3 * z + Math.floor(i / 2) * 5 * z
+        c.save(); c.translate(pinsX + dx, py)
+        if (hit && k < 0.95) c.rotate((i % 2 ? 1 : -1) * Math.min(1.4, (k - 0.62) * 8))
+        c.fillStyle = '#fff'; c.fillRect(-1 * z, -6 * z, 2 * z, 6 * z)
+        c.fillStyle = '#e03131'; c.fillRect(-1 * z, -4.5 * z, 2 * z, 0.8 * z)
+        c.restore()
+      }
+      if (!isOpen(g, f) && f.inside === 0) return
+      if (k < 0.62) {
+        const bx = p.x + (26 + (k / 0.62) * (BOWL_PINS - 30)) * z
+        c.fillStyle = '#7048e8'; c.beginPath(); c.arc(bx, py - 2 * z, 2.2 * z, 0, Math.PI * 2); c.fill()
+      } else if (k < 0.85) {
+        c.fillStyle = '#ffe066'; c.font = `bold ${Math.round(8 * z)}px sans-serif`
+        c.fillText('STRIKE!', pinsX - 40 * z, p.y + 16 * z)
+      }
+      drawPersonAt(c, p.x + 24 * z, py, z, SHIRTS[(f.id + 4) % SHIRTS.length], 1, 0)
+      return
+    }
+    case 'rollerRink': {
+      const open = isOpen(g, f) || f.inside > 0
+      if (!open) return
+      const cols = ['rgba(255,107,107,0.35)', 'rgba(77,171,247,0.35)', 'rgba(255,212,59,0.35)', 'rgba(105,219,124,0.35)']
+      for (let i = 0; i < 4; i++) {
+        c.fillStyle = cols[i]
+        const lx = p.x + w * (0.5 + 0.4 * Math.sin(now / (900 + i * 170) + i * 2))
+        c.beginPath(); c.ellipse(lx, p.y + h - 5 * z, 10 * z, 2.5 * z, 0, 0, Math.PI * 2); c.fill()
+      }
+      for (let i = 0; i < Math.min(6, 3 + f.inside); i++) {
+        const a = now / (1800 + i * 240) + i * 1.3
+        const sx = p.x + w / 2 + Math.sin(a) * (w / 2 - 16 * z)
+        drawPersonAt(c, sx, p.y + h - 6 * z, z, SHIRTS[(i + f.id) % SHIRTS.length], 0, 0)
+        c.fillStyle = '#e64980'; c.fillRect(sx - 1 * z, p.y + h - 6 * z, 3 * z, 0.8 * z)
+      }
+      return
+    }
+    case 'library': {
+      // the rolling ladder glides along the shelves
+      const lx = p.x + (20 + (Math.sin(now / 2600) * 0.5 + 0.5) * (w / z - 40)) * z
+      c.strokeStyle = '#8b5a2b'; c.lineWidth = Math.max(1, z)
+      c.beginPath(); c.moveTo(lx, p.y + 4 * z); c.lineTo(lx + 6 * z, p.y + FH * z - 3 * z); c.moveTo(lx + 4 * z, p.y + 4 * z); c.lineTo(lx + 10 * z, p.y + FH * z - 3 * z)
+      for (let k = 1; k < 6; k++) { const t = k / 6; c.moveTo(lx + 6 * z * t, p.y + (4 + t * (FH - 7)) * z); c.lineTo(lx + 4 * z + 6 * z * t, p.y + (4 + t * (FH - 7)) * z) }
+      c.stroke()
+      if (isOpen(g, f) && Math.floor(now / 3000) % 4 === 0) {
+        c.fillStyle = '#fff'; c.font = `bold ${Math.round(6 * z)}px sans-serif`
+        c.fillText('Shhh! 🤫', p.x + 70 * z, p.y + FH * z + 12 * z)
+      }
+      return
+    }
+    case 'bookstore': {
+      // the shop cat's tail flicks, and zzz
+      const t = Math.sin(now / 400)
+      c.fillStyle = '#ff922b'; c.fillRect(p.x + (56 + t) * z, p.y + h - 15 * z, 1 * z, 2 * z)
+      c.fillStyle = '#fff'; c.font = `${Math.round(5 * z)}px sans-serif`
+      c.fillText('z', p.x + 62 * z, p.y + h - 20 * z - ((now / 60) % 6) * z)
       return
     }
     case 'park': {

@@ -10,7 +10,17 @@ import { evict } from '../game/sim'
 import { totalWaiting } from '../game/elevators'
 import { Controller } from './controller'
 import { personDoing, personName, personRole, personThought, petLine } from '../game/people-info'
-import type { Speed } from './controller'
+import type { Speed, TowerSummary } from './controller'
+
+function ago(t: number) {
+  const m = Math.round((Date.now() - t) / 60000)
+  if (m < 1) return 'just now'
+  if (m < 60) return `${m} min ago`
+  const h = Math.round(m / 60)
+  if (h < 24) return `${h} hr ago`
+  const d = Math.round(h / 24)
+  return d === 1 ? 'yesterday' : `${d} days ago`
+}
 
 const ctl = new Controller()
 ;(window as unknown as { skytower: Controller }).skytower = ctl
@@ -41,9 +51,11 @@ function Title({ onStart }: { onStart: () => void }) {
   const [disasters, setDisasters] = useState(false)
   const [starter, setStarter] = useState(true)
   const [name, setName] = useState('')
-  const canContinue = ctl.hasSave()
+  const [towers, setTowers] = useState(() => ctl.towers())
+  const [doomed, setDoomed] = useState<TowerSummary | null>(null)
+  const canContinue = towers.length > 0
   const go = () => { unlockAudio(); play('star'); ctl.start(mode, disasters, starter, name.trim().slice(0, 28)); onStart() }
-  const cont = () => { unlockAudio(); if (ctl.load()) { play('move'); onStart() } }
+  const open = (id: string) => { unlockAudio(); if (ctl.load(id)) { play('move'); onStart() } else play('bad') }
   const modes: { id: Mode; name: string; emoji: string; text: string }[] = [
     { id: 'family', name: 'Family', emoji: '👨‍👩‍👧', text: 'Faster money and lower star goals. Great for playing together.' },
     { id: 'classic', name: 'Classic', emoji: '🕹️', text: 'The original challenge: 15,000 people for the Tower rating.' },
@@ -55,7 +67,31 @@ function Title({ onStart }: { onStart: () => void }) {
       <div className="title-card">
         <h1 className="logo">SKY<span>TOWER</span></h1>
         <p className="tagline">Build a skyscraper. Keep the elevators moving. Reach the stars.</p>
-        {canContinue && <button className="big primary" onClick={cont}>▶ Continue your tower</button>}
+        {canContinue && (
+          <div className="towers">
+            <h3>🏙️ My Towers</h3>
+            {towers.map((t) => (
+              <div key={t.id} className="tower-row">
+                <button className="tower-open" onClick={() => open(t.id)}>
+                  <b>{t.name}</b>
+                  <small>{t.stars >= 6 ? '🏆 TOWER' : '★'.repeat(t.stars)} · 👥 {t.pop.toLocaleString()} · {t.mode === 'sandbox' ? 'Sandbox' : money(t.money)} · {ago(t.updated)}</small>
+                </button>
+                <button className="tower-del" title="Delete this tower" onClick={() => setDoomed(t)}>🗑️</button>
+              </div>
+            ))}
+          </div>
+        )}
+        {doomed && (
+          <Modal onClose={() => setDoomed(null)}>
+            <h2>Delete “{doomed.name}”?</h2>
+            <p>This tower will be gone for good.</p>
+            <div className="row">
+              <button className="danger" onClick={() => { ctl.deleteTower(doomed.id); setTowers(ctl.towers()); setDoomed(null); play('boom') }}>🗑️ Delete it</button>
+              <button onClick={() => setDoomed(null)}>Keep it</button>
+            </div>
+          </Modal>
+        )}
+        {canContinue && <h3 className="new-head">✨ Start a new tower</h3>}
         <div className="mode-grid">
           {modes.map((m) => (
             <button key={m.id} className={`mode ${mode === m.id ? 'on' : ''}`} onClick={() => { setMode(m.id); setDisasters(m.id === 'classic'); play('click') }}>
@@ -73,7 +109,7 @@ function Title({ onStart }: { onStart: () => void }) {
           <label><input type="checkbox" checked={starter} onChange={(e) => setStarter(e.target.checked)} /> Start with a small tower already built</label>
           <label><input type="checkbox" checked={disasters} onChange={(e) => setDisasters(e.target.checked)} /> Disasters (fires 🔥 and bomb threats 💣)</label>
         </div>
-        <button className="big primary" onClick={go}>{canContinue ? '✨ Start a new tower' : '✨ Start building'}</button>
+        <button className="big primary" onClick={go}>✨ Start building</button>
         <p className="fineprint">Inspired by SimTower (1994). Space pauses · 1–4 set speed · scroll to zoom · drag to look around · build {__BUILD__}</p>
       </div>
     </div>
@@ -234,7 +270,7 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
               <span>🏷️ Tower name</span>
               <input value={g.name ?? ''} maxLength={28} placeholder="The Mega Tower" onChange={(e) => { g.name = e.target.value; ctl.emit() }} />
             </label>
-            <button onClick={() => { ctl.save(); setMenu(false); setToast({ text: '💾 Saved!', id: Date.now() }) }}>💾 Save now</button>
+            <button onClick={() => { const ok = ctl.save(); setMenu(false); setToast({ text: ok ? `💾 Saved “${g.name}”!` : '⚠️ Couldn\'t save. Try deleting an old tower.', id: Date.now() }) }}>💾 Save now</button>
             <button onClick={() => { ctl.toggleMusic() }}>{audioPrefs.music ? '🎵 Music: on' : '🎵 Music: off'}</button>
             <button onClick={() => { ctl.toggleSfx() }}>{audioPrefs.sfx ? '🔊 Sounds: on' : '🔇 Sounds: off'}</button>
             <button onClick={() => { g.disasters = !g.disasters; ctl.emit() }}>{g.disasters ? '🔥 Disasters: on' : '🛡️ Disasters: off'}</button>
@@ -300,7 +336,9 @@ const TOOL_LIST: Record<Category, ToolId[]> = {
   move: ['stairs', 'elevator', 'escalator', 'expressElevator', 'serviceElevator'],
   homes: ['office', 'condo'],
   hotel: ['hotelSingle', 'hotelTwin', 'hotelSuite', 'housekeeping'],
-  shops: ['fastFood', 'restaurant', 'shop', 'cinema', 'partyHall'],
+  shops: ['shop', 'bookstore', 'library', 'cinema', 'partyHall'],
+  play: ['trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink'],
+  food: ['fastFood', 'donuts', 'pancakes', 'tacos', 'pizza', 'candy', 'restaurant', 'sushi'],
   services: ['security', 'medical', 'recycling', 'parking', 'metro', 'cathedral'],
   fun: ['iceCream', 'park', 'arcade', 'pool', 'aquarium', 'hauntedHouse', 'dinoMuseum', 'rocketPad'],
 }
@@ -378,7 +416,7 @@ function Hint() {
   else if (g.shafts.size === 0 && ![...g.facilities.values()].some((f) => f.kind === 'stairs')) hint = 'Add an 🛗 Elevator: click and drag up from the lobby.'
   else if (![...g.facilities.values()].some((f) => f.kind === 'office' || f.kind === 'condo')) hint = 'Build Offices and Condos on upper floors to bring in people.'
   else if ([...g.facilities.values()].some((f) => !f.reachable && f.kind !== 'parking' && f.kind !== 'lobby')) hint = 'Rooms flashing 🚫 can\'t be reached. Connect them with an elevator or stairs.'
-  else if (![...g.facilities.values()].some((f) => f.kind === 'fastFood' || f.kind === 'restaurant')) hint = 'Office workers need lunch! Build Fast Food.'
+  else if (![...g.facilities.values()].some((f) => FACILITIES[f.kind].category === 'food')) hint = 'Office workers need lunch! Pick 🍕 Food and build a place to eat.'
   else if ([...g.shafts.values()].some((s) => totalWaiting(s) > 25)) hint = 'Long lines! Click an elevator and add more cars.'
   else if (![...g.facilities.values()].some((f) => FACILITIES[f.kind].category === 'fun')) hint = 'Try the 🎪 Fun Zone: ice cream, an aquarium with a shark, even a rocket!'
   if (!hint) return null
@@ -552,7 +590,7 @@ function Help({ onClose }: { onClose: () => void }) {
         <p><b>2. Elevators.</b> Choose 🛗 Elevator, then click and <i>drag up</i> from the lobby. One elevator reaches 30 floors. Click it later to add more cars.</p>
         <p><b>3. Bring people in.</b> Offices 💼 pay rent each quarter. Condos 🏠 sell for a big chunk of money. Rooms flashing 🚫 can't be reached yet.</p>
         <p><b>4. Keep them happy.</b> Watch the colors: <span style={{ color: '#ff9f43' }}>orange</span> and <span style={{ color: '#ff2d2d' }}>red</span> people are fed up with waiting. Press 😊 to see how every room feels. Unhappy tenants move out.</p>
-        <p><b>5. Food & fun.</b> Workers want lunch 🍔. Visitors come for restaurants, shops, and movies. More people means more customers.</p>
+        <p><b>5. Food & fun.</b> Workers want lunch 🍔 and families love breakfast 🥞. Find them all in the 🍕 Food tab. Visitors come for restaurants, shops, and movies. More people means more customers.</p>
         <p><b>6. Hotels.</b> Guests check in at night and leave in the morning. Housekeeping 🧹 cleans rooms. Skip cleaning and you'll get cockroaches 🪳!</p>
         <p><b>7. Go higher.</b> Put sky lobbies on floors 15, 30, 45… then use ⚡ Express elevators to zip between them.</p>
         <p><b>8. Fun Zone 🎪.</b> Ice cream, arcades, a pool, an aquarium with a shark, a haunted house and a dino museum. Put a 🚀 Rocket Pad on a roof and watch it blast off at noon! Name your tower in the ☰ menu.</p>

@@ -73,6 +73,19 @@ const FUN_THOUGHTS: Partial<Record<string, string[]>> = {
   rocketPad: ['To the moon! 🌕', '3… 2… 1… BLAST OFF!', 'I want to be an astronaut!'],
   cinema: ['Popcorn time! 🍿'],
   fastFood: ['Burger, fries, and a shake! 🍔'],
+  pizza: ['Extra cheese, please! 🍕', 'Pepperoni is the best topping. Fact.', 'Did you see that guy spin the dough?!'],
+  tacos: ['Taco time! 🌮', 'Three tacos. Maybe four.', 'Extra guac!'],
+  sushi: ['I\'m grabbing every plate that goes by! 🍣', 'Can I use chopsticks? Let\'s find out.', 'The plates ride a train!'],
+  donuts: ['Sprinkle donut, obviously. 🍩', 'Just one donut. Okay, two.', 'Donut worry, be happy!'],
+  pancakes: ['Pancakes with SO much syrup 🥞', 'A stack taller than me!', 'Best breakfast ever.'],
+  bookstore: ['A new dragon book! 🐉', 'I want to pet the shop cat.', 'Just ONE more chapter…'],
+  library: ['Shhh… reading time 📖', 'I\'m going to read ALL the books.', 'Story time is the best time!'],
+  trampoline: ['Watch me do a FLIP! 🤸', 'Higher! HIGHER!', 'Into the foam pit!'],
+  climbing: ['I\'m gonna ring that bell! 🧗', 'Don\'t look down… okay I looked down.', 'Spider-climber, go!'],
+  miniGolf: ['Hole in one, here I come! ⛳', 'Through the windmill… NOW!', 'It\'s all in the wrist.'],
+  bowling: ['STRIKE! 🎳', 'Bumpers up, please.', 'I picked the sparkly ball.'],
+  rollerRink: ['Wheee! 🛼', 'I can skate backwards!', 'Don\'t fall, don\'t fall…'],
+  candy: ['Don\'t tell my dentist! 🍭', 'The biggest lollipop they have!', 'Gummy worms! Gummy bears!'],
 }
 
 export function personThought(g: Game, p: Person) {

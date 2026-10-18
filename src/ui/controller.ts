@@ -11,7 +11,19 @@ import type { Camera, Overlay } from '../render/renderer'
 import { flashBuild, launchFireworks, personPos, render, screenToWorld } from '../render/renderer'
 import { FH, T } from '../render/sprites'
 
-const SAVE_KEY = 'skytower.save.v1'
+const LEGACY_KEY = 'skytower.save.v1'
+const INDEX_KEY = 'skytower.towers.v2'
+const towerKey = (id: string) => `skytower.tower.${id}`
+
+export interface TowerSummary { id: string; name: string; mode: Mode; stars: number; pop: number; money: number; updated: number }
+
+function readIndex(): TowerSummary[] {
+  try { return JSON.parse(localStorage.getItem(INDEX_KEY) ?? '[]') as TowerSummary[] } catch { return [] }
+}
+function writeIndex(list: TowerSummary[]) {
+  localStorage.setItem(INDEX_KEY, JSON.stringify(list))
+}
+const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
 
 export type Speed = 0 | 1 | 2 | 4 | 8
 
@@ -23,6 +35,7 @@ export class Controller {
   ov: Overlay = {}
   selected = 0
   person = 0
+  towerId = ''
   follow = false
   private lastStars = 1
   private fwYear = 0
@@ -49,7 +62,8 @@ export class Controller {
 
   // ---------- game lifecycle ----------
   start(mode: Mode, disasters: boolean, starter: boolean, name = '') {
-    this.g = newGame(mode, disasters, name)
+    this.g = newGame(mode, disasters, name || `Tower #${readIndex().length + 1}`)
+    this.towerId = newId()
     if (starter) buildStarter(this.g)
     const zoom = starter ? 1.4 : 1.8
     this.cam = { x: (TOWER_WIDTH * T) / 2 - 90 / zoom, y: starter ? -FH * 5 : -FH * 2.5, zoom }
@@ -63,15 +77,38 @@ export class Controller {
     this.emit()
   }
 
-  hasSave() {
-    try { return !!localStorage.getItem(SAVE_KEY) } catch { return false }
+  /** Saved towers, most recently played first. Moves a pre-v2 single save into the list. */
+  towers(): TowerSummary[] {
+    try {
+      const old = localStorage.getItem(LEGACY_KEY)
+      if (old) {
+        const g = deserialize(old)
+        const id = newId()
+        localStorage.setItem(towerKey(id), old)
+        writeIndex([...readIndex(), this.summary(id, g, g.name?.trim() || 'My First Tower')])
+        localStorage.removeItem(LEGACY_KEY)
+      }
+    } catch { /* unreadable old save: leave it alone */ }
+    return readIndex().sort((a, b) => b.updated - a.updated)
   }
 
-  load(): boolean {
+  private summary(id: string, g: Game, name = g.name?.trim() || 'My Tower'): TowerSummary {
+    return { id, name, mode: g.mode, stars: g.stars, pop: g.pop, money: g.money, updated: Date.now() }
+  }
+
+  deleteTower(id: string) {
     try {
-      const s = localStorage.getItem(SAVE_KEY)
+      localStorage.removeItem(towerKey(id))
+      writeIndex(readIndex().filter((t) => t.id !== id))
+    } catch { /* blocked storage */ }
+  }
+
+  load(id: string): boolean {
+    try {
+      const s = localStorage.getItem(towerKey(id))
       if (!s) return false
       this.g = deserialize(s)
+      this.towerId = id
       this.lastStars = this.g.stars
       afterBuild(this.g)
       setMusic(true)
@@ -80,8 +117,15 @@ export class Controller {
     } catch { return false }
   }
 
-  save() {
-    try { localStorage.setItem(SAVE_KEY, serialize(this.g)) } catch { /* storage full or blocked */ }
+  /** Returns false when the browser refused to store it (usually: storage full). */
+  save(): boolean {
+    if (!this.towerId) return false
+    try {
+      localStorage.setItem(towerKey(this.towerId), serialize(this.g))
+      const list = readIndex().filter((t) => t.id !== this.towerId)
+      writeIndex([...list, this.summary(this.towerId, this.g)])
+      return true
+    } catch { return false }
   }
 
   // ---------- frame loop ----------

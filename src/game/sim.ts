@@ -1,6 +1,6 @@
 // The simulation: people, schedules, hotel, economy, rating and events.
 import {
-  ATTRACTIONS, DAYS_PER_QUARTER, FACILITIES, HOTEL_NIGHT, MAX_FLOOR, MINUTES_PER_STEP, OFFICE_RENT, CONDO_PRICE,
+  ATTRACTIONS, BREAKFAST, DAYS_PER_QUARTER, DINNER, LUNCH, FACILITIES, HOTEL_NIGHT, MAX_FLOOR, MINUTES_PER_STEP, OFFICE_RENT, CONDO_PRICE,
   RENT_HAPPY, RENT_MULT, SHOP_CAPACITY, SPEND, TRANSPORTS, isCommercial, isConnector, isHotel, isResidential, starRules,
 } from './defs'
 import type { FacilityKind } from './defs'
@@ -424,7 +424,10 @@ function bookRoom(g: Game, r: Facility, kind: 'guest' | 'vip') {
     if (kind === 'vip') p.shirt = 99
     schedule(p, now + (kind === 'vip' ? 5 : rnd(0, 40)), 'home')
     if (Math.random() < 0.5 || kind === 'vip') schedule(p, Math.max(now + 90, dayOf(now) * 1440 + rnd(at(18, 30), at(20, 30))), 'eat')
-    schedule(p, tomorrow + rnd(at(7), at(10, 30)), 'checkout')
+    if (Math.random() < 0.4) {
+      schedule(p, tomorrow + rnd(at(7), at(8, 15)), 'breakfast')
+      schedule(p, tomorrow + rnd(at(9, 45), at(10, 45)), 'checkout')
+    } else schedule(p, tomorrow + rnd(at(7), at(10, 30)), 'checkout')
   }
 }
 
@@ -466,6 +469,19 @@ const FUN_HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
   hauntedHouse: [[at(17), at(24)]],
   dinoMuseum: [[at(9), at(18)]],
   rocketPad: [[at(10), at(12, 30)]],
+  pizza: [[at(11), at(22)]],
+  tacos: [[at(11), at(21)]],
+  sushi: [[at(11, 30), at(14, 30)], [at(17), at(22)]],
+  donuts: [[at(6), at(14)]],
+  pancakes: [[at(7), at(13)]],
+  candy: [[at(10), at(20)]],
+  bookstore: [[at(10), at(21)]],
+  library: [[at(9), at(20)]],
+  trampoline: [[at(10), at(20)]],
+  climbing: [[at(10), at(20)]],
+  miniGolf: [[at(10), at(21)]],
+  bowling: [[at(12), at(23)]],
+  rollerRink: [[at(14), at(23)]],
 }
 const LAUNCH = at(12)
 
@@ -475,7 +491,14 @@ function stayFor(g: Game, k: FacilityKind) {
     case 'partyHall': return 130
     case 'restaurant': return rnd(45, 80)
     case 'shop': return rnd(15, 40)
-    case 'iceCream': return rnd(10, 20)
+    case 'iceCream': case 'donuts': case 'candy': return rnd(10, 20)
+    case 'tacos': return rnd(15, 30)
+    case 'pizza': case 'pancakes': return rnd(25, 45)
+    case 'sushi': return rnd(35, 60)
+    case 'trampoline': case 'climbing': case 'miniGolf': return rnd(40, 70)
+    case 'bookstore': return rnd(20, 45)
+    case 'library': return rnd(45, 100)
+    case 'bowling': case 'rollerRink': return rnd(50, 90)
     case 'arcade': return rnd(30, 60)
     case 'pool': return rnd(40, 90)
     case 'aquarium': return rnd(40, 70)
@@ -532,6 +555,19 @@ function spawnVisitors(g: Game) {
       if ((m >= at(11) && m < at(11, 50)) || (m >= at(17) && m < at(17, 50))) perHour = 45
     } else if (f.kind === 'iceCream') perHour = m >= at(13) && m < at(18) ? 6 : 3
     else if (f.kind === 'arcade') perHour = 4
+    else if (f.kind === 'pizza') perHour = m >= at(17) || (m >= at(11, 30) && m < at(13, 30)) ? 6 : 2
+    else if (f.kind === 'tacos') perHour = m >= at(11, 30) && m < at(13, 30) ? 6 : 3
+    else if (f.kind === 'sushi') perHour = m >= at(17) ? 5 : 3
+    else if (f.kind === 'donuts') perHour = m < at(10) ? 6 : 2
+    else if (f.kind === 'pancakes') perHour = m < at(10, 30) ? 7 : 3
+    else if (f.kind === 'bookstore') perHour = 4
+    else if (f.kind === 'library') perHour = isWeekend(g.time) ? 8 : 5
+    else if (f.kind === 'trampoline') perHour = isWeekend(g.time) ? 12 : 7
+    else if (f.kind === 'climbing') perHour = 5
+    else if (f.kind === 'miniGolf') perHour = 5
+    else if (f.kind === 'bowling') perHour = m >= at(18) ? 10 : 4
+    else if (f.kind === 'rollerRink') perHour = m >= at(18) ? 9 : 5
+    else if (f.kind === 'candy') perHour = isWeekend(g.time) ? 6 : 3
     else if (f.kind === 'pool') perHour = 5
     else if (f.kind === 'aquarium') perHour = 8
     else if (f.kind === 'hauntedHouse') perHour = m >= at(19) ? 10 : 5
@@ -572,19 +608,22 @@ function planDay(g: Game, p: Person, fromNow: boolean) {
     case 'worker':
       if (weekend) break
       add(base + rnd(at(7), at(9, 15)), 'work')
+      if (Math.random() < 0.2) add(base + rnd(at(9, 45), at(10, 45)), 'snack')
       if (Math.random() < 0.85) add(base + rnd(at(11, 30), at(13)), 'lunch')
       add(base + rnd(at(17), at(19)), 'exit')
       break
     case 'resident':
       if (!weekend) {
+        if (Math.random() < 0.25) add(base + rnd(at(7), at(7, 40)), 'breakfast')
         if (Math.random() < 0.6) {
-          add(base + rnd(at(7, 30), at(9, 30)), 'exit')
+          add(base + rnd(at(8, 30), at(9, 30)), 'exit')
           add(base + rnd(at(16, 30), at(19)), 'home')
         }
         if (Math.random() < 0.35) add(base + rnd(at(18, 30), at(20, 30)), 'eat')
         else if (Math.random() < 0.25) add(base + rnd(at(17, 30), at(19, 30)), 'fun')
       } else {
-        if (Math.random() < 0.6) add(base + rnd(at(10), at(14)), 'fun')
+        if (Math.random() < 0.4) add(base + rnd(at(8), at(10)), 'breakfast')
+        if (Math.random() < 0.6) add(base + rnd(at(10, 30), at(14)), 'fun')
         if (Math.random() < 0.5) add(base + rnd(at(15), at(19)), 'fun')
       }
       add(base + at(22), 'home')
@@ -613,7 +652,7 @@ function doAct(g: Game, p: Person, act: string) {
     case 'exit':
       if (p.state === 'off') return
       releaseTask(g, p)
-      p.agenda = p.agenda.filter((a) => a.act !== 'doneClean')
+      p.agenda = p.agenda.filter((a) => a.act !== 'doneClean' && a.act !== 'leaveShop')
       if (!startTrip(g, p, 0, 'exit')) {
         // stuck: poof out
         leaveFacility(g, p)
@@ -626,15 +665,23 @@ function doAct(g: Game, p: Person, act: string) {
       return
     case 'lunch':
       if (p.state !== 'inside') return
-      if (!goShopping(g, p, ['fastFood', 'restaurant']) && home) home.stressAvg += 3
+      if (!goShopping(g, p, LUNCH) && home) home.stressAvg += 3
       return
     case 'eat':
       if (p.state !== 'inside') return
-      goShopping(g, p, ['restaurant', 'fastFood'])
+      goShopping(g, p, DINNER)
+      return
+    case 'breakfast':
+      if (p.state !== 'inside') return
+      goShopping(g, p, BREAKFAST)
+      return
+    case 'snack':
+      if (p.state !== 'inside') return
+      goShopping(g, p, ['donuts', 'candy', 'iceCream'])
       return
     case 'fun':
       if (p.state !== 'inside') return
-      goShopping(g, p, ['shop', 'cinema', 'restaurant', 'fastFood', ...ATTRACTIONS.filter((k) => k !== 'rocketPad')])
+      goShopping(g, p, ['shop', 'cinema', 'candy', ...DINNER, ...ATTRACTIONS.filter((k) => k !== 'rocketPad')])
       return
     case 'leaveShop':
       goBack(g, p)
@@ -740,7 +787,7 @@ function refreshEnvironment(g: Game) {
         const v = r[i]
         if (v <= 0 || v === f.id) continue
         const o = g.facilities.get(v)
-        if (g.shafts.has(v) || (o && (isCommercial(o.kind) || isConnector(o.kind) || o.kind === 'office'))) { f.noisy = true; break }
+        if (g.shafts.has(v) || (o && ((isCommercial(o.kind) && o.kind !== 'library') || isConnector(o.kind) || o.kind === 'office'))) { f.noisy = true; break }
       }
     }
   }
@@ -751,7 +798,7 @@ function evaluate(g: Game) {
   const count = (k: FacilityKind) => facilitiesOf(g, k).length
   let offices = 0, condos = 0
   for (const f of g.facilities.values()) { if (f.kind === 'office' && f.occupied) offices++; if (f.kind === 'condo' && f.occupied) condos++ }
-  const food = count('fastFood') + count('restaurant')
+  const food = LUNCH.reduce((n, k) => n + count(k), 0)
   const parkingShort = g.stars >= 3 && count('parking') < Math.ceil((offices + condos) / 10)
   const trashShort = g.stars >= 3 && count('recycling') < Math.ceil(g.pop / 3000)
   const medShort = g.stars >= 3 && count('medical') < Math.ceil(g.pop / 4000)

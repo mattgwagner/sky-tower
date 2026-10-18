@@ -43,12 +43,25 @@ export type FacilityKind =
   | 'pool'
   | 'park'
   | 'rocketPad'
+  | 'pizza'
+  | 'tacos'
+  | 'sushi'
+  | 'donuts'
+  | 'pancakes'
+  | 'candy'
+  | 'trampoline'
+  | 'climbing'
+  | 'miniGolf'
+  | 'bowling'
+  | 'rollerRink'
+  | 'bookstore'
+  | 'library'
 
 export type TransportKind = 'elevator' | 'serviceElevator' | 'expressElevator'
 
 export type ToolId = FacilityKind | TransportKind | 'bulldoze' | 'inspect'
 
-export type Category = 'basics' | 'homes' | 'hotel' | 'shops' | 'services' | 'move' | 'fun'
+export type Category = 'basics' | 'homes' | 'hotel' | 'shops' | 'services' | 'move' | 'food' | 'play' | 'fun'
 
 export interface FacilityDef {
   kind: FacilityKind
@@ -76,7 +89,7 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: '6 workers. Pays rent every quarter. Workers need lunch nearby.' },
   condo: { kind: 'condo', name: 'Condo', emoji: '🏠', category: 'homes', width: 16, height: 1, cost: 80000, stars: 1, pop: 3,
     blurb: 'A family of 3 buys it when they move in. Keep it quiet!' },
-  fastFood: { kind: 'fastFood', name: 'Fast Food', emoji: '🍔', category: 'shops', width: 16, height: 1, cost: 100000, stars: 1, pop: 4,
+  fastFood: { kind: 'fastFood', name: 'Fast Food', emoji: '🍔', category: 'food', width: 16, height: 1, cost: 100000, stars: 1, pop: 4,
     blurb: 'Lunch spot for workers and visitors. Earns money per customer.' },
   hotelSingle: { kind: 'hotelSingle', name: 'Single Room', emoji: '🛏️', category: 'hotel', width: 4, height: 1, cost: 20000, stars: 2, pop: 1,
     blurb: 'One guest per night. Needs housekeeping to clean it.' },
@@ -88,7 +101,7 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: '6 housekeepers clean dirty hotel rooms each day.' },
   security: { kind: 'security', name: 'Security', emoji: '👮', category: 'services', width: 16, height: 1, cost: 100000, stars: 2, pop: 6, upkeep: 10000,
     blurb: 'Guards put out fires and search for bombs. Needed for 3★.' },
-  restaurant: { kind: 'restaurant', name: 'Restaurant', emoji: '🍝', category: 'shops', width: 24, height: 1, cost: 200000, stars: 3, pop: 8,
+  restaurant: { kind: 'restaurant', name: 'Restaurant', emoji: '🍝', category: 'food', width: 24, height: 1, cost: 200000, stars: 3, pop: 8,
     blurb: 'Dinner for hotel guests, residents and visitors.' },
   shop: { kind: 'shop', name: 'Shop', emoji: '🛍️', category: 'shops', width: 12, height: 1, cost: 100000, stars: 3, pop: 3,
     blurb: 'Shoppers drop by during the day. Busier on weekends.' },
@@ -126,6 +139,32 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'Giant dinosaur skeletons. The T-Rex roars at noon and 4pm!' },
   rocketPad: { kind: 'rocketPad', name: 'Rocket Pad', emoji: '🚀', category: 'fun', width: 14, height: 2, cost: 1500000, stars: 3, pop: 10, underground: 'no',
     blurb: 'Build it on a roof with open sky above. Blasts off every day at noon!' },
+  donuts: { kind: 'donuts', name: 'Donut Shop', emoji: '🍩', category: 'food', width: 10, height: 1, cost: 50000, stars: 1, pop: 3,
+    blurb: 'Opens bright and early. Workers grab a snack mid-morning.' },
+  pancakes: { kind: 'pancakes', name: 'Pancake House', emoji: '🥞', category: 'food', width: 16, height: 1, cost: 90000, stars: 1, pop: 5,
+    blurb: 'Breakfast! Families stop in before heading out for the day.' },
+  tacos: { kind: 'tacos', name: 'Taco Stand', emoji: '🌮', category: 'food', width: 10, height: 1, cost: 50000, stars: 1, pop: 3,
+    blurb: 'Quick, cheap and tasty. A favorite lunch spot.' },
+  pizza: { kind: 'pizza', name: 'Pizza Place', emoji: '🍕', category: 'food', width: 14, height: 1, cost: 80000, stars: 1, pop: 5,
+    blurb: 'Wood-fired oven and flying dough. Lunch and dinner.' },
+  candy: { kind: 'candy', name: 'Candy Shop', emoji: '🍭', category: 'food', width: 10, height: 1, cost: 60000, stars: 1, pop: 3,
+    blurb: 'Lollipops and jars of sweets. Busy on weekends.' },
+  sushi: { kind: 'sushi', name: 'Sushi Bar', emoji: '🍣', category: 'food', width: 18, height: 1, cost: 150000, stars: 2, pop: 6,
+    blurb: 'Plates ride around on a conveyor belt. Fancy lunch and dinner.' },
+  trampoline: { kind: 'trampoline', name: 'Trampoline Park', emoji: '🤸', category: 'play', width: 20, height: 2, cost: 200000, stars: 1, pop: 10,
+    blurb: 'Two floors tall so everyone can bounce SUPER high. Plus a foam pit!' },
+  climbing: { kind: 'climbing', name: 'Climbing Wall', emoji: '🧗', category: 'play', width: 12, height: 3, cost: 180000, stars: 1, pop: 6,
+    blurb: 'Three floors of climbing. Ring the bell at the top!' },
+  miniGolf: { kind: 'miniGolf', name: 'Mini Golf', emoji: '⛳', category: 'play', width: 20, height: 1, cost: 120000, stars: 1, pop: 6,
+    blurb: 'Putt through the spinning windmill for a hole-in-one.' },
+  bowling: { kind: 'bowling', name: 'Bowling Alley', emoji: '🎳', category: 'play', width: 28, height: 1, cost: 250000, stars: 2, pop: 10,
+    blurb: 'STRIKE! Busy in the evenings. A little noisy.' },
+  rollerRink: { kind: 'rollerRink', name: 'Roller Rink', emoji: '🛼', category: 'play', width: 24, height: 1, cost: 200000, stars: 2, pop: 10,
+    blurb: 'Disco lights and skaters zooming around in circles.' },
+  bookstore: { kind: 'bookstore', name: 'Bookstore', emoji: '📚', category: 'shops', width: 14, height: 1, cost: 90000, stars: 1, pop: 4,
+    blurb: 'Comics, mysteries and dragon books. There\'s a shop cat!' },
+  library: { kind: 'library', name: 'Library', emoji: '📖', category: 'shops', width: 24, height: 2, cost: 150000, stars: 1, pop: 8,
+    blurb: 'Two floors of books and a story-time corner. Quiet, so neighbors don\'t mind.' },
 }
 
 export interface TransportDef {
@@ -158,8 +197,10 @@ export const CATEGORIES: { id: Category; name: string; emoji: string }[] = [
   { id: 'move', name: 'Get Around', emoji: '🛗' },
   { id: 'homes', name: 'Work & Live', emoji: '🏢' },
   { id: 'hotel', name: 'Hotel', emoji: '🛎️' },
-  { id: 'shops', name: 'Food & Fun', emoji: '🍔' },
+  { id: 'shops', name: 'Shops & Shows', emoji: '🛍️' },
   { id: 'services', name: 'Services', emoji: '🏥' },
+  { id: 'food', name: 'Food', emoji: '🍕' },
+  { id: 'play', name: 'Play', emoji: '🤸' },
   { id: 'fun', name: 'Fun Zone', emoji: '🎪' },
 ]
 
@@ -201,21 +242,36 @@ export const CONDO_PRICE = 150000 // one-time sale
 export const HOTEL_NIGHT: Partial<Record<FacilityKind, number>> = { hotelSingle: 3000, hotelTwin: 4500, hotelSuite: 9000 }
 export const SPEND: Partial<Record<FacilityKind, number>> = {
   fastFood: 400, restaurant: 1200, shop: 800, cinema: 1000, partyHall: 0, metro: 0,
+  bookstore: 300, library: 60,
+  trampoline: 400, climbing: 300, miniGolf: 250, bowling: 450, rollerRink: 350,
+  pizza: 350, tacos: 250, sushi: 700, donuts: 150, pancakes: 300, candy: 150,
   iceCream: 200, arcade: 350, pool: 250, aquarium: 550, hauntedHouse: 450, dinoMuseum: 650, rocketPad: 1000,
 }
 export const SHOP_CAPACITY: Partial<Record<FacilityKind, number>> = {
   fastFood: 14, restaurant: 18, shop: 8, cinema: 60, partyHall: 40,
+  bookstore: 10, library: 30,
+  trampoline: 24, climbing: 10, miniGolf: 14, bowling: 20, rollerRink: 20,
+  pizza: 12, tacos: 8, sushi: 12, donuts: 8, pancakes: 14, candy: 8,
   iceCream: 10, arcade: 16, pool: 20, aquarium: 40, hauntedHouse: 24, dinoMuseum: 50, rocketPad: 40,
 }
 
+/** Places to eat, by meal. */
+export const LUNCH: FacilityKind[] = ['fastFood', 'restaurant', 'pizza', 'tacos', 'sushi']
+export const DINNER: FacilityKind[] = ['restaurant', 'fastFood', 'pizza', 'sushi', 'tacos']
+export const BREAKFAST: FacilityKind[] = ['pancakes', 'donuts']
+export const FOOD: FacilityKind[] = [...LUNCH, ...BREAKFAST, 'candy']
+
 /** Fun Zone places people visit like shops. */
-export const ATTRACTIONS: FacilityKind[] = ['iceCream', 'arcade', 'pool', 'aquarium', 'hauntedHouse', 'dinoMuseum', 'rocketPad']
+export const ATTRACTIONS: FacilityKind[] = [
+  'iceCream', 'arcade', 'pool', 'aquarium', 'hauntedHouse', 'dinoMuseum', 'rocketPad',
+  'trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink', 'bookstore', 'library',
+]
 
 export function isHotel(k: FacilityKind) {
   return k === 'hotelSingle' || k === 'hotelTwin' || k === 'hotelSuite'
 }
 export function isCommercial(k: FacilityKind) {
-  return k === 'fastFood' || k === 'restaurant' || k === 'shop' || k === 'cinema' || k === 'partyHall' || ATTRACTIONS.includes(k)
+  return k === 'fastFood' || k === 'restaurant' || k === 'shop' || k === 'cinema' || k === 'partyHall' || ATTRACTIONS.includes(k) || FOOD.includes(k)
 }
 export function isResidential(k: FacilityKind) {
   return k === 'condo' || isHotel(k)

@@ -494,7 +494,235 @@ const painters: Partial<Record<FacilityKind, Painter>> = {
   },
 }
 
-export const ARCADE_X = [4, 17, 30, 82, 95]
+Object.assign(painters, {
+  pizza(c: Ctx, w: number, h: number, look: Look) {
+    const dark = look === 'night'
+    shell(c, w, h, '#fff4e6', '#8d6e4f', dark)
+    for (let x = 0; x < w; x += 4) r(c, dark ? '#5a2a2a' : (x / 4) % 2 ? '#e03131' : '#fff', x, h - 10, 4, 3)
+    sign(c, w, 'PIZZA', '#e03131', '#fff')
+    // brick oven
+    c.fillStyle = '#b5532c'; c.beginPath(); c.arc(16, h - 10, 13, Math.PI, 0); c.fill()
+    r(c, '#b5532c', 3, h - 10, 26, 7)
+    for (let y = h - 20; y < h - 4; y += 4) for (let x = 5 + ((y / 4) % 2) * 3; x < 28; x += 6) r(c, '#8f3d1f', x, y, 4, 1)
+    c.fillStyle = '#1a1010'; c.beginPath(); c.arc(16, h - 7, 6, Math.PI, 0); c.fill()
+    // counter + pizza
+    r(c, '#ced4da', 36, h - 12, 30, 9); r(c, '#868e96', 36, h - 13, 30, 1)
+    c.fillStyle = '#f4c05a'; c.beginPath(); c.ellipse(46, h - 14, 7, 2, 0, 0, Math.PI * 2); c.fill()
+    c.fillStyle = '#e8590c'; c.beginPath(); c.ellipse(46, h - 14, 5.5, 1.4, 0, 0, Math.PI * 2); c.fill()
+    for (const dx of [-3, 0, 3]) r(c, '#c92a2a', 46 + dx, h - 15, 1, 1)
+    // tables with checkered cloths
+    for (const x of [74, 94]) {
+      for (let i = 0; i < 12; i += 2) { r(c, '#e03131', x + i, h - 12, 1, 2); r(c, '#fff', x + i + 1, h - 12, 1, 2) }
+      r(c, '#5c4632', x + 5, h - 10, 2, 7)
+    }
+  },
+  tacos(c: Ctx, w: number, h: number, look: Look) {
+    const dark = look === 'night'
+    shell(c, w, h, '#fff3bf', '#c2703d', dark)
+    // paper flag bunting
+    const flags = ['#e64980', '#fab005', '#12b886', '#4c6ef5', '#fd7e14']
+    c.strokeStyle = '#495057'; c.lineWidth = 0.5
+    c.beginPath(); c.moveTo(0, 4); c.quadraticCurveTo(w / 2, 9, w, 4); c.stroke()
+    for (let i = 0; i < 9; i++) {
+      const x = 3 + i * 8.6, y = 4 + Math.sin((i / 8) * Math.PI) * 4
+      c.fillStyle = flags[i % flags.length]
+      c.beginPath(); c.moveTo(x, y); c.lineTo(x + 5, y); c.lineTo(x + 2.5, y + 5); c.fill()
+    }
+    sign(c, w, 'TACOS', '#f08c00', '#fff')
+    // grill counter
+    r(c, '#495057', 4, h - 12, 28, 9); r(c, '#212529', 4, h - 13, 28, 2)
+    for (let x = 6; x < 30; x += 4) r(c, '#868e96', x, h - 14, 2, 1)
+    // giant taco
+    c.fillStyle = '#f4c05a'; c.beginPath(); c.arc(w - 18, h - 6, 11, Math.PI, 0); c.fill()
+    r(c, '#51cf66', w - 27, h - 12, 18, 2)
+    r(c, '#e03131', w - 24, h - 13, 3, 2); r(c, '#ffd43b', w - 18, h - 13, 4, 1); r(c, '#8b5a2b', w - 13, h - 12, 3, 2)
+    r(c, '#d9a03f', w - 29, h - 7, 22, 1)
+  },
+  sushi(c: Ctx, w: number, h: number, look: Look) {
+    const dark = look === 'night'
+    shell(c, w, h, '#f3e6cc', '#8d6e4f', dark)
+    // noren curtain
+    for (let i = 0; i < 5; i++) r(c, '#1c3d6e', 8 + i * 7, 2, 6, 9)
+    r(c, '#fff', 20, 5, 6, 3)
+    sign(c, w, 'SUSHI', '#c92a2a', '#fff')
+    // paper lanterns
+    for (const x of [w - 30, w - 14]) { r(c, '#555', x + 2, 2, 1, 4); r(c, '#ff6b6b', x, 6, 5, 7); r(c, '#c92a2a', x, 6, 5, 1); r(c, '#c92a2a', x, 12, 5, 1) }
+    // conveyor counter + stools
+    r(c, '#8b5a2b', 6, h - 12, w - 12, 9)
+    r(c, '#868e96', 6, h - 15, w - 12, 3)
+    r(c, '#495057', 6, h - 13, w - 12, 1)
+    for (let x = 12; x < w - 10; x += 16) { r(c, '#c92a2a', x, h - 8, 6, 2); r(c, '#495057', x + 2, h - 6, 2, 3) }
+  },
+  donuts(c: Ctx, w: number, h: number, look: Look) {
+    const dark = look === 'night'
+    shell(c, w, h, '#ffe3ec', '#c48b5c', dark)
+    for (let x = 0; x < w; x += 6) r(c, dark ? '#4a2a3a' : '#f783ac', x, 2, 3, 3)
+    sign(c, w, 'DONUTS', '#ae3ec9', '#fff')
+    // display case
+    r(c, '#dee2e6', 4, h - 14, 40, 11); r(c, 'rgba(200,240,255,0.6)', 5, h - 13, 38, 6)
+    const icing = ['#f783ac', '#8d6e4f', '#fff', '#ffd43b', '#74c0fc', '#b197fc']
+    for (let i = 0; i < 6; i++) {
+      const x = 8 + i * 6
+      c.fillStyle = '#d9a03f'; c.beginPath(); c.arc(x, h - 10, 2.6, 0, Math.PI * 2); c.fill()
+      c.fillStyle = icing[i]; c.beginPath(); c.arc(x, h - 10.5, 2.1, 0, Math.PI * 2); c.fill()
+      r(c, '#f3e6cc', x - 0.5, h - 10.5, 1, 1)
+    }
+    r(c, '#fff', 50, h - 10, 8, 2); r(c, '#ced4da', 53, h - 8, 2, 5)
+  },
+  pancakes(c: Ctx, w: number, h: number, look: Look) {
+    const dark = look === 'night'
+    shell(c, w, h, '#fff9db', '#a0703f', dark)
+    sign(c, w, 'PANCAKES', '#f59f00', '#fff')
+    window(c, 6, 6, 14, 10, dark)
+    // griddle
+    r(c, '#343a40', 6, h - 12, 30, 9); r(c, '#212529', 6, h - 13, 30, 2)
+    for (const x of [12, 24]) { c.fillStyle = '#e8b04f'; c.beginPath(); c.ellipse(x, h - 14, 4, 1, 0, 0, Math.PI * 2); c.fill() }
+    // booths
+    for (const x of [48, 84]) {
+      r(c, '#e03131', x, h - 14, 3, 11); r(c, '#e03131', x + 21, h - 14, 3, 11)
+      r(c, '#fff', x + 5, h - 11, 14, 2); r(c, '#adb5bd', x + 11, h - 9, 2, 6)
+      r(c, '#e8b04f', x + 7, h - 13, 4, 2); r(c, '#fab005', x + 14, h - 14, 2, 3)
+    }
+    plant(c, w - 8, h - 3)
+  },
+  candy(c: Ctx, w: number, h: number, look: Look) {
+    const dark = look === 'night'
+    shell(c, w, h, '#fff0f6', '#f8c6d8', dark)
+    for (let x = 0; x < w; x += 6) r(c, dark ? 'rgba(80,30,50,0.4)' : 'rgba(247,131,172,0.35)', x, 2, 3, h - 13)
+    sign(c, w, 'CANDY', '#e64980', '#fff')
+    // shelves of jars
+    r(c, '#8d6e4f', 4, h - 22, 34, 19)
+    const sweets = ['#ff6b6b', '#ffd43b', '#69db7c', '#4dabf7', '#da77f2', '#ff922b', '#fff', '#f783ac']
+    for (let row = 0; row < 2; row++) for (let i = 0; i < 5; i++) {
+      const x = 6 + i * 6.4, y = h - 20 + row * 8
+      r(c, 'rgba(220,240,255,0.8)', x, y, 5, 6)
+      for (let k = 0; k < 4; k++) r(c, sweets[(i + row * 3 + k) % sweets.length], x + 1 + (k % 2) * 2, y + 2 + Math.floor(k / 2) * 2, 2, 2)
+      r(c, '#e64980', x, y - 1, 5, 1)
+    }
+    // lollipop sticks (the swirls spin in the renderer)
+    for (const x of CANDY_POPS) r(c, '#fff', x, h - 13, 1, 10)
+  },
+} satisfies Partial<Record<FacilityKind, Painter>>)
+
+Object.assign(painters, {
+  trampoline(c: Ctx, w: number, h: number) {
+    shell(c, w, h, '#d0ebff', '#1971c2', false)
+    for (let x = 0; x < w; x += 10) r(c, '#a5d8ff', x, 2, 5, h - 12)
+    sign(c, w, 'BOUNCE!', '#1c7ed6', '#ffe066')
+    for (let i = 0; i < TRAMPS; i++) {
+      const x = 6 + i * 26
+      r(c, '#212529', x, h - 7, 22, 3); r(c, '#364fc7', x + 2, h - 8, 18, 1)
+      for (let k = 0; k < 6; k++) r(c, '#adb5bd', x + 1 + k * 4, h - 6, 1, 2)
+      r(c, '#212529', x, h - 4, 2, 1); r(c, '#212529', x + 20, h - 4, 2, 1)
+    }
+    // foam pit
+    const px = w - 50
+    r(c, '#495057', px, h - 14, 46, 11)
+    const foam = ['#ff8787', '#ffd43b', '#69db7c', '#74c0fc', '#da77f2']
+    for (let i = 0; i < 22; i++) r(c, foam[i % 5], px + 2 + (i * 7) % 42, h - 13 + (i % 3) * 3, 4, 3)
+  },
+  climbing(c: Ctx, w: number, h: number) {
+    r(c, '#e9ecef', 0, 0, w, h)
+    r(c, '#3a3a46', 0, 0, w, 2)
+    for (let f = 1; f < 3; f++) r(c, '#ced4da', 0, f * FH, w, 1)
+    r(c, '#5c7c9c', 8, 12, w - 16, h - 18)
+    for (let x = 8; x < w - 8; x += 20) r(c, '#4a6a8a', x, 12, 1, h - 18)
+    const holds = ['#ff6b6b', '#ffd43b', '#69db7c', '#4dabf7', '#da77f2', '#ff922b']
+    for (let i = 0; i < 46; i++) r(c, holds[i % 6], 10 + ((i * 37) % (w - 22)), 14 + ((i * 53) % (h - 26)), 3, 2)
+    // bell + anchors + crash mat
+    r(c, '#868e96', w / 2 - 20, 9, 40, 1)
+    r(c, '#fab005', w / 2 - 3, 5, 6, 5); r(c, '#e67700', w / 2 - 1, 10, 2, 1)
+    r(c, '#e03131', 4, h - 6, w - 8, 4)
+    sign(c, w, 'CLIMB', '#e8590c')
+  },
+  miniGolf(c: Ctx, w: number, h: number, look: Look) {
+    const dark = look === 'night'
+    shell(c, w, h, '#d3f9d8', '#2f9e44', dark)
+    sign(c, w, 'MINI GOLF', '#2f9e44')
+    r(c, '#40c057', 4, h - 6, w - 8, 3)
+    r(c, '#8b5a2b', 4, h - 7, w - 8, 1)
+    c.fillStyle = '#37b24d'; c.beginPath(); c.ellipse(52, h - 6, 14, 3, 0, Math.PI, 0); c.fill()
+    // windmill
+    r(c, '#e03131', GOLF_MILL - 6, h - 20, 12, 14); c.fillStyle = '#862e9c'
+    c.beginPath(); c.moveTo(GOLF_MILL - 8, h - 20); c.lineTo(GOLF_MILL, h - 27); c.lineTo(GOLF_MILL + 8, h - 20); c.fill()
+    r(c, '#212529', GOLF_MILL - 2, h - 10, 4, 4)
+    // hole + flag
+    r(c, '#111', GOLF_HOLE - 2, h - 6, 4, 1)
+    r(c, '#fff', GOLF_HOLE, h - 20, 1, 14)
+    r(c, '#ffd43b', GOLF_HOLE + 1, h - 20, 6, 4)
+  },
+  bowling(c: Ctx, w: number, h: number) {
+    r(c, '#1f1638', 0, 0, w, h)
+    r(c, '#3a3a46', 0, 0, w, 2)
+    for (let i = 0; i < 12; i++) r(c, i % 2 ? '#f06595' : '#22b8cf', 10 + i * 18, 6 + (i % 3) * 3, 2, 2)
+    sign(c, w, 'BOWLING', '#f06595', '#fff')
+    r(c, '#d9a86c', 0, h - 8, w, 5); r(c, '#b5834c', 0, h - 3, w, 3)
+    for (let x = 0; x < w; x += 12) r(c, '#c9965a', x, h - 8, 1, 5)
+    r(c, '#212529', BOWL_PINS - 8, h - 20, 2, 12)
+    // ball return
+    r(c, '#495057', 8, h - 14, 14, 6)
+    for (const [x, col] of [[10, '#e03131'], [15, '#4dabf7']] as const) { c.fillStyle = col; c.beginPath(); c.arc(x + 2, h - 15, 2.5, 0, Math.PI * 2); c.fill() }
+  },
+  rollerRink(c: Ctx, w: number, h: number) {
+    r(c, '#24123f', 0, 0, w, h)
+    r(c, '#3a3a46', 0, 0, w, 2)
+    r(c, '#c9965a', 0, h - 6, w, 3); r(c, '#a87a44', 0, h - 3, w, 3)
+    for (let x = 0; x < w; x += 4) r(c, (x / 4) % 3 ? '#b88650' : '#d9a86c', x, h - 6, 4, 1)
+    r(c, '#ddd', w / 2, 2, 1, 6); r(c, '#ced4da', w / 2 - 4, 8, 9, 8); r(c, '#fff', w / 2 - 2, 10, 2, 2)
+    sign(c, w, 'SKATE', '#7048e8', '#ffe066')
+    for (const x of [4, w - 8]) r(c, '#f06595', x, 6, 4, h - 12)
+  },
+} satisfies Partial<Record<FacilityKind, Painter>>)
+
+Object.assign(painters, {
+  bookstore(c: Ctx, w: number, h: number, look: Look) {
+    const dark = look === 'night'
+    shell(c, w, h, '#f3e6cc', '#8b5a2b', dark)
+    sign(c, w, 'BOOKS', '#5c3d2e', '#ffe8a3')
+    shelf(c, 4, h - 25, 30, 22)
+    shelf(c, w - 34, h - 25, 30, 22)
+    // table with a stack, armchair, sleepy shop cat
+    r(c, '#8b5a2b', 42, h - 11, 22, 2); r(c, '#5c4632', 44, h - 9, 2, 6); r(c, '#5c4632', 60, h - 9, 2, 6)
+    for (let i = 0; i < 4; i++) r(c, ['#e03131', '#1c7ed6', '#2f9e44', '#f08c00'][i], 46 + (i % 2), h - 13 - i * 2, 10, 2)
+    r(c, '#c92a2a', 66, h - 12, 10, 9); r(c, '#a61e1e', 66, h - 16, 3, 13)
+    r(c, '#ff922b', 58, h - 16, 6, 3); r(c, '#ff922b', 63, h - 18, 2, 2); r(c, '#ff922b', 57, h - 15, 1, 2)
+  },
+  library(c: Ctx, w: number, h: number, look: Look) {
+    const dark = look === 'night'
+    shell(c, w, h, '#e6dccb', '#7d4f14', dark)
+    r(c, '#5c3d2e', 0, FH - 2, w, 3) // mezzanine
+    sign(c, w, 'LIBRARY', '#1864ab', '#fff')
+    for (const x of [4, 40, 128, 164]) { shelf(c, x, 6, 26, FH - 9); shelf(c, x, FH + 3, 26, FH - 7) }
+    // story-time rug, chairs, lamp
+    c.fillStyle = '#ffa8a8'; c.beginPath(); c.ellipse(96, h - 4, 20, 2.5, 0, 0, Math.PI * 2); c.fill()
+    r(c, '#2f9e44', 74, h - 12, 7, 8); r(c, '#2f9e44', 74, h - 15, 2, 11)
+    r(c, '#fab005', 110, h - 10, 6, 6)
+    r(c, '#495057', 100, FH + 8, 1, 10); r(c, '#ffe066', 97, FH + 6, 7, 3)
+    plant(c, w - 10, FH - 2)
+  },
+} satisfies Partial<Record<FacilityKind, Painter>>)
+
+function shelf(c: Ctx, x: number, y: number, w: number, h: number) {
+  r(c, '#6b4f3a', x, y, w, h)
+  const cols = ['#e03131', '#1c7ed6', '#2f9e44', '#f08c00', '#7048e8', '#0ca678', '#e64980', '#fab005']
+  for (let row = 0; row < Math.floor((h - 2) / 7); row++) {
+    const yy = y + 1 + row * 7
+    for (let i = 0, bx = x + 1; bx < x + w - 2; i++) {
+      const bw = 2 + ((x + i * 3 + row) % 2)
+      const bh = 4 + ((i + row) % 3 === 0 ? 0 : 1)
+      r(c, cols[(i * 5 + row * 3 + x) % cols.length], bx, yy + 6 - bh, bw, bh)
+      bx += bw + 0.5
+    }
+    r(c, '#4a3426', x, yy + 6, w, 1)
+  }
+}
+
+export const TRAMPS = 4
+export const GOLF_MILL = 112
+export const GOLF_HOLE = 148
+export const BOWL_PINS = 208
+export const CANDY_POPS = [50, 64]
+export const ARCADE_X =[4, 17, 30, 82, 95]
 export const ARCADE_CABS = ARCADE_X.length
 export const AQ_PAD = 8
 /** Rocket centre, in sprite pixels from the pad's left edge. */

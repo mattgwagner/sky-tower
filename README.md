@@ -20,6 +20,19 @@ Production build: `npm run build && npm run preview`. The build in `dist/` is a 
 
 Optional starter tower and disasters (fires, bomb threats) are chosen on the title screen.
 
+## Food, Play and Books
+
+- 🍕 **Food**: Fast Food, Donut Shop and Pancake House (breakfast), Taco Stand, Pizza Place, Candy Shop, Restaurant,
+  Sushi Bar. Workers grab lunch and mid-morning snacks, families eat breakfast and dinner, and hotel guests eat
+  breakfast before checkout.
+- 🤸 **Play**: Trampoline Park, Climbing Wall, Mini Golf, Bowling Alley, Roller Rink.
+- 🛍️ **Shops & Shows** adds a Bookstore and a Library. The Library is quiet, so it doesn't count as noisy next to homes.
+
+## Saved towers
+
+Each tower saves under its own name. The title screen lists them (most recent first) with play and delete buttons.
+A save from before this change is moved into the list automatically the first time the title screen loads.
+
 ## Fun Zone
 
 The 🎪 Fun Zone tab holds the whimsical stuff: Ice Cream Shop, Sky Park (makes rooms on its floor happier),
