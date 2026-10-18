@@ -2,12 +2,12 @@
 import { FACILITIES, TOWER_WIDTH, TRANSPORTS, isCommercial, isHotel, isLobbyFloor } from '../game/defs'
 import type { FacilityKind } from '../game/defs'
 import { carPos } from '../game/elevators'
-import { TRAIN_EVERY, TRAIN_IN, isOpen, launchClock, trainPhase, ufoX } from '../game/sim'
+import { TRAIN_EVERY, TRAIN_IN, entityNow, hidingOn, isOpen, launchClock, trainPhase, ufoX } from '../game/sim'
 import type { Facility, Game, Person, Shaft } from '../game/state'
 import { dayOf, isWeekend, minuteOfDay } from '../game/state'
 import { hasPet } from '../game/people-info'
 import { topFloor } from '../game/world'
-import { FAZ_COVE, FAZ_OFFICE, FAZ_STAGE, FAZ_TABLES, METRO_BOARD, METRO_TUNNEL, AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
+import { INDIGO_LOOP, INDIGO_SCREEN, TOY_BELT, TOY_CASE, FAZ_COVE, FAZ_OFFICE, FAZ_STAGE, FAZ_TABLES, METRO_BOARD, METRO_TUNNEL, AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
 import type { Look } from './sprites'
 import { drawLightning, drawRainbow, drawShootingStars, weatherFor } from './sky-fx'
 import { pokeWobble } from './poke-fx'
@@ -356,6 +356,8 @@ export function render(c: CanvasRenderingContext2D, W: number, H: number, g: Gam
   drawPeople(c, g, S, z, fBot, fTop, now)
   for (const f of g.facilities.values()) if (f.kind === 'rocketPad') drawRocket(c, g, f, S, z, now)
   drawUfo(c, g, S, z, now)
+  drawEntity(c, g, S, z, now)
+  drawHuggyVent(c, g, S, z, now)
   drawFires(c, g, visibleFacs, S, z, now)
   drawFlashes(c, S, z, dt)
   drawSelectedPerson(c, g, ov, S, z, now)
@@ -418,9 +420,17 @@ function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: 
   if (f.kind === 'parking' && f.reachable) drawCar(c, p.x + 10 * z, p.y + h - 3 * z, z, f.id)
   if (f.kind === 'cathedral') drawSpire(c, p.x + w / 2, p.y, z)
   if (z >= 0.6) drawFun(c, g, f, p, w, h, z, now, m)
+  if (isHotel(f.kind) && z >= 1.2) drawDoorPlate(c, g, f, p, w, h, z)
+  const ent = entityNow(g)
+  if (ent && ent.kind === 'rush' && ent.floor === f.floor && f.height === 1) {
+    // the lights flicker before Rush comes, and stay dark while it passes
+    const dark = ent.warning ? (Math.sin(now / 47) + Math.sin(now / 131) > 0.6 ? 0.75 : 0.15 + ent.k * 0.3) : 0.8
+    c.fillStyle = `rgba(0,0,0,${dark})`
+    c.fillRect(p.x, p.y, w, h)
+  }
   if (wob) c.restore()
   // people inside
-  if (z >= 0.75 && f.inside > 0 && f.kind !== 'lobby' && f.kind !== 'parking') {
+  if (z >= 0.75 && f.inside > 0 && f.kind !== 'lobby' && f.kind !== 'parking' && !hidingOn(g, f.floor)) {
     const n = Math.min(f.inside, Math.max(1, Math.floor(f.width / 3)))
     const slot = (f.width * T) / (n + 1)
     for (let i = 0; i < n; i++) {
@@ -591,6 +601,7 @@ function drawPeople(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: numb
   for (const p of g.people.values()) {
     if (p.state === 'walking') {
       if (p.floor < fBot || p.floor > fTop) continue
+      if (hidingOn(g, p.floor)) continue
       const s = S(p.x * T, floorTop(p.floor) + FH - 3)
       drawPersonAt(c, s.x, s.y, z, personColor(p.shirt), Math.floor(p.x * 1.5) % 2, p.mood, p.shirt)
       const pet = hasPet(p)
@@ -1233,7 +1244,24 @@ function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: nu
       drawTrain(c, g, p, w, h, z, now)
       return
     }
+    case 'toyFactory': {
+      drawToyFactory(c, g, f, p, w, h, z, now, m)
+      return
+    }
+    case 'indigoPark': {
+      drawIndigo(c, g, f, p, w, h, z, now, m)
+      return
+    }
     case 'library': {
+      if (m >= 21 * 60 || m < 6 * 60) {
+        // after closing, something tall and blind wanders the stacks
+        c.fillStyle = 'rgba(10,0,0,0.6)'
+        c.fillRect(p.x, p.y, w, h)
+        const fx0 = p.x + w * (0.5 + 0.38 * Math.sin(now / 5200))
+        const dir = Math.cos(now / 5200) >= 0 ? 1 : -1
+        drawFigure(c, fx0, p.y + h - 3 * z, z, now, dir)
+        return
+      }
       // the rolling ladder glides along the shelves
       const lx = p.x + (20 + (Math.sin(now / 2600) * 0.5 + 0.5) * (w / z - 40)) * z
       c.strokeStyle = '#8b5a2b'; c.lineWidth = Math.max(1, z)
@@ -1666,4 +1694,200 @@ function drawJumpscare(c: CanvasRenderingContext2D, W: number, H: number, now: n
   c.fillRect(0, 0, W, H)
   const u = Math.min(W, H) / 40 * (0.8 + k * 0.6)
   drawBot(c, 'freddy', W / 2 + shake, H / 2 + 22 * u, u, { mouth: true, glow: true, bob: 0 })
+}
+
+// ---------- spooky references ----------
+let plateCache: { v: number; nums: Map<number, number> } = { v: -1, nums: new Map() }
+
+/** Gold door-number plates on hotel rooms, counted up the tower like a certain hotel game. */
+function drawDoorPlate(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: number, h: number, z: number) {
+  if (plateCache.v !== g.buildVersion) {
+    const rooms = [...g.facilities.values()].filter((r) => isHotel(r.kind)).sort((a, b) => a.floor - b.floor || a.x - b.x)
+    plateCache = { v: g.buildVersion, nums: new Map(rooms.map((r, i) => [r.id, i + 1])) }
+  }
+  const n = plateCache.nums.get(f.id)
+  if (!n) return
+  const px = p.x + w - 10 * z, py = p.y + h - 27 * z
+  c.fillStyle = '#7a5c12'; c.fillRect(px - 0.5 * z, py - 0.5 * z, 9 * z, 4 * z)
+  c.fillStyle = '#f2c94c'; c.fillRect(px, py, 8 * z, 3 * z)
+  c.fillStyle = '#3d2a00'
+  c.font = `bold ${2.6 * z}px monospace`
+  c.fillText(String(n).padStart(4, '0'), px + 0.6 * z, py + 2.4 * z)
+}
+
+function drawHuggy(c: CanvasRenderingContext2D, x: number, yb: number, u: number, now: number, wave = false) {
+  const fur = '#1c7ed6', fur2 = '#4dabf7'
+  const R = (x0: number, y0: number, w: number, hh: number, cc: string) => { c.fillStyle = cc; c.fillRect(x + x0 * u, yb + y0 * u, w * u, hh * u) }
+  R(-4, -14, 3, 14, fur); R(1, -14, 3, 14, fur) // legs
+  R(-4, -28, 8, 15, fur) // body
+  const swing = Math.sin(now / 500) * 2
+  R(-7, -27, 3, 20 + swing, fur); R(4, -27, 3, wave ? 8 : 20 - swing, fur) // long arms
+  if (wave) R(5, -36 + Math.sin(now / 150) * 1.5, 3, 9, fur)
+  R(-5, -38, 10, 10, fur) // head
+  for (const [dx, dy] of [[-3, -24], [1, -20], [-2, -16], [2, -26], [-4, -35], [3, -33]]) R(dx, dy, 1, 1, fur2)
+  R(-4, -36, 3, 3, '#fff'); R(1, -36, 3, 3, '#fff'); R(-3, -35, 1.5, 1.5, '#111'); R(2, -35, 1.5, 1.5, '#111')
+  R(-4.5, -31, 9, 3, '#e03131') // big red smile
+  for (let k = 0; k < 4; k++) R(-3.6 + k * 2, -30.4, 1.2, 1.4, '#fff')
+}
+
+function drawHuggyVent(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: number) => Pt, z: number, now: number) {
+  const hg = g.flags.huggy
+  if (!hg || z < 0.5) return
+  const top = S(hg.x * T, floorTop(hg.floor) + 2)
+  // vent grate hanging open
+  c.fillStyle = '#495057'; c.fillRect(top.x - 6 * z, top.y, 12 * z, 2.5 * z)
+  c.fillStyle = '#212529'; for (let k = 0; k < 4; k++) c.fillRect(top.x - 5 * z + k * 3 * z, top.y + 0.5 * z, 1.5 * z, 1.5 * z)
+  c.save(); c.translate(top.x + 7 * z, top.y + 1 * z); c.rotate(0.9); c.fillStyle = '#868e96'; c.fillRect(0, 0, 10 * z, 1.5 * z); c.restore()
+  // Huggy dangles upside down out of the vent, peeking
+  const peek = 6 + Math.sin(now / 700) * 2
+  c.save()
+  c.beginPath(); c.rect(top.x - 20 * z, top.y + 2 * z, 40 * z, 30 * z); c.clip()
+  c.translate(top.x, top.y + 2 * z + (peek - 6) * z)
+  c.rotate(Math.PI)
+  drawHuggy(c, 0, 28 * z, z, now) // upside down: head and arms hang below the vent
+  c.restore()
+  // a little sparkle so kids can spot him
+  if (Math.floor(now / 400) % 3 === 0) { c.fillStyle = '#ffe066'; c.fillRect(top.x + 9 * z, top.y + 4 * z, 1.5 * z, 1.5 * z) }
+}
+
+function drawToyFactory(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: number, h: number, z: number, now: number, m: number) {
+  const X = (sx: number) => p.x + sx * z
+  const open = isOpen(g, f)
+  // toys riding the belt
+  const [b0, b1] = TOY_BELT
+  const toyCols = ['#e03131', '#fab005', '#2f9e44', '#1c7ed6', '#e64980']
+  for (let i = 0; i < 6; i++) {
+    const k = ((open ? now / 60 : 0) + i * 15) % (b1 - b0)
+    const tx = X(b0 + k), ty = p.y + h - 16 * z
+    c.fillStyle = toyCols[i % toyCols.length]
+    if (i % 2) c.fillRect(tx - 2 * z, ty - 4 * z, 4 * z, 4 * z)
+    else { c.beginPath(); c.arc(tx, ty - 2.5 * z, 2.5 * z, 0, Math.PI * 2); c.fill(); c.fillRect(tx - 2.5 * z, ty - 6 * z, 1.5 * z, 1.5 * z); c.fillRect(tx + 1 * z, ty - 6 * z, 1.5 * z, 1.5 * z) }
+  }
+  // the GrabPack hand shoots out on its cord and grabs a toy
+  if (open) {
+    const k = (now % 2600) / 2600
+    const reach = k < 0.5 ? Math.sin(k * Math.PI) : 0
+    if (reach > 0) {
+      const hx = X(166), hy = p.y + 26 * z
+      const ex = hx - reach * 40 * z, ey = hy + reach * (h - 46 * z)
+      c.strokeStyle = '#495057'; c.lineWidth = Math.max(1, 0.8 * z)
+      c.beginPath(); c.moveTo(hx, hy); c.lineTo(ex, ey); c.stroke()
+      c.fillStyle = Math.floor(now / 2600) % 2 ? '#e03131' : '#1c7ed6'
+      c.fillRect(ex - 3 * z, ey - 2 * z, 6 * z, 5 * z)
+    }
+  }
+  // Huggy in his case, unless he's escaped
+  const [cx, cw] = TOY_CASE
+  if (!g.flags.huggy) drawHuggy(c, X(cx + cw / 2), p.y + h - 8 * z, z, now, open && Math.floor(now / 3000) % 3 === 0)
+  else {
+    c.fillStyle = '#ff6b6b'
+    c.font = `bold ${Math.round(10 * z)}px sans-serif`
+    c.textAlign = 'center'
+    c.fillText('?', X(cx + cw / 2), p.y + h / 2 + 2 * z)
+    c.font = `bold ${Math.max(4, Math.round(3.5 * z))}px monospace`
+    c.fillText('MISSING', X(cx + cw / 2), p.y + h - 12 * z)
+    c.textAlign = 'left'
+  }
+  if (m >= 20 * 60 || m < 6 * 60) { c.fillStyle = 'rgba(5,5,20,0.45)'; c.fillRect(p.x, p.y, w, h) }
+}
+
+function drawRambley(c: CanvasRenderingContext2D, x: number, y: number, u: number, talk: boolean, eyes = '#111') {
+  const R = (x0: number, y0: number, w: number, hh: number, cc: string) => { c.fillStyle = cc; c.fillRect(x + x0 * u, y + y0 * u, w * u, hh * u) }
+  R(-6, -4, 3, 3, '#868e96'); R(3, -4, 3, 3, '#868e96'); R(-5, -3, 1, 1, '#ffc9c9'); R(4, -3, 1, 1, '#ffc9c9') // ears
+  R(-5, -2, 10, 9, '#adb5bd') // head
+  R(-5, 0, 10, 3, '#343a40') // bandit mask
+  R(-3, 0.5, 2, 2, '#fff'); R(1, 0.5, 2, 2, '#fff'); R(-2.5, 1, 1, 1, eyes); R(1.5, 1, 1, 1, eyes)
+  R(-3, 3, 6, 4, '#f1f3f5') // muzzle
+  R(-1, 3, 2, 1, '#111')
+  R(-2, 5, 4, talk ? 1.5 : 0.6, '#c92a2a')
+}
+
+function drawIndigo(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: number, h: number, z: number, now: number, m: number) {
+  const X = (sx: number) => p.x + sx * z
+  const open = isOpen(g, f)
+  const dark = m >= 20 * 60 || m < 6 * 60
+  // the park railway circling the lake
+  const [lc, lr] = INDIGO_LOOP
+  const th = open ? now / 2400 : 1.2
+  for (let i = 3; i >= 0; i--) {
+    const a = th - i * 0.32
+    const tx = X(lc + Math.cos(a) * lr), ty = p.y + h - 11 * z + Math.sin(a) * 7 * z
+    c.fillStyle = i === 0 ? '#5f3dc4' : ['#ffd43b', '#ff8787', '#74c0fc'][i - 1]
+    c.fillRect(tx - 4 * z, ty - 5 * z, 8 * z, 5 * z)
+    if (i === 0) { c.fillStyle = '#212529'; c.fillRect(tx + 1 * z, ty - 8 * z, 2 * z, 3 * z) }
+    c.fillStyle = '#212529'; c.fillRect(tx - 3 * z, ty, 1.5 * z, 1.5 * z); c.fillRect(tx + 1.5 * z, ty, 1.5 * z, 1.5 * z)
+  }
+  // the big screen
+  const [sx, sy, sw, sh] = INDIGO_SCREEN
+  const scr = { x: X(sx), y: p.y + sy * z, w: sw * z, h: sh * z }
+  if (dark) {
+    c.fillStyle = 'rgba(5,5,25,0.6)'; c.fillRect(p.x, p.y, w, h)
+    for (let i = 0; i < 60; i++) { c.fillStyle = Math.random() < 0.5 ? '#555' : '#ccc'; c.fillRect(scr.x + Math.random() * scr.w, scr.y + Math.random() * scr.h, z, z) }
+    if (Math.random() < 0.6) {
+      c.save(); c.beginPath(); c.rect(scr.x, scr.y, scr.w, scr.h); c.clip()
+      drawRambley(c, scr.x + scr.w / 2 + (Math.random() - 0.5) * 4 * z, scr.y + 6 * z, z, false, '#ff2d2d')
+      c.restore()
+    }
+  } else {
+    c.fillStyle = '#d0bfff'; c.fillRect(scr.x, scr.y, scr.w, scr.h)
+    drawRambley(c, scr.x + scr.w / 2, scr.y + 6 * z, z, open && Math.floor(now / 180) % 2 === 0)
+  }
+}
+
+function drawFigure(c: CanvasRenderingContext2D, x: number, yb: number, u: number, now: number, dir: number) {
+  const step = Math.sin(now / 400)
+  const R = (x0: number, y0: number, w: number, hh: number, cc: string) => { c.fillStyle = cc; c.fillRect(x + x0 * dir * u - (dir < 0 ? w * u : 0), yb + y0 * u, w * u, hh * u) }
+  const skin = '#7a2e2e'
+  R(-3 + step, -22, 3, 22, skin); R(1 - step, -22, 3, 22, skin) // long legs
+  R(-5, -42, 10, 21, skin)
+  for (let k = 0; k < 4; k++) R(-4, -40 + k * 4, 8, 1, '#4a1414') // ribs
+  R(-8, -41, 3, 24, skin); R(5, -41, 3, 24, skin)
+  R(-4, -52, 9, 11, skin) // eyeless head
+  R(-3, -46, 7, 4, '#2b0a0a'); for (let k = 0; k < 4; k++) R(-2.5 + k * 1.8, -46, 1, 1.4, '#f1e3c8')
+}
+
+function drawEntity(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: number) => Pt, z: number, now: number) {
+  const e = entityNow(g)
+  if (!e) return
+  const yb = floorTop(e.floor) + FH - 3
+  if (e.kind === 'seek') {
+    // eyes open up all over the walls
+    const n = Math.floor(6 + 30 * (e.warning ? e.k : 1))
+    for (let i = 0; i < n; i++) {
+      const ex = e.a + ((i * 37.7) % Math.max(1, e.b - e.a))
+      const ey = floorTop(e.floor) + 6 + ((i * 13) % 18)
+      const p = S(ex * T, ey)
+      const blink = Math.sin(now / 300 + i * 1.7) > 0.92 ? 0.3 : 1
+      c.fillStyle = '#f8f9fa'
+      c.beginPath(); c.ellipse(p.x, p.y, 2.6 * z, 1.4 * z * blink, 0, 0, Math.PI * 2); c.fill()
+      c.fillStyle = '#111'; c.fillRect(p.x - 0.7 * z, p.y - 0.7 * z * blink, 1.4 * z, 1.4 * z * blink)
+    }
+    if (e.warning) return
+    const x = e.a + (e.b - e.a) * e.k
+    const p = S(x * T, yb)
+    const run = Math.sin(now / 70)
+    c.fillStyle = '#0b0b0f'
+    c.fillRect(p.x - 3 * z, p.y - 20 * z, 7 * z, 12 * z)
+    c.fillRect(p.x - 2 * z + run * 2 * z, p.y - 9 * z, 2.5 * z, 9 * z); c.fillRect(p.x + 1.5 * z - run * 2 * z, p.y - 9 * z, 2.5 * z, 9 * z)
+    c.beginPath(); c.arc(p.x + 0.5 * z, p.y - 23 * z, 4.5 * z, 0, Math.PI * 2); c.fill()
+    c.fillStyle = '#f8f9fa'; c.beginPath(); c.ellipse(p.x + 1.5 * z, p.y - 23 * z, 2.4 * z, 1.6 * z, 0, 0, Math.PI * 2); c.fill()
+    c.fillStyle = '#111'; c.fillRect(p.x + 1.2 * z, p.y - 23.8 * z, 1.4 * z, 1.4 * z)
+    c.fillStyle = 'rgba(11,11,15,0.5)'; for (let k = 1; k < 4; k++) c.fillRect(p.x - (3 + k * 5) * z, p.y - 2 * z, 4 * z, 2 * z)
+    return
+  }
+  if (e.warning) return
+  // RUSH: a roaring cloud with a huge grin, tearing down the hallway
+  const x = e.a - 6 + (e.b - e.a + 12) * e.k
+  const p = S(x * T, yb - FH / 2 + 2)
+  for (let i = 0; i < 8; i++) {
+    c.fillStyle = `rgba(20,20,24,${0.12 + i * 0.05})`
+    c.beginPath(); c.arc(p.x - (30 - i * 4) * z, p.y + Math.sin(now / 60 + i) * 2 * z, (6 + i) * z, 0, Math.PI * 2); c.fill()
+  }
+  const jitter = (Math.random() - 0.5) * 2 * z
+  c.fillStyle = '#16161a'
+  c.beginPath(); c.arc(p.x + jitter, p.y, 13 * z, 0, Math.PI * 2); c.fill()
+  c.fillStyle = '#f8f9fa'
+  c.beginPath(); c.ellipse(p.x - 5 * z + jitter, p.y - 4 * z, 3 * z, 2.2 * z, 0, 0, Math.PI * 2); c.fill()
+  c.beginPath(); c.ellipse(p.x + 5 * z + jitter, p.y - 4 * z, 3 * z, 2.2 * z, 0, 0, Math.PI * 2); c.fill()
+  c.beginPath(); c.moveTo(p.x - 9 * z, p.y + 2 * z); c.quadraticCurveTo(p.x, p.y + 12 * z, p.x + 9 * z, p.y + 2 * z); c.quadraticCurveTo(p.x, p.y + 6 * z, p.x - 9 * z, p.y + 2 * z); c.fill()
 }

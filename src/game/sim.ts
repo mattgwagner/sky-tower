@@ -491,6 +491,8 @@ const FUN_HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
   bookstore: [[at(10), at(21)]],
   library: [[at(9), at(20)]],
   fazbear: [[at(11), at(21)]],
+  toyFactory: [[at(10), at(19)]],
+  indigoPark: [[at(10), at(20)]],
   trampoline: [[at(10), at(20)]],
   climbing: [[at(10), at(20)]],
   miniGolf: [[at(10), at(21)]],
@@ -513,6 +515,7 @@ function stayFor(g: Game, k: FacilityKind) {
     case 'bookstore': return rnd(20, 45)
     case 'library': return rnd(45, 100)
     case 'fazbear': return rnd(50, 90)
+    case 'toyFactory': case 'indigoPark': return rnd(50, 90)
     case 'bowling': case 'rollerRink': return rnd(50, 90)
     case 'arcade': return rnd(30, 60)
     case 'pool': return rnd(40, 90)
@@ -576,6 +579,8 @@ function spawnVisitors(g: Game) {
     else if (f.kind === 'donuts') perHour = m < at(10) ? 6 : 2
     else if (f.kind === 'pancakes') perHour = m < at(10, 30) ? 7 : 3
     else if (f.kind === 'bookstore') perHour = 4
+    else if (f.kind === 'toyFactory') perHour = 8
+    else if (f.kind === 'indigoPark') perHour = isWeekend(g.time) ? 14 : 9
     else if (f.kind === 'fazbear') perHour = isWeekend(g.time) ? 14 : m >= at(16) ? 9 : 5
     else if (f.kind === 'library') perHour = isWeekend(g.time) ? 8 : 5
     else if (f.kind === 'trampoline') perHour = isWeekend(g.time) ? 12 : 7
@@ -1043,6 +1048,7 @@ function minuteTick(g: Game) {
   parties(g)
   funEvents(g, m)
   trains(g, m)
+  stepEntity(g)
   stepFires(g)
   stepBomb(g)
   if (m % 15 === 0) {
@@ -1074,6 +1080,8 @@ function hourTick(g: Game, m: number) {
   }
   if (quarterOf(g.time) === 4 && dayOf(g.time) % 3 === 2 && m === at(19)) g.flags.santaDay = dayOf(g.time)
   maybeUfo(g, m)
+  huggyHour(g, m)
+  maybeEntity(g, m)
 }
 
 // ---------- metro trains ----------
@@ -1136,6 +1144,113 @@ function trains(g: Game, m: number) {
     }
     if (arrived + boarded > 0) fx(g, st.x + st.width / 2, st.floor + st.height - 1, `🚇 ${arrived} off · ${boarded} on`, '#a5d8ff')
   }
+}
+
+// ---------- spooky stuff: Huggy hide-and-seek, Rush and Seek ----------
+
+const nightOf = (g: Game) => dayOf(g.time) - (minuteOfDay(g.time) < at(6) ? 1 : 0)
+const isNight = (m: number) => m >= at(20) || m < at(6)
+
+function hideHuggy(g: Game, factory: Facility) {
+  const rooms = [...g.facilities.values()].filter((f) => f.id !== factory.id && f.width >= 4 && f.kind !== 'lobby' && !isConnector(f.kind) && f.kind !== 'rocketPad')
+  if (!rooms.length) return false
+  const r = pick(rooms)
+  g.flags.huggy = { floor: r.floor + r.height - 1, x: r.x + 1.5 + Math.random() * (r.width - 3) }
+  return true
+}
+
+function huggyHour(g: Game, m: number) {
+  const factory = facilitiesOf(g, 'toyFactory').find((f) => f.reachable)
+  if (!factory) { g.flags.huggy = null; return }
+  if (m === at(6) && g.flags.huggy) {
+    g.flags.huggy = null
+    log(g, '🧸 Huggy Wuggy snuck back into his case before sunrise. Try to find him tomorrow night!', 'info', factory.floor, factory.x + 5)
+    return
+  }
+  if (!isNight(m) || g.flags.huggyFound === nightOf(g)) return
+  if (!g.flags.huggy) {
+    if (hideHuggy(g, factory)) {
+      log(g, '🧸 Huggy Wuggy\'s display case is EMPTY! He\'s hiding in a vent somewhere in your tower. Find him and tap him!', 'event')
+      sound.play('spooky')
+    }
+  } else if (m % 120 === 0) hideHuggy(g, factory)
+}
+
+/** Tapped Huggy: he goes back in his case for the rest of the night. */
+export function catchHuggy(g: Game) {
+  const h = g.flags.huggy
+  if (!h) return
+  const v = earn(g, 10000 + g.stars * 5000)
+  g.flags.huggy = null
+  g.flags.huggyFound = nightOf(g)
+  fx(g, h.x, h.floor, `🧸 Found you, Huggy! +$${v.toLocaleString()}`, '#74c0fc')
+  log(g, `🧸 You found Huggy Wuggy hiding on ${floorLabel(h.floor)}! Back in the case he goes. +$${v.toLocaleString()}`, 'good', h.floor, h.x)
+  sound.play('party')
+}
+
+export const ENTITY = { rush: { warn: 40, pass: 8 }, seek: { warn: 30, pass: 16 } } as const
+
+/** The entity visiting tonight, with how far along it is. */
+export function entityNow(g: Game) {
+  const e = g.flags.entity
+  if (!e) return null
+  const d = ENTITY[e.kind]
+  const t = g.time - e.start
+  if (t < 0 || t > d.warn + d.pass) return null
+  return { ...e, warning: t < d.warn, k: t < d.warn ? t / d.warn : (t - d.warn) / d.pass }
+}
+
+function maybeEntity(g: Game, m: number) {
+  if (g.flags.entity || !(m >= at(21) || m < at(5)) || g.flags.entityNight === nightOf(g)) return
+  if (Math.random() > 0.14) return
+  const hotelFloors = [...new Set([...g.facilities.values()].filter((f) => isHotel(f.kind)).map((f) => f.floor))]
+  const hotelRooms = [...g.facilities.values()].filter((f) => isHotel(f.kind)).length
+  let kind: 'rush' | 'seek' | null = null
+  let floor = 0
+  if (hotelRooms >= 2 && Math.random() < 0.7) { kind = 'rush'; floor = pick(hotelFloors) }
+  else if (topFloor(g) >= 5) {
+    const floors = [...g.floors.keys()].filter((f) => f >= 1)
+    kind = 'seek'; floor = pick(floors)
+  }
+  if (!kind) return
+  const [a, b] = floorExtent(g, floor)
+  g.flags.entity = { kind, floor, start: Math.round(g.time), a, b }
+  g.flags.entityNight = nightOf(g)
+  if (kind === 'rush') {
+    log(g, `⚡ The lights are flickering on ${floorLabel(floor)}… something is coming! Hide!`, 'event', floor, (a + b) / 2)
+    sound.play('flicker')
+  } else {
+    log(g, `👁️ Eyes are opening on the walls of ${floorLabel(floor)}…`, 'event', floor, (a + b) / 2)
+    sound.play('heartbeat')
+  }
+}
+
+function stepEntity(g: Game) {
+  const e = g.flags.entity
+  if (!e) return
+  const d = ENTITY[e.kind]
+  const t = Math.round(g.time - e.start)
+  if (t === d.warn) {
+    sound.play(e.kind === 'rush' ? 'rush' : 'heartbeat')
+    if (e.kind === 'rush') {
+      for (const f of g.facilities.values()) if (isHotel(f.kind) && f.floor === e.floor) fx(g, facCenter(f), f.floor, '🚪 Hid in the closet!', '#ced4da')
+    } else fx(g, e.a + 2, e.floor, 'RUN! 🏃', '#ff6b6b')
+  }
+  if (t >= d.warn + d.pass) {
+    g.flags.entity = null
+    if (e.kind === 'rush') log(g, `💨 RUSH roared down the hall on ${floorLabel(e.floor)}! Everyone hid in the closets. Phew!`, 'good', e.floor, (e.a + e.b) / 2)
+    else log(g, `🏃 SEEK chased everyone across ${floorLabel(e.floor)}… then sank back into the floor.`, 'good', e.floor, (e.a + e.b) / 2)
+    if (e.kind === 'rush' && !g.flags.guided) {
+      g.flags.guided = true
+      log(g, '💙 Guiding Light: when the lights flicker, hide in a closet. You can do this!', 'info')
+    }
+  }
+}
+
+/** True while a visiting entity has everyone on that floor hiding. */
+export function hidingOn(g: Game, floor: number) {
+  const e = entityNow(g)
+  return !!e && e.floor === floor && !e.warning
 }
 
 // ---------- whimsy: rockets, dinosaurs, ghosts and aliens ----------

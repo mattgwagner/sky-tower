@@ -11,6 +11,7 @@ import type { Camera, Overlay } from '../render/renderer'
 import { flashBuild, jumpscare, launchFireworks, personPos, render, screenToWorld } from '../render/renderer'
 import { registerPoke } from '../render/poke-fx'
 import { pokeFacility } from '../game/poke'
+import { catchHuggy } from '../game/sim'
 import { FH, T } from '../render/sprites'
 
 const LEGACY_KEY = 'skytower.save.v1'
@@ -273,6 +274,12 @@ export class Controller {
       return
     }
     if (this.tool === 'inspect') {
+      const hg = this.g.flags.huggy
+      if (hg) {
+        const hx = (hg.x * T - this.cam.x) * this.cam.zoom + this.W / 2
+        const hy = ((-(hg.floor + 1) * FH + 10) - this.cam.y) * this.cam.zoom + this.H / 2
+        if (Math.hypot(hx - sx, hy - sy) < Math.max(16, 9 * this.cam.zoom)) { catchHuggy(this.g); this.emit(); return }
+      }
       const pid = this.personAt(sx, sy)
       if (pid) {
         this.person = pid

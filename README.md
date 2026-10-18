@@ -50,6 +50,19 @@ population. Save picture downloads a PNG, or opens the share sheet on an iPad or
 Some days it rains from 10am to 6pm; a third of those are storms with lightning and thunder, and every rainy day ends
 with a rainbow. On winter days it snows. At night, shooting stars streak across the sky now and then.
 
+## Spooky stuff
+
+Fan homages with original pixel art, scary-silly rather than gory:
+
+- **Playtime Co. Toy Factory** (Fun → Spooky): conveyor toys, GrabPack hands, Huggy Wuggy in a display case. Most
+  nights he escapes and hides in a ceiling vent somewhere in the tower; tap him in Look mode to catch him for a reward.
+  He moves every two hours and sneaks back at 6am if nobody finds him.
+- **Indigo Park**: a little indoor park with a railway and Rambley on the big screen. After dark the screen goes to
+  static and Rambley glitches.
+- **Night visitors** (at most one a night, about two nights in three): with 2+ hotel rooms, the lights on a hotel
+  floor flicker and Rush tears down the hall while everyone hides; otherwise Seek's eyes open on a floor's walls before
+  it runs across. Hotel rooms carry gold four-digit door plates, and the Library has a blind Figure after 9pm.
+
 ## Metro trains
 
 A Metro Station gets a train every 30 game minutes from 5am to midnight: it pulls out of the tunnel, opens its doors

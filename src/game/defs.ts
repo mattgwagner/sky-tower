@@ -57,6 +57,8 @@ export type FacilityKind =
   | 'bookstore'
   | 'library'
   | 'fazbear'
+  | 'toyFactory'
+  | 'indigoPark'
 
 export type TransportKind = 'elevator' | 'serviceElevator' | 'expressElevator'
 
@@ -164,6 +166,10 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'Disco lights and skaters zooming around in circles.' },
   bookstore: { kind: 'bookstore', name: 'Bookstore', emoji: '📚', category: 'shops', width: 14, height: 1, cost: 90000, stars: 1, pop: 4,
     blurb: 'Comics, mysteries and dragon books. There\'s a shop cat!' },
+  toyFactory: { kind: 'toyFactory', name: 'Playtime Co. Toy Factory', emoji: '🧸', category: 'fun', width: 30, height: 2, cost: 600000, stars: 2, pop: 14,
+    blurb: 'Toys on conveyor belts and Huggy Wuggy in his case. At night he escapes… find him and tap him!' },
+  indigoPark: { kind: 'indigoPark', name: 'Indigo Park', emoji: '🦝', category: 'fun', width: 34, height: 2, cost: 500000, stars: 2, pop: 16,
+    blurb: 'A little theme park with a train ride and Rambley on the big screen. Don\'t visit after dark…' },
   fazbear: { kind: 'fazbear', name: 'Freddy Fazbear\'s Pizza', emoji: '🐻', category: 'food', width: 32, height: 2, cost: 250000, stars: 1, pop: 12,
     blurb: 'Pizza and a singing animatronic band! But after midnight… the animatronics wander. 👀' },
   library: { kind: 'library', name: 'Library', emoji: '📖', category: 'shops', width: 24, height: 2, cost: 150000, stars: 1, pop: 8,
@@ -243,14 +249,14 @@ export const CONDO_PRICE = 150000 // one-time sale
 export const HOTEL_NIGHT: Partial<Record<FacilityKind, number>> = { hotelSingle: 3000, hotelTwin: 4500, hotelSuite: 9000 }
 export const SPEND: Partial<Record<FacilityKind, number>> = {
   fastFood: 400, restaurant: 1200, shop: 800, cinema: 1000, partyHall: 0, metro: 0,
-  bookstore: 300, library: 60, fazbear: 500,
+  bookstore: 300, library: 60, fazbear: 500, toyFactory: 600, indigoPark: 700,
   trampoline: 400, climbing: 300, miniGolf: 250, bowling: 450, rollerRink: 350,
   pizza: 350, tacos: 250, sushi: 700, donuts: 150, pancakes: 300, candy: 150,
   iceCream: 200, arcade: 350, pool: 250, aquarium: 550, hauntedHouse: 450, dinoMuseum: 650, rocketPad: 1000,
 }
 export const SHOP_CAPACITY: Partial<Record<FacilityKind, number>> = {
   fastFood: 14, restaurant: 18, shop: 8, cinema: 60, partyHall: 40,
-  bookstore: 10, library: 30, fazbear: 30,
+  bookstore: 10, library: 30, fazbear: 30, toyFactory: 30, indigoPark: 40,
   trampoline: 24, climbing: 10, miniGolf: 14, bowling: 20, rollerRink: 20,
   pizza: 12, tacos: 8, sushi: 12, donuts: 8, pancakes: 14, candy: 8,
   iceCream: 10, arcade: 16, pool: 20, aquarium: 40, hauntedHouse: 24, dinoMuseum: 50, rocketPad: 40,
@@ -265,7 +271,7 @@ export const FOOD: FacilityKind[] = [...LUNCH, ...BREAKFAST, 'candy', 'fazbear']
 /** Fun Zone places people visit like shops. */
 export const ATTRACTIONS: FacilityKind[] = [
   'iceCream', 'arcade', 'pool', 'aquarium', 'hauntedHouse', 'dinoMuseum', 'rocketPad',
-  'trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink', 'bookstore', 'library',
+  'trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink', 'bookstore', 'library', 'toyFactory', 'indigoPark',
 ]
 
 export function isHotel(k: FacilityKind) {

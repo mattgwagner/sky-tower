@@ -373,7 +373,8 @@ const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
   fun: [
     { label: 'Chill out', tools: ['park', 'arcade', 'pool', 'aquarium'] },
     { label: 'Get moving', tools: ['trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink'] },
-    { label: 'Wow!', tools: ['hauntedHouse', 'dinoMuseum', 'rocketPad'] },
+    { label: 'Wow!', tools: ['dinoMuseum', 'rocketPad'] },
+    { label: 'Spooky 🕯️', tools: ['hauntedHouse', 'toyFactory', 'indigoPark'] },
   ],
   services: [
     { label: 'Keep it safe', tools: ['security', 'medical'] },

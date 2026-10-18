@@ -129,7 +129,16 @@ export interface Game {
   facilities: Map<number, Facility>
   shafts: Map<number, Shaft>
   people: Map<number, Person>
-  flags: { vip: boolean; vipVisit: number; goldFound: boolean; santaDay: number; ufoDay?: number }
+  flags: {
+    vip: boolean; vipVisit: number; goldFound: boolean; santaDay: number; ufoDay?: number
+    /** Huggy Wuggy's hiding spot (top floor of a room + tile x), or null when he's in his case */
+    huggy?: { floor: number; x: number } | null
+    huggyFound?: number
+    /** a DOORS-style entity visiting a floor at night */
+    entity?: { kind: 'rush' | 'seek'; floor: number; start: number; a: number; b: number } | null
+    guided?: boolean
+    entityNight?: number
+  }
   bomb: Bomb | null
   pop: number
   stats: { day: number; income: number; expense: number; lastQuarter: { income: number; expense: number } }

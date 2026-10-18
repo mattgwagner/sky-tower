@@ -777,6 +777,66 @@ Object.assign(painters, {
   },
 } satisfies Partial<Record<FacilityKind, Painter>>)
 
+Object.assign(painters, {
+  toyFactory(c: Ctx, w: number, h: number) {
+    // factory walls with Playtime Co. colours
+    r(c, '#d9d2c5', 0, 0, w, h)
+    for (let x = 0; x < w; x += 16) r(c, '#cfc6b6', x, 2, 8, h - 5)
+    r(c, '#3a3a46', 0, 0, w, 2); r(c, '#6c757d', 0, h - 3, w, 3)
+    for (let x = 0; x < w; x += 10) r(c, ['#e03131', '#1c7ed6', '#fab005', '#2f9e44'][(x / 10) % 4], x, h - 40, 10, 2)
+    // Huggy's display case (the renderer puts Huggy in it)
+    const [cx, cw] = TOY_CASE
+    r(c, '#495057', cx - 2, h - 8, cw + 4, 5)
+    r(c, 'rgba(200,235,255,0.35)', cx, 6, cw, h - 14)
+    r(c, '#adb5bd', cx, 6, cw, 1); r(c, '#adb5bd', cx, 6, 1, h - 14); r(c, '#adb5bd', cx + cw - 1, 6, 1, h - 14)
+    r(c, 'rgba(255,255,255,0.5)', cx + 3, 9, 1, h - 22)
+    // conveyor belt
+    r(c, '#343a40', TOY_BELT[0], h - 16, TOY_BELT[1] - TOY_BELT[0], 4)
+    for (let x = TOY_BELT[0] + 2; x < TOY_BELT[1]; x += 8) { c.fillStyle = '#868e96'; c.beginPath(); c.arc(x, h - 11, 2, 0, Math.PI * 2); c.fill() }
+    for (let x = TOY_BELT[0] + 6; x < TOY_BELT[1]; x += 30) r(c, '#495057', x, h - 11, 2, 8)
+    // GrabPack on its rack: one blue hand, one red hand
+    r(c, '#5c4632', 150, 18, 30, 2)
+    for (const [x, col] of [[154, '#1c7ed6'], [168, '#e03131']] as const) { r(c, col, x, 20, 6, 6); for (let k = 0; k < 3; k++) r(c, col, x + k * 2, 26, 1, 3) }
+    // the doll in her little glass case
+    const dx = w - 26
+    r(c, '#495057', dx - 2, h - 8, 18, 5)
+    r(c, 'rgba(200,235,255,0.35)', dx, h - 34, 14, 26)
+    r(c, '#f1c27d', dx + 5, h - 28, 5, 5); r(c, '#e03131', dx + 3, h - 30, 9, 4); r(c, '#e03131', dx + 3, h - 26, 2, 4); r(c, '#e03131', dx + 10, h - 26, 2, 4)
+    r(c, '#4dabf7', dx + 4, h - 23, 7, 8); r(c, '#fff', dx + 4, h - 23, 7, 1); r(c, '#212529', dx + 6, h - 27, 1, 1); r(c, '#212529', dx + 8, h - 27, 1, 1)
+    sign(c, w, 'PLAYTIME CO.', '#e03131', '#ffd43b')
+  },
+  indigoPark(c: Ctx, w: number, h: number) {
+    // indoor park: indigo sky ceiling, grass, lake, oval railway
+    const g = c.createLinearGradient(0, 0, 0, h)
+    g.addColorStop(0, '#3b2f8f'); g.addColorStop(0.6, '#6a5acd'); g.addColorStop(1, '#8e7dff')
+    c.fillStyle = g; c.fillRect(0, 0, w, h)
+    for (let i = 0; i < 30; i++) r(c, '#fff3bf', (i * 71) % w, 4 + ((i * 37) % 22), 1, 1)
+    r(c, '#3a3a46', 0, 0, w, 2)
+    r(c, '#51cf66', 0, h - 18, w, 15); r(c, '#2f9e44', 0, h - 18, w, 1)
+    c.fillStyle = '#4dabf7'; c.beginPath(); c.ellipse(INDIGO_LOOP[0], h - 11, 34, 4, 0, 0, Math.PI * 2); c.fill()
+    c.strokeStyle = '#8d6e4f'; c.lineWidth = 1.5
+    c.beginPath(); c.ellipse(INDIGO_LOOP[0], h - 11, INDIGO_LOOP[1], 7, 0, 0, Math.PI * 2); c.stroke()
+    r(c, '#6b4f3a', 0, h - 3, w, 3)
+    // entrance gate
+    r(c, '#5f3dc4', 6, 14, 4, h - 17); r(c, '#5f3dc4', 44, 14, 4, h - 17)
+    c.fillStyle = '#7048e8'; c.beginPath(); c.moveTo(4, 16); c.quadraticCurveTo(27, 2, 50, 16); c.lineTo(50, 20); c.quadraticCurveTo(27, 7, 4, 20); c.fill()
+    for (let k = 0; k < 6; k++) r(c, '#ffd43b', 10 + k * 7, 11 + Math.abs(k - 2.5) * 1.2, 2, 2)
+    // little trees + balloon cart
+    for (const x of [64, 214]) { r(c, '#8b5a2b', x, h - 26, 3, 9); c.fillStyle = '#2b8a3e'; c.beginPath(); c.arc(x + 1.5, h - 29, 6, 0, Math.PI * 2); c.fill() }
+    r(c, '#e64980', 228, h - 24, 12, 7); for (let k = 0; k < 3; k++) { r(c, ['#ffd43b', '#74c0fc', '#ff8787'][k], 228 + k * 4, h - 40 + k * 2, 4, 5); r(c, '#ddd', 230 + k * 4, h - 35 + k * 2, 1, 11 - k * 2) }
+    // the big screen on a pole (Rambley appears on it)
+    const [sx, sy, sw, sh] = INDIGO_SCREEN
+    r(c, '#495057', sx + sw / 2 - 1, sy + sh, 3, h - sy - sh - 3)
+    r(c, '#212529', sx - 2, sy - 2, sw + 4, sh + 4)
+    sign(c, w, 'INDIGO PARK', '#5f3dc4', '#ffd43b')
+  },
+} satisfies Partial<Record<FacilityKind, Painter>>)
+
+export const TOY_CASE = [12, 26] as const
+export const TOY_BELT = [50, 140] as const
+export const INDIGO_LOOP = [130, 54] as const // centre x, radius x
+export const INDIGO_SCREEN = [238, 10, 26, 18] as const
+
 /** Freddy's layout, in sprite px: stage [left, right], tables, Pirate Cove, guard office. */
 export const FAZ_STAGE = [6, 112] as const
 export const FAZ_TABLES = 122

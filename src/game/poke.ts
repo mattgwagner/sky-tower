@@ -36,6 +36,8 @@ const POKES: Partial<Record<FacilityKind, Poke>> = {
   cinema: { says: ['🍿 It\'s starting!', 'Shhh! 🤫', 'Best movie EVER'], color: '#f783ac', sfx: 'party' },
   partyHall: { says: ['PARTY! 🎉', '🎂 Make a wish!', '🎈🎈🎈'], color: '#ff7ad9', sfx: 'party' },
   cathedral: { says: ['DONG! 🔔', 'DING DONG!', '🕊️'], color: '#ffd43b', sfx: 'bell' },
+  toyFactory: { says: ['Huggy wants a HUG! 🤗', 'GrabPack: GRAB! ✋', 'It\'s Playtime! 🧸', 'Toys toys toys!'], color: '#74c0fc', sfx: 'boing' },
+  indigoPark: { says: ['Welcome to Indigo Park! 🦝', 'All aboard the park railway! 🚂', 'Stay on the path, friend!', 'Let\'s go on an adventure!'], color: '#b197fc', sfx: 'train' },
   fazbear: { says: ['Hurr hurr hurr! 🐻'], color: '#ffd43b', sfx: 'party' },
   metro: { says: ['Choo choo! 🚇', 'All aboard!', 'Mind the gap!'], color: '#a5d8ff', sfx: 'train' },
   parking: { says: ['Beep beep! 🚗', 'HONK!', 'Vroom vroom!'], color: '#ffd43b', sfx: 'honk' },
@@ -72,6 +74,17 @@ export function pokeFacility(g: Game, f: Facility, now: number): Sfx | null {
       : ['Hurr hurr hurr! 🐻', 'Let\'s eat! 🐔', 'Arr, matey! 🦊', '🎸 Guitar solo!', 'Happy birthday! 🎂', 'Pizza time! 🍕']
     fx(g, f.x + f.width / 2, f.floor + f.height - 1, says[Math.floor(Math.random() * says.length)], night ? '#ff6b6b' : '#ffd43b')
     return night ? 'scare' : 'party'
+  }
+  const late = minuteOfDay(g.time) >= 20 * 60 || minuteOfDay(g.time) < 6 * 60
+  const spooky: Partial<Record<FacilityKind, string[]>> = {
+    toyFactory: g.flags.huggy ? ['The case is EMPTY! 😱', 'Where did Huggy go?!', 'Check the vents… 👀'] : [],
+    indigoPark: ['…friend? Is that you? 📺', '*static* 📺', 'The park is closed… 🌙'],
+    library: ['Shhh… it can HEAR you 🤫', '…tiptoe… tiptoe…'],
+  }
+  const scary = late ? spooky[f.kind] : undefined
+  if (scary?.length) {
+    fx(g, f.x + f.width / 2, f.floor + f.height - 1, scary[Math.floor(Math.random() * scary.length)], '#ff8787')
+    return 'heartbeat'
   }
   const train = f.kind === 'metro' ? trainPhase(g) : null
   const says = !train ? p.says
