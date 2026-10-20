@@ -140,6 +140,10 @@ room, moves every hour, and leaves a banana peel that disappears the next mornin
 — and the zookeeper carries it home for a small reward. If nobody catches it by 6pm, it swings back by itself.
 The room it is sitting on says `🍌` when you poke it.
 
+## Stickers
+
+Tap **📒 Stickers** in the top bar or the ☰ menu. Earned stickers are in colour and a little crooked; the rest are a grey outline with a hint. Secret ones stay blank until you get them. A new sticker slides down from the top, and if you earn a bunch they wait their turn. Another part of the game can add its own with one `defineSticker()` call.
+
 ## Code map
 
 - `src/game/`: pure TypeScript simulation, no DOM.
@@ -151,9 +155,9 @@ The room it is sitting on says `🍌` when you poke it.
 - `src/render/`: Canvas 2D renderer with procedural pixel-art sprites. `sky-fx.ts` has the weather predicate, rainbow,
   shooting stars and lightning; `poke-fx.ts` the poke wobble.
 - `src/game/poke.ts`: what each room says and plays when tapped.
+- `src/game/stickers.ts`: sticker checks and `defineSticker()`. `src/ui/Stickers.tsx`: the album and the toast.
 - `src/ui/postcard.ts`: renders the tower to a framed PNG and saves or shares it.
 - `src/ui/`: React HUD and input controller.
-- `scripts/simcheck.ts`, `scripts/simbig.ts`, `scripts/slidecheck.ts`: headless smoke runs (`npm run sim` runs simcheck
-  and slidecheck).
+- `scripts/simcheck.ts`, `scripts/simbig.ts`, `scripts/slidecheck.ts`, `scripts/stickercheck.ts`: headless smoke runs (`npm run sim` runs simcheck, slidecheck, and the sticker check).
 
 Saves are in `localStorage`, written automatically every game day.

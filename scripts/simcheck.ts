@@ -3,6 +3,7 @@ import { newGame } from '../src/game/state'
 import { buildStarter } from '../src/game/starter'
 import { step } from '../src/game/sim'
 import { STEPS_PER_SECOND } from '../src/game/defs'
+import { checkStarterStickers } from './stickercheck'
 
 const days = Number(process.argv[2] ?? 3)
 const g = newGame('family', true)
@@ -29,3 +30,4 @@ const occ = [...g.facilities.values()].filter(f => f.kind === 'office' || f.kind
 console.log('occupied', occ.filter(f => f.occupied).length, '/', occ.length, 'avg happiness', Math.round(occ.reduce((a, f) => a + f.happiness, 0) / occ.length))
 console.log('complaints', [...new Set(occ.flatMap(f => f.complaints))])
 console.log(g.log.slice(-12).map(m => m.text).join('\n'))
+checkStarterStickers()

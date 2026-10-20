@@ -2,20 +2,23 @@
 import { play, setMusic, audioPrefs } from '../audio'
 import { FACILITIES, STEPS_PER_SECOND, TOWER_WIDTH, TRANSPORTS } from '../game/defs'
 import type { FacilityKind, Mode, ToolId, TransportKind } from '../game/defs'
-import { afterBuild, evict, sound, step } from '../game/sim'
+import { afterBuild, evict, sound, step, ufoX } from '../game/sim'
 import type { Facility, Game } from '../game/state'
-import { deserialize, newGame, serialize } from '../game/state'
+import { dayOf, deserialize, minuteOfDay, newGame, serialize } from '../game/state'
 import { dragDrop } from '../game/slide'
 import { buildStarter } from '../game/starter'
-import { checkFacility, checkShaft, demolish, occupantAt, paintRun, placeFacility, placeShaft } from '../game/world'
+import { checkFacility, checkShaft, demolish, occupantAt, paintRun, placeFacility, placeShaft, topFloor } from '../game/world'
 import type { Camera, Overlay } from '../render/renderer'
-import { flashBuild, jumpscare, launchFireworks, personPos, render, screenToWorld } from '../render/renderer'
+import { flashBuild, jumpscare, launchFireworks, personPos, render, screenToWorld, worldToScreen } from '../render/renderer'
 import { registerPoke } from '../render/poke-fx'
 import { pokeFacility } from '../game/poke'
 import { apeHit, pokeGiant } from '../game/giants'
+import { bump, stepStickers } from '../game/stickers'
+import type { Sticker, StickerSnap } from '../game/stickers'
 import { catchHuggy } from '../game/sim'
 import { catchMonkey } from '../game/zoo'
 import { looseMonkeyWorld } from '../render/zoo'
+import { shootingStarCount } from '../render/sky-fx'
 import { FH, T } from '../render/sprites'
 
 const LEGACY_KEY = 'skytower.save.v1'
@@ -59,6 +62,11 @@ export class Controller {
   H = 0
   confirmDemolish: ((id: number) => void) | null = null
   onBuildFail: ((reason: string) => void) | null = null
+  /** Stickers waiting to toast, one at a time. */
+  stickerQueue: Sticker[] = []
+  private stickerMinute = -1
+  private seenStars = 0
+  private wasSeeingUfo = false
 
   constructor() {
     this.g = newGame('family', false)
@@ -79,6 +87,7 @@ export class Controller {
     this.lastStars = 1
     this.speed = 1
     this.tool = starter ? 'inspect' : 'lobby'
+    this.resetStickerUi()
     setMusic(true)
     this.save()
     this.emit()
@@ -117,6 +126,7 @@ export class Controller {
       this.g = deserialize(s)
       this.towerId = id
       this.lastStars = this.g.stars
+      this.resetStickerUi()
       afterBuild(this.g)
       setMusic(true)
       this.emit()
@@ -135,20 +145,74 @@ export class Controller {
     } catch { return false }
   }
 
+  private resetStickerUi() {
+    this.stickerQueue = []
+    this.stickerMinute = -1
+    // The sky's star count is a page-wide global. Baseline it so a new tower
+    // does not inherit stars that fell on the previous one.
+    this.seenStars = shootingStarCount()
+    this.wasSeeingUfo = false
+  }
+
+  /** Stars are painted on the sky behind the tower, so a frame of the game is watching. */
+  private noteWishes(): boolean {
+    const n = shootingStarCount()
+    if (n === this.seenStars) return false
+    if (n < this.seenStars) this.seenStars = 0
+    const fresh = n - this.seenStars
+    this.seenStars = n
+    if (fresh <= 0) return false
+    bump(this.g, 'wishes', fresh)
+    return true
+  }
+
+  /** True while the UFO is hovering and its sprite is inside the window. */
+  private seeingUfo(): boolean {
+    if (this.g.flags.ufoDay !== dayOf(this.g.time)) return false
+    const t = minuteOfDay(this.g.time) - 22 * 60
+    if (t < 8 || t > 52) return false
+    const roof = -(topFloor(this.g) + 1) * FH
+    const p = worldToScreen(this.cam, this.W, this.H, ufoX(this.g) * T, roof - 70)
+    return p.x > -40 && p.x < this.W + 40 && p.y > -40 && p.y < this.H + 40
+  }
+
   // ---------- frame loop ----------
   frame(now: number, ctx: CanvasRenderingContext2D, dpr: number) {
     const dt = this.lastFrame ? Math.min(0.1, (now - this.lastFrame) / 1000) : 0
     this.lastFrame = now
+    const wished = this.noteWishes()
+    const seeing = this.seeingUfo()
+    const snap: StickerSnap = { watchingSky: seeing }
+    const lookedUp = seeing && !this.wasSeeingUfo
+    this.wasSeeingUfo = seeing
+    let toast = false
+    const collect = () => {
+      for (const st of stepStickers(this.g, snap)) {
+        this.stickerQueue.push(st)
+        toast = true
+      }
+    }
+    if (this.stickerMinute < 0 || wished || lookedUp) {
+      collect()
+      this.stickerMinute = Math.floor(this.g.time)
+    }
     if (this.speed > 0) {
       this.acc += dt * STEPS_PER_SECOND * this.speed
       let n = Math.min(Math.floor(this.acc), 900)
       this.acc -= Math.floor(this.acc)
       const t0 = performance.now()
       while (n-- > 0) {
+        const prev = Math.floor(this.g.time)
         step(this.g)
+        const nowM = Math.floor(this.g.time)
+        if (nowM !== prev) {
+          collect()
+          this.stickerMinute = nowM
+        }
         if (performance.now() - t0 > 24) { this.acc = 0; break }
       }
     }
+    if (toast) this.emit()
     const day = Math.floor(this.g.time / 1440)
     if (day !== this.lastSaveDay) {
       if (this.lastSaveDay >= 0) this.save()
@@ -325,6 +389,7 @@ export class Controller {
     const now = performance.now()
     const sfx = pokeFacility(this.g, f, now)
     if (sfx === null) return
+    bump(this.g, 'pokes'); bump(this.g, 'poke:' + f.kind)
     registerPoke(f.id, now)
     if (sfx === 'scare') jumpscare(now)
     play(sfx)

@@ -1,7 +1,7 @@
 // The simulation: people, schedules, hotel, economy, rating and events.
 import type { Sfx } from '../audio'
 import {
-  ATTRACTIONS, BREAKFAST, DAYS_PER_QUARTER, DINNER, LUNCH, FACILITIES, HOTEL_NIGHT, MAX_FLOOR, MINUTES_PER_STEP, OFFICE_RENT, CONDO_PRICE,
+  ATTRACTIONS, BREAKFAST, DAYS_PER_QUARTER, DINNER, FOOD, LUNCH, FACILITIES, HOTEL_NIGHT, MAX_FLOOR, MINUTES_PER_STEP, OFFICE_RENT, CONDO_PRICE,
   RENT_HAPPY, RENT_MULT, SHOP_CAPACITY, SPEND, TRANSPORTS, isCommercial, isConnector, isHotel, isResidential, starRules,
 } from './defs'
 import type { FacilityKind } from './defs'
@@ -16,6 +16,7 @@ import { dayOf, floorLabel, isWeekend, minuteOfDay, quarterOf } from './state'
 import { giantsArrive, giantsDay } from './giants'
 import { clearNight, heliMinute, turbineCut } from './roof'
 import { zooHour } from './zoo'
+import { bump } from './stickers'
 import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
 
 export { giantCount, giantNow, giantsArrive } from './giants'
@@ -179,9 +180,10 @@ const hooks = (g: Game): ElevatorHooks => ({
     const p = g.people.get(pid)
     return p ? p.legs[p.leg]?.to ?? p.floor : 0
   },
-  onBoard(pid) {
+  onBoard(pid, s, c) {
     const p = g.people.get(pid)
     if (p) p.state = 'riding'
+    bump(g, 'car:' + s.id + ':' + s.cars.indexOf(c))
   },
   onUnload(pid, s, floor) {
     const p = g.people.get(pid)
@@ -320,6 +322,7 @@ function arrive(g: Game, p: Person) {
         const v = earn(g, spendAmt * RENT_MULT[fac.rent] * (0.8 + Math.random() * 0.4))
         fac.incomeToday += v
         fac.incomeTotal += v
+        if (FOOD.includes(fac.kind)) bump(g, 'sold:' + fac.kind)
         if (Math.random() < 0.35) fx(g, p.x, fac.floor, `+$${v}`)
         if (Math.random() < 0.04) sound.play('cash')
       }

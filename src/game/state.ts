@@ -162,6 +162,10 @@ export interface Game {
   buildVersion: number
   fx: Fx[]
   starCelebration: number
+  /** Earned sticker ids, in the order they were earned. Old saves omit this. */
+  stickers: string[]
+  /** Pokes, pizzas sold, riders, and other totals nothing else tracked. */
+  counters: Record<string, number>
   name?: string
 }
 
@@ -189,6 +193,8 @@ export function newGame(mode: Mode, disasters: boolean, name = ''): Game {
     buildVersion: 0,
     fx: [],
     starCelebration: 0,
+    stickers: [],
+    counters: {},
   }
 }
 
@@ -258,6 +264,8 @@ export function deserialize(json: string): Game {
   const s = JSON.parse(json) as SaveShape
   return {
     ...s,
+    stickers: s.stickers ?? [],
+    counters: s.counters ?? {},
     floors: new Map(s.floors.map(([f, r]) => [f, Int32Array.from(r)])),
     facilities: new Map(s.facilities.map((f) => [f.id, f])),
     shafts: new Map(s.shafts.map((x) => [x.id, x])),
