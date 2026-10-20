@@ -1,4 +1,4 @@
-// Sky Zoo: a monkey escapes once a day, hides on a room, and can be caught.
+// Sky Zoo: on the days surprises.ts draws it, a monkey escapes, hides on a room, and can be caught.
 import { isConnector } from './defs'
 import type { Facility, Game } from './state'
 import { dayOf } from './state'
@@ -42,7 +42,7 @@ export function monkeyOn(g: Game, f: Facility): boolean {
   return m.floor === f.floor + f.height - 1 && m.x >= f.x && m.x < f.x + f.width
 }
 
-/** Once a day at 10am, unless Huggy is already loose. Moves every hour until 6pm. */
+/** A loose monkey moves every hour and swings home at 6pm. */
 export function zooHour(g: Game, m: number) {
   const day = dayOf(g.time)
   if (g.flags.peels?.length) {
@@ -62,14 +62,17 @@ export function zooHour(g: Game, m: number) {
     log(g, 'The monkey swung back to the Sky Zoo all by itself.', 'info', zoo.floor, zoo.x + 4)
     return
   }
-  if (g.flags.monkey) {
+  // he moves on the hour, but not in the minute he got out
+  if (g.flags.monkey && g.time - g.flags.monkey.since >= 1) {
     const prev = g.flags.monkey
     if (sitMonkey(g, zoo)) dropPeel(g, prev)
-    return
   }
-  if (m !== 10 * 60 || g.flags.huggy) return
-  if (Math.random() >= 0.3) return
-  if (!sitMonkey(g, zoo)) return
+}
+
+/** A monkey gets out. surprises.ts calls this at 10am on a monkey day. */
+export function escapeMonkey(g: Game) {
+  const zoo = facilitiesOf(g, 'zoo').find((f) => f.reachable) ?? facilitiesOf(g, 'zoo')[0]
+  if (!zoo || g.flags.monkey || !sitMonkey(g, zoo)) return
   log(g, 'A monkey escaped from the Sky Zoo!', 'event', zoo.floor, zoo.x + 4)
   sound.play('pop')
 }

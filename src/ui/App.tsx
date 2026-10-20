@@ -4,6 +4,7 @@ import { CATEGORIES, FACILITIES, RENT_LABELS, TRANSPORTS, isCommercial, isConnec
 import type { Category, FacilityKind, Mode, ToolId, TransportKind } from '../game/defs'
 import { bombDecision, setRent, starProgress } from '../game/sim'
 import type { Facility, Shaft } from '../game/state'
+import type { SurpriseId } from '../game/surprises'
 import { clockLabel, dayOf, floorLabel, isWeekend, minuteOfDay, money, quarterOf, yearOf } from '../game/state'
 import { addCar, removeCar, resizeShaft, unlocked } from '../game/world'
 import { evict } from '../game/sim'
@@ -31,8 +32,10 @@ const ctl = new Controller()
 if (import.meta.env.DEV) {
   const w = window as unknown as { api: Record<string, unknown> }
   w.api = { stickers: stickersApi }
-  void Promise.all([import('../game/world'), import('../game/sim'), import('../render/sky-fx')]).then(([world, sim, sky]) => {
-    w.api = { ...world, ...sim, ...sky, stickers: stickersApi }
+  void Promise.all([import('../game/world'), import('../game/sim'), import('../render/sky-fx'), import('../game/surprises')]).then(([world, sim, sky, surprises]) => {
+    // forceSurprise('ufo') starts that surprise now, for screenshots
+    const forceSurprise = (id: SurpriseId) => surprises.forceSurprise(ctl.g, id)
+    w.api = { ...world, ...sim, ...sky, stickers: stickersApi, forceSurprise }
   })
 }
 

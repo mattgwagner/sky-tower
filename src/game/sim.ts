@@ -13,7 +13,8 @@ import type { HolidaySim } from './holidays'
 import { SLIDE_STEPS, slideDayTick, slideLanded } from './slide'
 import type { Facility, Game, Person, PersonKind, Shaft } from './state'
 import { dayOf, floorLabel, isWeekend, minuteOfDay, quarterOf } from './state'
-import { giantsArrive, giantsDay } from './giants'
+import { giantsArrive } from './giants'
+import { surpriseDay, surpriseMinute } from './surprises'
 import { clearNight, heliMinute, turbineCut } from './roof'
 import { zooHour } from './zoo'
 import { bump } from './stickers'
@@ -1042,10 +1043,9 @@ function stepBomb(g: Game) {
   for (const p of g.people.values()) if (p.kind === 'guard' && (p.purpose === 'search' || p.purpose === 'sweep')) goBackToPost(g, p)
 }
 
-function maybeVip(g: Game) {
-  if (g.flags.vip || g.stars < 3 || isWeekend(g.time)) return
-  if (g.flags.vipVisit === today(g)) return
-  if (Math.random() > 0.6) return
+/** A VIP checks into the best free Suite. Only on the days surprises.ts draws one. */
+export function startVip(g: Game) {
+  if (g.flags.vip || g.flags.vipVisit === today(g)) return
   g.flags.vipVisit = today(g)
   const suites = facilitiesOf(g, 'hotelSuite').filter((s) => !s.booked && !s.dirty && !s.roaches && s.reachable)
   if (!suites.length) {
@@ -1083,6 +1083,8 @@ function minuteTick(g: Game) {
     // idle housekeepers look for work
     for (const p of g.people.values()) if (p.kind === 'maid' && p.state === 'inside' && p.at === p.home && !p.task) maidNext(g, p)
   }
+  surpriseMinute(g)
+  ufoMinute(g)
   if (m % 60 === 0) hourTick(g, m)
   giantsArrive(g)
 }
@@ -1102,15 +1104,12 @@ function hourTick(g: Game, m: number) {
   }
   computePop(g)
   checkRating(g)
-  if (m === at(13) || m === at(15)) maybeVip(g)
   if (g.disasters && g.stars >= 2 && m >= at(9) && m <= at(20)) {
     if (Math.random() < 1 / (24 * 14)) startFire(g)
     if (g.stars >= 3 && !g.bomb && Math.random() < 1 / (24 * 20)) startBomb(g)
   }
   if (quarterOf(g.time) === 4 && dayOf(g.time) % 3 === 2 && m === at(19)) g.flags.santaDay = dayOf(g.time)
-  maybeUfo(g, m)
   huggyHour(g, m)
-  maybeEntity(g, m)
   stepHoliday(g, m, holidaySim)
   zooHour(g, m)
 }
@@ -1192,21 +1191,26 @@ function hideHuggy(g: Game, factory: Facility) {
   return true
 }
 
+/** Huggy gets out of his case. Only on the nights surprises.ts draws him. */
+export function releaseHuggy(g: Game) {
+  const factory = facilitiesOf(g, 'toyFactory').find((f) => f.reachable)
+  if (!factory || g.flags.huggy || g.flags.huggyFound === nightOf(g)) return
+  if (!hideHuggy(g, factory)) return
+  log(g, '🧸 Huggy Wuggy\'s display case is EMPTY! He\'s hiding in a vent somewhere in your tower. Find him and tap him!', 'event')
+  sound.play('spooky')
+}
+
+/** While he's loose, Huggy changes hiding spots every two hours and is back in his case by sunrise. */
 function huggyHour(g: Game, m: number) {
+  if (!g.flags.huggy) return
   const factory = facilitiesOf(g, 'toyFactory').find((f) => f.reachable)
   if (!factory) { g.flags.huggy = null; return }
-  if (m === at(6) && g.flags.huggy) {
+  if (m === at(6)) {
     g.flags.huggy = null
-    log(g, '🧸 Huggy Wuggy snuck back into his case before sunrise. Try to find him tomorrow night!', 'info', factory.floor, factory.x + 5)
+    log(g, '🧸 Huggy Wuggy snuck back into his case before sunrise. Try to find him another night!', 'info', factory.floor, factory.x + 5)
     return
   }
-  if (!isNight(m) || g.flags.huggyFound === nightOf(g)) return
-  if (!g.flags.huggy) {
-    if (hideHuggy(g, factory)) {
-      log(g, '🧸 Huggy Wuggy\'s display case is EMPTY! He\'s hiding in a vent somewhere in your tower. Find him and tap him!', 'event')
-      sound.play('spooky')
-    }
-  } else if (m % 120 === 0) hideHuggy(g, factory)
+  if (isNight(m) && m % 120 === 0) hideHuggy(g, factory)
 }
 
 /** Tapped Huggy: he goes back in his case for the rest of the night. */
@@ -1233,19 +1237,14 @@ export function entityNow(g: Game) {
   return { ...e, warning: t < d.warn, k: t < d.warn ? t / d.warn : (t - d.warn) / d.pass }
 }
 
-function maybeEntity(g: Game, m: number) {
-  if (g.flags.entity || !(m >= at(21) || m < at(5)) || g.flags.entityNight === nightOf(g)) return
-  if (Math.random() > 0.14) return
-  const hotelFloors = [...new Set([...g.facilities.values()].filter((f) => isHotel(f.kind)).map((f) => f.floor))]
-  const hotelRooms = [...g.facilities.values()].filter((f) => isHotel(f.kind)).length
-  let kind: 'rush' | 'seek' | null = null
-  let floor = 0
-  if (hotelRooms >= 2 && Math.random() < 0.7) { kind = 'rush'; floor = pick(hotelFloors) }
-  else if (topFloor(g) >= 5) {
-    const floors = [...g.floors.keys()].filter((f) => f >= 1)
-    kind = 'seek'; floor = pick(floors)
-  }
-  if (!kind) return
+/** Rush runs a hotel floor; Seek watches any floor above the lobby. Only on the nights surprises.ts draws one. */
+export function startEntity(g: Game, kind: 'rush' | 'seek') {
+  if (g.flags.entity && entityNow(g)) return
+  const floors = kind === 'rush'
+    ? [...new Set([...g.facilities.values()].filter((f) => isHotel(f.kind)).map((f) => f.floor))]
+    : [...g.floors.keys()].filter((f) => f >= 1)
+  if (!floors.length) return
+  const floor = pick(floors)
   const [a, b] = floorExtent(g, floor)
   g.flags.entity = { kind, floor, start: Math.round(g.time), a, b }
   g.flags.entityNight = nightOf(g)
@@ -1353,18 +1352,33 @@ function roofMinute(g: Game, m: number) {
   }
 }
 
-function maybeUfo(g: Game, m: number) {
-  const day = dayOf(g.time)
-  if (m === at(22) && g.flags.ufoDay !== day && topFloor(g) >= 4 && Math.random() < 0.3) {
-    g.flags.ufoDay = day
-    log(g, '🛸 A UFO is hovering over your tower! Quick, look up!', 'event', topFloor(g) + 2, ufoX(g))
-    sound.play('ufo')
-  }
-  if (m === at(23) && g.flags.ufoDay === day) {
-    const v = earn(g, 15000 + g.pop * 5)
-    log(g, `👽 The aliens loved your tower! They left $${v.toLocaleString()} in space money.`, 'good', topFloor(g) + 1, ufoX(g))
-    fx(g, ufoX(g), topFloor(g) + 1, `👽 +$${v.toLocaleString()}`, '#8ce99a')
-  }
+/** How long the UFO stays, in sim minutes. */
+export const UFO_STAY = 60
+
+/** Sim minute the UFO arrived. Old saves only have the day: it came at 10pm. */
+const ufoArrived = (day: number, ufoAt?: number) => ufoAt ?? day * 1440 + at(22)
+
+/** Minutes since the UFO arrived, or null when it isn't here. */
+export function ufoTime(g: Game): number | null {
+  if (g.flags.ufoDay !== dayOf(g.time)) return null
+  const t = g.time - ufoArrived(g.flags.ufoDay, g.flags.ufoAt)
+  return t >= 0 && t < UFO_STAY ? t : null
+}
+
+/** The UFO arrives. Only on the nights surprises.ts draws it. */
+export function startUfo(g: Game) {
+  g.flags.ufoDay = dayOf(g.time)
+  g.flags.ufoAt = Math.round(g.time)
+  log(g, '🛸 A UFO is hovering over your tower! Quick, look up!', 'event', topFloor(g) + 2, ufoX(g))
+  sound.play('ufo')
+}
+
+/** An hour after it came, the UFO leaves space money. */
+function ufoMinute(g: Game) {
+  if (g.flags.ufoDay == null || Math.round(g.time) !== ufoArrived(g.flags.ufoDay, g.flags.ufoAt) + UFO_STAY) return
+  const v = earn(g, 15000 + g.pop * 5)
+  log(g, `👽 The aliens loved your tower! They left $${v.toLocaleString()} in space money.`, 'good', topFloor(g) + 1, ufoX(g))
+  fx(g, ufoX(g), topFloor(g) + 1, `👽 +$${v.toLocaleString()}`, '#8ce99a')
 }
 
 /** The middle of the highest floor, where the UFO likes to hover. */
@@ -1413,7 +1427,7 @@ function dayTick(g: Game) {
     p.mood *= 0.6
   }
   if (day > 0 && day % DAYS_PER_QUARTER === 0) quarterTick(g)
-  giantsDay(g)
+  surpriseDay(g)
 }
 
 function quarterTick(g: Game) {

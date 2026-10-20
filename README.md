@@ -48,20 +48,29 @@ population. Save picture downloads a PNG, or opens the share sheet on an iPad or
 ## Sky
 
 Some days it rains from 10am to 6pm; a third of those are storms with lightning and thunder, and every rainy day ends
-with a rainbow. On winter days it snows. At night, shooting stars streak across the sky now and then.
+with a rainbow. On winter days it snows. Each night one to three shooting stars cross the sky, well apart.
+
+## Surprises
+
+Scheduled things happen on time every day: the noon rocket, the T-Rex roars, the trains, Freddy's 6am, the
+holidays. Everything random shares one draw instead. At midnight the tower picks at most one surprise for the
+coming day and night, and about three days in seven nothing happens. The pool is Huggy getting out, a monkey getting
+out, Rush or Seek, the UFO, a giant visitor and a VIP, each only when the tower has what it needs. With everything
+built, Huggy, the monkey and Rush/Seek each come about once a week, the UFO and the giants about once in two weeks,
+and the VIP fills in. The draw is seeded by the tower and the day, so reloading a save never re-rolls it. The list is
+`src/game/surprises.ts`; in dev, `api.forceSurprise('ufo')` (or any other id) starts one right now.
 
 ## Spooky stuff
 
 Fan homages with original pixel art, scary-silly rather than gory:
 
-- **Playtime Co. Toy Factory** (Fun → Spooky): conveyor toys, GrabPack hands, Huggy Wuggy in a display case. Most
+- **Playtime Co. Toy Factory** (Fun → Spooky): conveyor toys, GrabPack hands, Huggy Wuggy in a display case. Some
   nights he escapes and hides in a ceiling vent somewhere in the tower; tap him in Look mode to catch him for a reward.
   He moves every two hours and sneaks back at 6am if nobody finds him.
 - **Indigo Park**: a little indoor park with a railway and Rambley on the big screen. After dark the screen goes to
   static and Rambley glitches.
-- **Night visitors** (at most one a night, about two nights in three): with 2+ hotel rooms, the lights on a hotel
-  floor flicker and Rush tears down the hall while everyone hides; otherwise Seek's eyes open on a floor's walls before
-  it runs across. Hotel rooms carry gold four-digit door plates, and the Library has a blind Figure after 9pm.
+- **Night visitors**: with 2+ hotel rooms, the lights on a hotel floor can flicker and Rush tears down the hall while
+  everyone hides; in a tower of 5+ floors, Seek's eyes can open on a floor's walls before it runs across. Hotel rooms carry gold four-digit door plates, and the Library has a blind Figure after 9pm.
 
 ## Holidays
 
@@ -112,11 +121,11 @@ one.
 
 ## Giant visitors
 
-At most one a day, picked at midnight. A dragon will not show up on a night that already has a night visitor or a UFO.
+Each is a surprise (above). A dragon never lands on a night Huggy or a night visitor is still out.
 
-- **The Big Ape** — about one evening in six, 6pm to 7pm, once the tower is 20 floors tall. He climbs the outside, peeks in the windows, beats his chest on the roof while a little plane pulls a BE NICE banner, waves, and climbs back down. Tap him in Look mode.
-- **The Dragon** — about one night in eight, just after midnight, if the tower has a Rocket Pad or a Cathedral. He flies past, lands, and breathes a small flame. The roof lanterns stay lit until dawn.
-- **Skywriter** — about one clear afternoon in five. A plane writes the tower's name across the sky. The letters drift off over about 20 minutes.
+- **The Big Ape** — 6pm to 7pm, once the tower is 20 floors tall. He climbs the outside, peeks in the windows, beats his chest on the roof while a little plane pulls a BE NICE banner, waves, and climbs back down. Tap him in Look mode.
+- **The Dragon** — just after midnight, if the tower has a Rocket Pad or a Cathedral. He flies past, lands, and breathes a small flame. The roof lanterns stay lit until dawn.
+- **Skywriter** — a clear afternoon. A plane writes the tower's name across the sky. The letters drift off over about 20 minutes.
 
 ## Roof toppers
 
@@ -135,7 +144,7 @@ Fun → Wow. Two floors: penguins slide down an ice ramp into a pool, a giraffe 
 railing, and monkeys swing on a tyre. A zookeeper walks between them with a bucket. After dark the penguins huddle
 and the monkeys sleep in a pile.
 
-Once a day at 10am, about a third of the time, a monkey escapes (never while Huggy is loose). It sits on a random
+On a monkey day (a surprise, above), a monkey escapes at 10am. It sits on a random
 room, moves every hour, and leaves a banana peel that disappears the next morning. Tap it in Look mode — `Gotcha! 🍌`
 — and the zookeeper carries it home for a small reward. If nobody catches it by 6pm, it swings back by itself.
 The room it is sitting on says `🍌` when you poke it.
@@ -152,12 +161,13 @@ Tap **📒 Stickers** in the top bar or the ☰ menu. Earned stickers are in col
   - `routing.ts`: Dijkstra over elevators, stairs and escalators.
   - `elevators.ts`: per-car SCAN logic.
   - `sim.ts`: people, schedules, hotel, commerce, rating, events.
+  - `surprises.ts`: the one-a-day surprise draw.
 - `src/render/`: Canvas 2D renderer with procedural pixel-art sprites. `sky-fx.ts` has the weather predicate, rainbow,
   shooting stars and lightning; `poke-fx.ts` the poke wobble.
 - `src/game/poke.ts`: what each room says and plays when tapped.
 - `src/game/stickers.ts`: sticker checks and `defineSticker()`. `src/ui/Stickers.tsx`: the album and the toast.
 - `src/ui/postcard.ts`: renders the tower to a framed PNG and saves or shares it.
 - `src/ui/`: React HUD and input controller.
-- `scripts/simcheck.ts`, `scripts/simbig.ts`, `scripts/slidecheck.ts`, `scripts/stickercheck.ts`: headless smoke runs (`npm run sim` runs simcheck, slidecheck, and the sticker check).
+- `scripts/simcheck.ts`, `scripts/simbig.ts`, `scripts/slidecheck.ts`, `scripts/stickercheck.ts`, `scripts/surprisecheck.ts`: headless smoke runs (`npm run sim` runs simcheck, slidecheck, the sticker check and the 30-day surprise check).
 
 Saves are in `localStorage`, written automatically every game day.

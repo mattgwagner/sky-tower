@@ -1,5 +1,6 @@
 import type { FacilityKind, Mode, RentLevel, TransportKind } from './defs'
 import { MAX_FLOOR, MIN_FLOOR, TOWER_WIDTH } from './defs'
+import type { SurpriseId } from './surprises'
 
 export interface Facility {
   id: number
@@ -154,6 +155,14 @@ export interface Game {
     peels?: { floor: number; x: number; day: number }[]
     /** Zookeeper walking a caught monkey back to the zoo. */
     monkeyCarry?: { floor: number; x: number; zooFloor: number; zooX: number; start: number; until: number } | null
+    /** Sim minute the UFO arrived. Older saves only have ufoDay, which meant 10pm. */
+    ufoAt?: number
+    /** Seeds this tower's surprise draws, so a reload never re-rolls a day. Set at the first draw. */
+    seed?: number
+    /** The day's surprise from surprises.ts; id null on a quiet day. `at` is minutes after that midnight. */
+    surprise?: { id: SurpriseId | null; day: number; at: number } | null
+    /** Yesterday's draw, kept so a surprise due after midnight still starts. */
+    lastSurprise?: { id: SurpriseId | null; day: number; at: number } | null
   }
   bomb: Bomb | null
   pop: number

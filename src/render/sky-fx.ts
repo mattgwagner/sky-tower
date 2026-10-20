@@ -1,8 +1,9 @@
-// Sky wonders: shooting stars at night, a rainbow after the rain, lightning in a storm.
+// Sky wonders: a few shooting stars at night, a rainbow after the rain, lightning in a storm.
 import { play } from '../audio'
 import type { Game } from '../game/state'
 import { dayOf, minuteOfDay } from '../game/state'
 import { dayHash, snowsOn } from '../game/holidays'
+import { surpriseHash } from '../game/surprises'
 
 export interface Weather { rain: boolean; snow: boolean; storm: boolean; rainbow: boolean }
 
@@ -47,17 +48,30 @@ export function drawRainbow(c: CanvasRenderingContext2D, W: number, H: number, g
 
 interface Streak { x: number; y: number; vx: number; vy: number; born: number; life: number }
 let streaks: Streak[] = []
-let nextStreak = 0
 let wishes = 0
+let starNight = -1
+let starGame: Game | null = null
+let starTimes: number[] = []
 
 /** Dev hook: how many shooting stars have fallen tonight. */
 export function shootingStarCount() { return wishes }
 
-/** Occasional streaks across the night sky. Returns how many stars have fallen tonight. */
-export function drawShootingStars(c: CanvasRenderingContext2D, W: number, H: number, now: number, night: number) {
-  if (night < 0.6) { streaks = []; nextStreak = now + 4000 + Math.random() * 8000; wishes = 0; return 0 }
-  if (now >= nextStreak) {
-    nextStreak = now + 7000 + Math.random() * 16000
+/** One to three stars a night, in sim minutes, each in its own slice of 8:30pm to 4:30am so they never bunch up. */
+function starsFor(g: Game, night: number) {
+  const from = night * 1440 + 20 * 60 + 30
+  const n = 1 + (surpriseHash(g, night, 11) % 3)
+  const slot = 480 / n
+  return Array.from({ length: n }, (_, i) => from + i * slot + (surpriseHash(g, night, 12 + i) % (slot / 2)))
+}
+
+/** A few streaks across the night sky. Returns how many stars have fallen tonight. */
+export function drawShootingStars(c: CanvasRenderingContext2D, W: number, H: number, g: Game, now: number, night: number) {
+  if (night < 0.6) { streaks = []; wishes = 0; return 0 }
+  const n = dayOf(g.time) - (minuteOfDay(g.time) < 12 * 60 ? 1 : 0)
+  if (n !== starNight || g !== starGame) { starNight = n; starGame = g; starTimes = starsFor(g, n) }
+  while (starTimes.length && g.time >= starTimes[0]!) {
+    // a star whose minute passed while the game was closed or skipping ahead stays unseen
+    if (g.time - starTimes.shift()! > 20) continue
     const fromLeft = Math.random() < 0.5
     const sp = 900 + Math.random() * 500
     streaks.push({ x: fromLeft ? W * (0.05 + Math.random() * 0.3) : W * (0.65 + Math.random() * 0.3), y: H * (0.02 + Math.random() * 0.2), vx: (fromLeft ? 1 : -1) * sp, vy: sp * 0.42, born: now, life: 650 + Math.random() * 400 })

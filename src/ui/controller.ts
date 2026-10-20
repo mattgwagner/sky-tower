@@ -2,9 +2,9 @@
 import { play, setMusic, audioPrefs } from '../audio'
 import { FACILITIES, STEPS_PER_SECOND, TOWER_WIDTH, TRANSPORTS } from '../game/defs'
 import type { FacilityKind, Mode, ToolId, TransportKind } from '../game/defs'
-import { afterBuild, evict, sound, step, ufoX } from '../game/sim'
+import { afterBuild, evict, sound, step, ufoTime, ufoX } from '../game/sim'
 import type { Facility, Game } from '../game/state'
-import { dayOf, deserialize, minuteOfDay, newGame, serialize } from '../game/state'
+import { deserialize, newGame, serialize } from '../game/state'
 import { dragDrop } from '../game/slide'
 import { buildStarter } from '../game/starter'
 import { checkFacility, checkShaft, demolish, occupantAt, paintRun, placeFacility, placeShaft, topFloor } from '../game/world'
@@ -168,9 +168,8 @@ export class Controller {
 
   /** True while the UFO is hovering and its sprite is inside the window. */
   private seeingUfo(): boolean {
-    if (this.g.flags.ufoDay !== dayOf(this.g.time)) return false
-    const t = minuteOfDay(this.g.time) - 22 * 60
-    if (t < 8 || t > 52) return false
+    const t = ufoTime(this.g)
+    if (t == null || t < 8 || t > 52) return false
     const roof = -(topFloor(this.g) + 1) * FH
     const p = worldToScreen(this.cam, this.W, this.H, ufoX(this.g) * T, roof - 70)
     return p.x > -40 && p.x < this.W + 40 && p.y > -40 && p.y < this.H + 40

@@ -182,7 +182,7 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
   bookstore: { kind: 'bookstore', name: 'Bookstore', emoji: '📚', category: 'shops', width: 14, height: 1, cost: 90000, stars: 1, pop: 4,
     blurb: 'Comics, mysteries and dragon books. There\'s a shop cat!' },
   toyFactory: { kind: 'toyFactory', name: 'Playtime Co. Toy Factory', emoji: '🧸', category: 'fun', width: 30, height: 2, cost: 600000, stars: 2, pop: 14,
-    blurb: 'Toys on conveyor belts and Huggy Wuggy in his case. At night he escapes… find him and tap him!' },
+    blurb: 'Toys on conveyor belts and Huggy Wuggy in his case. Some nights he escapes… find him and tap him!' },
   indigoPark: { kind: 'indigoPark', name: 'Indigo Park', emoji: '🦝', category: 'fun', width: 34, height: 2, cost: 500000, stars: 2, pop: 16,
     blurb: 'A little theme park with a train ride and Rambley on the big screen. Don\'t visit after dark…' },
   fazbear: { kind: 'fazbear', name: 'Freddy Fazbear\'s Pizza', emoji: '🐻', category: 'food', width: 32, height: 2, cost: 250000, stars: 1, pop: 12,

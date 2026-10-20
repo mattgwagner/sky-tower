@@ -2,7 +2,7 @@
 import { FACILITIES, TOWER_WIDTH, TRANSPORTS, isCommercial, isConnector, isHotel, isLobbyFloor } from '../game/defs'
 import type { FacilityKind } from '../game/defs'
 import { carPos } from '../game/elevators'
-import { TRAIN_EVERY, TRAIN_IN, climbSteps, entityNow, hidingOn, isOpen, launchClock, trainPhase, ufoX } from '../game/sim'
+import { TRAIN_EVERY, TRAIN_IN, climbSteps, entityNow, hidingOn, isOpen, launchClock, trainPhase, ufoTime, ufoX } from '../game/sim'
 import type { Facility, Game, Person, Shaft } from '../game/state'
 import { dayOf, isWeekend, minuteOfDay } from '../game/state'
 import { hasPet } from '../game/people-info'
@@ -305,7 +305,7 @@ function personColor(shirt: number) {
 export function render(c: CanvasRenderingContext2D, W: number, H: number, g: Game, cam: Camera, ov: Overlay, now: number, dt: number) {
   c.imageSmoothingEnabled = false
   const night = drawSky(c, W, H, g, cam, now)
-  drawShootingStars(c, W, H, now, night)
+  drawShootingStars(c, W, H, g, now, night)
   drawRainbow(c, W, H, g)
   drawBalloons(c, W, H, now, night)
   drawBlimp(c, W, H, g, now, night)
@@ -1408,9 +1408,8 @@ function drawRocket(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: nu
 }
 
 function drawUfo(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: number) => Pt, z: number, now: number) {
-  if (g.flags.ufoDay !== dayOf(g.time)) return
-  const t = minuteOfDay(g.time) - 22 * 60
-  if (t < 0 || t >= 60) return
+  const t = ufoTime(g)
+  if (t == null) return
   const roof = floorTop(topFloor(g))
   let dx = 0, dy = 0
   if (t < 8) dx = ((8 - t) / 8) ** 2 * 1600
