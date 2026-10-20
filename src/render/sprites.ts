@@ -887,6 +887,91 @@ Object.assign(painters, {
     r(c, '#212529', sx - 2, sy - 2, sw + 4, sh + 4)
     sign(c, w, 'INDIGO PARK', '#5f3dc4', '#ffd43b')
   },
+  observatory(c, w, h) {
+    r(c, '#868e96', 0, h - 6, w, 6)
+    c.fillStyle = '#dee2e6'
+    c.beginPath()
+    c.arc(w / 2, h - 6, w * 0.46, Math.PI, 0)
+    c.fill()
+    c.strokeStyle = '#adb5bd'
+    c.lineWidth = 1
+    c.stroke()
+    r(c, '#ced4da', w / 2 - 3, 4, 6, 5)
+    r(c, '#495057', 4, h - 10, 3, 4)
+    r(c, '#495057', w - 7, h - 10, 3, 4)
+  },
+  helipad(c, w, h) {
+    r(c, '#495057', 0, 0, w, h)
+    c.strokeStyle = '#f8f9fa'
+    c.lineWidth = 2
+    c.beginPath()
+    c.arc(w / 2, h / 2 + 1, 12, 0, Math.PI * 2)
+    c.stroke()
+    const cx = w / 2
+    const cy = h / 2
+    r(c, '#f8f9fa', cx - 6, cy - 5, 2, 11)
+    r(c, '#f8f9fa', cx + 4, cy - 5, 2, 11)
+    r(c, '#f8f9fa', cx - 6, cy - 1, 12, 2)
+  },
+  turbine(c, w, h) {
+    r(c, '#868e96', 0, h - 5, w, 5)
+    r(c, '#e9ecef', w / 2 - 2, 14, 4, h - 18)
+    r(c, '#ced4da', w / 2 - 7, 10, 14, 6)
+  },
+  waterTower(c, w, h) {
+    r(c, '#8d6e4f', 8, h * 0.5, 3, h * 0.5)
+    r(c, '#8d6e4f', w - 11, h * 0.5, 3, h * 0.5)
+    r(c, '#a07d4a', 6, h * 0.48, w - 12, 3)
+    r(c, '#c4a574', 3, 10, w - 6, h * 0.4)
+    for (let y = 14; y < 10 + h * 0.4; y += 4) r(c, '#8d6e4f', 3, y, w - 6, 1)
+    r(c, '#6b4f3a', 1, 6, w - 2, 4)
+    r(c, '#6b4f3a', w / 2 - 2, 2, 4, 5)
+  },
+  giantDonut(c, w, h) {
+    r(c, '#495057', 0, h - 6, w, 6)
+    r(c, '#868e96', w / 2 - 2, h * 0.45, 4, h * 0.55 - 6)
+    r(c, '#343a40', w / 2 - 8, h * 0.42, 16, 3)
+  },
+  crown(c, w, h) {
+    r(c, '#495057', 0, h - 8, w, 8)
+    r(c, '#ffd43b', 4, h - 28, w - 8, 20)
+    for (const x of [6, w / 2 - 5, w - 16]) r(c, '#ffd43b', x, h - 42, 10, 16)
+    r(c, '#fff3bf', 4, h - 28, w - 8, 3)
+    r(c, '#ff6b6b', 10, h - 22, 4, 4)
+    r(c, '#74c0fc', w / 2 - 2, h - 22, 4, 4)
+    r(c, '#da77f2', w - 14, h - 22, 4, 4)
+    r(c, '#ffd43b', w / 2 - 1, h - 52, 2, 12)
+  },
+  dome(c, w, h) {
+    r(c, '#495057', 0, h - 6, w, 6)
+    r(c, '#b2f2bb', 6, h - 22, w - 12, 16)
+    r(c, '#2f9e44', 12, h - 28, 2, 8)
+    r(c, '#2f9e44', w - 16, h - 26, 2, 6)
+    r(c, '#ff6b6b', 11, h - 30, 3, 3)
+    r(c, '#ffd43b', w - 17, h - 28, 3, 3)
+    c.fillStyle = 'rgba(165,216,255,0.45)'
+    c.beginPath()
+    c.arc(w / 2, h - 12, w * 0.4, Math.PI, 0)
+    c.fill()
+    c.strokeStyle = '#d0ebff'
+    c.lineWidth = 1
+    c.stroke()
+  },
+  antenna(c, w, h) {
+    r(c, '#495057', 0, h - 6, w, 6)
+    r(c, '#dee2e6', w / 2 - 1, 10, 2, h - 16)
+    c.strokeStyle = '#adb5bd'
+    c.lineWidth = 1
+    c.beginPath()
+    for (let y = 16; y < h - 12; y += 10) {
+      c.moveTo(w / 2 - 7, y)
+      c.lineTo(w / 2 + 7, y + 10)
+      c.moveTo(w / 2 + 7, y)
+      c.lineTo(w / 2 - 7, y + 10)
+    }
+    c.stroke()
+    r(c, '#ff6b6b', w / 2 - 2, 4, 4, 4)
+  },
 } satisfies Partial<Record<FacilityKind, Painter>>)
 
 export const SLIDE_TUBE_DY = 6 // tube centreline sits this far above each floor line

@@ -118,6 +118,17 @@ At most one a day, picked at midnight. A dragon will not show up on a night that
 - **The Dragon** — about one night in eight, just after midnight, if the tower has a Rocket Pad or a Cathedral. He flies past, lands, and breathes a small flame. The roof lanterns stay lit until dawn.
 - **Skywriter** — about one clear afternoon in five. A plane writes the tower's name across the sky. The letters drift off over about 20 minutes.
 
+## Roof toppers
+
+The 🏗️ Build tab has a Roof group, after the elevators. Every topper, including the Rocket Pad, needs open sky. Building a floor over one is refused until you move it (`Move the Observatory first`, and the same for the others).
+
+- **Observatory**: a silver dome. The slit opens at night and the telescope swings. On a clear night, once, `✨ Saw Saturn!`
+- **Helipad**: an H in a circle. From 8am to 5pm a helicopter arrives every 3 hours, lands, and six visitors walk inside. You hear the rotor.
+- **Wind Turbines**: up to three, side by side. They spin faster in a storm and trim the upkeep of the floor below a little. The room panel says `Making power`.
+- **Water Tower**: a wooden tank. Pigeons sit on it until you tap, then they scatter.
+- **Giant Donut**: a spinning donut sign. While it stands, every Donut Shop gets three times the customers.
+- **Crown, Glass Dome, Radio Antenna**: one spire on the very top of the tower. Placing another swaps it. The antenna's red light blinks, and a beacon sweeps at night. The tower name sign stays off the toppers, and a placed spire takes the place of the cathedral's plain point.
+
 ## Code map
 
 - `src/game/`: pure TypeScript simulation, no DOM.

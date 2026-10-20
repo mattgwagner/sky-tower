@@ -359,6 +359,7 @@ const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
   build: [
     { label: 'Floors', tools: ['lobby', 'floor'] },
     { label: 'Getting around', tools: ['elevator', 'stairs', 'firePole', 'megaSlide', 'escalator', 'expressElevator', 'serviceElevator'] },
+    { label: 'Roof', tools: ['observatory', 'helipad', 'turbine', 'waterTower', 'giantDonut', 'crown', 'dome', 'antenna'] },
   ],
   homes: [{ tools: ['office', 'condo'] }],
   hotel: [
@@ -505,6 +506,7 @@ function FacPanel({ f }: { f: Facility }) {
   if (tenant) status = f.occupied ? (f.kind === 'office' ? 'Rented' : 'Sold — family lives here') : f.kind === 'office' ? 'For rent' : 'For sale'
   else if (isHotel(f.kind)) status = f.roaches ? '🪳 Cockroaches!' : f.booked ? 'Guests checked in' : f.dirty ? 'Needs cleaning' : 'Ready for guests'
   else if (isCommercial(f.kind)) status = f.fire ? 'On fire!' : f.reachable ? 'Open for business' : 'Closed — no way to get here'
+  else if (f.kind === 'turbine') status = 'Making power'
   else status = f.reachable ? 'Working' : 'Not connected'
   return (
     <div className="panel">

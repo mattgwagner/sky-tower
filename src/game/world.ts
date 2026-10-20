@@ -4,6 +4,7 @@ import {
   isConnector, isLobbyFloor,
 } from './defs'
 import type { FacilityKind, TransportKind } from './defs'
+import { isSpire, needsOpenSky, onVeryTop, TURBINE_MAX } from './roof'
 import type { Facility, Game, Msg, Shaft } from './state'
 import { cell, dayOf, row } from './state'
 import { SLIDE_MAX, SLIDE_MIN, slideCost } from './slide'
@@ -51,13 +52,15 @@ function isLobbyCell(g: Game, v: number) {
   return v > 0 && g.facilities.get(v)?.kind === 'lobby'
 }
 
-/** True when any cell in [x, x+w) on floor f is part of a rocket pad, whose sky must stay clear. */
-function rocketUnder(g: Game, f: number, x: number, w: number) {
+/** The open-sky topper occupying any cell in [x, x+w) on floor f, if there is one. */
+function topperUnder(g: Game, f: number, x: number, w: number): Facility | null {
   for (let i = x; i < x + w; i++) {
     const v = cell(g, f, i)
-    if (v > 0 && g.facilities.get(v)?.kind === 'rocketPad') return true
+    if (v <= 0) continue
+    const fac = g.facilities.get(v)
+    if (fac && needsOpenSky(fac.kind)) return fac
   }
-  return false
+  return null
 }
 
 /** Remove lobby cells in [x, x+w) on floor f, keeping the rest of the lobby as separate pieces. */
@@ -96,20 +99,28 @@ export function checkFacility(g: Game, kind: FacilityKind, x: number, floor: num
   if (floor < 0 && (kind === 'hotelSingle' || kind === 'hotelTwin' || kind === 'hotelSuite' || kind === 'condo' || kind === 'office'))
     return { ok: false, cost: 0, reason: 'Nobody wants to live or work underground' }
 
+  if (kind === 'turbine' && facilitiesOf(g, 'turbine').length >= TURBINE_MAX)
+    return { ok: false, cost: 0, reason: 'Three turbines is the whole wind farm!' }
+  if (isSpire(kind) && !onVeryTop(g, floor, h))
+    return { ok: false, cost: 0, reason: 'It has to go on the very top' }
+
   let unbuilt = 0
   for (let f = floor; f < floor + h; f++) {
     for (let i = x; i < x + w; i++) {
       const v = cell(g, f, i)
-      if (!freeCell(v) && !(isConnector(kind) && isLobbyCell(g, v))) return { ok: false, cost: 0, reason: 'Something is in the way' }
+      const occ = v > 0 ? g.facilities.get(v) : undefined
+      const swapping = !!occ && isSpire(kind) && isSpire(occ.kind)
+      if (!freeCell(v) && !swapping && !(isConnector(kind) && isLobbyCell(g, v))) return { ok: false, cost: 0, reason: 'Something is in the way' }
       if (v === -1) unbuilt++
     }
   }
   // support: above ground needs floor below; underground needs floor above
   if (floor > 0) {
     for (let i = x; i < x + w; i++) if (cell(g, floor - 1, i) === -1) return { ok: false, cost: 0, reason: 'Needs a floor underneath' }
-    if (rocketUnder(g, floor - 1, x, w)) return { ok: false, cost: 0, reason: 'Keep the sky clear for the rocket! 🚀' }
+    const under = topperUnder(g, floor - 1, x, w)
+    if (under) return { ok: false, cost: 0, reason: `Move the ${FACILITIES[under.kind].name} first` }
   }
-  if (kind === 'rocketPad') {
+  if (needsOpenSky(kind)) {
     for (let f = floor + h; f <= MAX_FLOOR; f++) {
       if (!g.floors.has(f)) continue
       for (let i = x; i < x + w; i++) if (cell(g, f, i) !== -1) return { ok: false, cost: 0, reason: 'Needs open sky above — build it on a roof' }
@@ -147,6 +158,9 @@ export function placeFacility(g: Game, kind: FacilityKind, x: number, floor: num
   const def = FACILITIES[kind]
   const w = width ?? def.width
   const h = height ?? def.height
+  if (isSpire(kind)) {
+    for (const old of [...g.facilities.values()]) if (isSpire(old.kind)) demolish(g, old.id, () => {})
+  }
   if (kind === 'floor') {
     const r = row(g, floor, true)!
     for (let i = x; i < x + w; i++) if (r[i] === -1) r[i] = 0
@@ -212,7 +226,7 @@ const BRIDGE_MAX = 16
 /** Fill short unbuilt gaps between [a, b) on floor f and the nearest built cells, so people can walk across. */
 function bridgeGaps(g: Game, f: number, a: number, b: number) {
   const r = row(g, f, true)!
-  const supported = (i: number) => f === 0 || (f > 0 ? cell(g, f - 1, i) !== -1 && !rocketUnder(g, f - 1, i, 1) : cell(g, f + 1, i) !== -1)
+  const supported = (i: number) => f === 0 || (f > 0 ? cell(g, f - 1, i) !== -1 && !topperUnder(g, f - 1, i, 1) : cell(g, f + 1, i) !== -1)
   for (const dir of [-1, 1]) {
     let i = dir < 0 ? a - 1 : b
     const gap: number[] = []
@@ -265,7 +279,10 @@ export function checkShaft(g: Game, kind: TransportKind, x: number, a: number, b
     }
   }
   if (lo > 0) for (let i = x; i < x + def.width; i++) if (cell(g, lo - 1, i) === -1) return { ok: false, cost: 0, reason: 'Needs a floor underneath' }
-  if (lo > 0 && rocketUnder(g, lo - 1, x, def.width)) return { ok: false, cost: 0, reason: 'Keep the sky clear for the rocket! 🚀' }
+  if (lo > 0) {
+    const under = topperUnder(g, lo - 1, x, def.width)
+    if (under) return { ok: false, cost: 0, reason: `Move the ${FACILITIES[under.kind].name} first` }
+  }
   if (hi < 0) for (let i = x; i < x + def.width; i++) if (cell(g, hi + 1, i) === -1) return { ok: false, cost: 0, reason: 'Dig down from the floor above' }
   const cost = def.cost + def.perFloorCost * (hi - lo + 1) + unbuilt * FLOOR_COST
   if (g.mode !== 'sandbox' && cost > g.money) return { ok: false, cost, reason: 'Not enough money' }

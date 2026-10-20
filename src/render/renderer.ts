@@ -7,6 +7,7 @@ import type { Facility, Game, Person, Shaft } from '../game/state'
 import { dayOf, isWeekend, minuteOfDay } from '../game/state'
 import { hasPet } from '../game/people-info'
 import { SLIDE_LOOKS, slidePos, slideProgress } from '../game/slide'
+import { hasSpire, needsOpenSky } from '../game/roof'
 import { topFloor } from '../game/world'
 import { CLIMB_TOP, ZIP, INDIGO_LOOP, INDIGO_SCREEN, TOY_BELT, TOY_CASE, FAZ_COVE, FAZ_OFFICE, FAZ_STAGE, FAZ_TABLES, METRO_BOARD, METRO_TUNNEL, AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
 import type { Look } from './sprites'
@@ -16,6 +17,7 @@ import { drawHolidayAmbient, drawHolidayDecor, drawHolidayWear, holidaySky } fro
 import { holidayBanner } from '../game/holidays'
 import { drawSlide } from './slide'
 import { drawGiants } from './giants'
+import { drawRoofTopper } from './roof'
 
 export interface Camera { x: number; y: number; zoom: number }
 
@@ -425,8 +427,9 @@ function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: 
       c.drawImage(spr, p.x, p.y, w, h)
     } else c.drawImage(spr, p.x, p.y, w, h)
   }
+  drawRoofTopper(c, g, f, p, w, h, z, now, m)
   if (f.kind === 'parking' && f.reachable) drawCar(c, p.x + 10 * z, p.y + h - 3 * z, z, f.id)
-  if (f.kind === 'cathedral') drawSpire(c, p.x + w / 2, p.y, z)
+  if (f.kind === 'cathedral' && !hasSpire(g)) drawSpire(c, p.x + w / 2, p.y, z)
   if (z >= 0.6) drawFun(c, g, f, p, w, h, z, now, m)
   drawHolidayDecor(c, g, f, p, w, h, z, now, m)
   if (isHotel(f.kind) && z >= 1.2) drawDoorPlate(c, g, f, p, w, h, z)
@@ -500,7 +503,11 @@ function drawCar(c: CanvasRenderingContext2D, x: number, yb: number, z: number, 
 }
 
 function drawRoofs(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: number) => { x: number; y: number }, z: number, fBot: number, fTop: number, x0: number, x1: number) {
-  const open = (v: number) => v === -1 || (v > 0 && g.facilities.get(v)?.kind === 'rocketPad')
+  const open = (v: number) => {
+    if (v === -1) return true
+    const k = v > 0 ? g.facilities.get(v)?.kind : undefined
+    return !!k && needsOpenSky(k)
+  }
   for (let f = Math.max(0, fBot); f <= fTop; f++) {
     const row = g.floors.get(f)
     if (!row) continue
@@ -1461,7 +1468,7 @@ function drawTowerSign(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: n
       for (let i = 0; i < TOWER_WIDTH; i++) {
         const v = row[i]
         const k = v > 0 ? g.facilities.get(v)?.kind : undefined
-        const ok = v !== -1 && (!above || above[i] === -1) && k !== 'rocketPad' && k !== 'cathedral'
+        const ok = v !== -1 && (!above || above[i] === -1) && k !== 'cathedral' && !(k && needsOpenSky(k))
         run = ok ? run + 1 : 0
         if (run >= tiles) { signCache.at = { floor: f, x: i - run + 1 }; break search }
       }

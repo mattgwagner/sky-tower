@@ -55,6 +55,14 @@ const POKES: Partial<Record<FacilityKind, Poke>> = {
   megaSlide: { says: ['WHEEE! 🛝', 'Faster! Faster!', 'My tummy! 🤢', 'Again! Again!'], color: '#ff8787', sfx: 'whistle' },
   stairs: { says: ['Step step step', 'Phew! 😮‍💨', 'Race you up!'], color: '#ced4da', sfx: 'click' },
   escalator: { says: ['Weee ⬆️', 'Stand on the right!', 'Hold the rail!'], color: '#ced4da', sfx: 'move' },
+  observatory: { says: ['I can see your house from here!'], color: '#d0ebff', sfx: 'twinkle' },
+  helipad: { says: ['Chopper inbound!'], color: '#ffd43b', sfx: 'rotor' },
+  turbine: { says: ['Whoosh!'], color: '#a5d8ff', sfx: 'rotor' },
+  waterTower: { says: ['Flutter flutter!'], color: '#ced4da', sfx: 'pop' },
+  giantDonut: { says: ['Mmmmm'], color: '#f783ac', sfx: 'pop' },
+  crown: { says: ['So shiny!'], color: '#ffd43b', sfx: 'twinkle' },
+  dome: { says: ['A garden in the clouds!'], color: '#8ce99a', sfx: 'twinkle' },
+  antenna: { says: ['Beep… beep…'], color: '#ff6b6b', sfx: 'ding' },
 }
 
 const lastPoke = new Map<number, number>()
@@ -88,6 +96,7 @@ export function pokeFacility(g: Game, f: Facility, now: number): Sfx | null {
     fx(g, f.x + f.width / 2, f.floor + f.height - 1, scary[Math.floor(Math.random() * scary.length)], '#ff8787')
     return 'heartbeat'
   }
+  if (f.kind === 'waterTower') g.flags.pigeon = { id: f.id, at: now }
   const train = f.kind === 'metro' ? trainPhase(g) : null
   const says = !train ? p.says
     : train.phase === 'doors' ? ['Doors closing! 🚪', 'All aboard! 🚇', 'Tickets, please! 🎫', 'Mind the gap!']

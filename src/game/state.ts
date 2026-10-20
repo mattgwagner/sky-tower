@@ -144,6 +144,10 @@ export interface Game {
     founded?: number
     /** Today's giant visitor, chosen once at midnight. Missing on older saves. */
     giant?: { kind: 'ape' | 'dragon' | 'skywriter'; day: number; start: number }
+    /** day index the observatory already announced Saturn */
+    saturnNight?: number
+    /** water-tower poke: pigeons on this tank fly off until `at` (performance.now) ages out */
+    pigeon?: { id: number; at: number }
   }
   bomb: Bomb | null
   pop: number

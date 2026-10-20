@@ -14,6 +14,7 @@ import { SLIDE_STEPS, slideDayTick, slideLanded } from './slide'
 import type { Facility, Game, Person, PersonKind, Shaft } from './state'
 import { dayOf, floorLabel, isWeekend, minuteOfDay, quarterOf } from './state'
 import { giantsArrive, giantsDay } from './giants'
+import { clearNight, heliMinute, turbineCut } from './roof'
 import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
 
 export { giantCount, giantNow, giantsArrive } from './giants'
@@ -574,6 +575,7 @@ function spawnVisitors(g: Game) {
   const m = minuteOfDay(g.time)
   const wk = isWeekend(g.time) ? 1.6 : 1
   const metro = facilitiesOf(g, 'metro').length ? 1.6 : 1
+  const donutBoost = facilitiesOf(g, 'giantDonut').length ? 3 : 1
   const demand = Math.min(4, 0.35 + g.pop / 700) * wk * metro
   for (const f of g.facilities.values()) {
     if (!isCommercial(f.kind) || !isOpen(g, f)) continue
@@ -591,7 +593,7 @@ function spawnVisitors(g: Game) {
     else if (f.kind === 'pizza') perHour = m >= at(17) || (m >= at(11, 30) && m < at(13, 30)) ? 6 : 2
     else if (f.kind === 'tacos') perHour = m >= at(11, 30) && m < at(13, 30) ? 6 : 3
     else if (f.kind === 'sushi') perHour = m >= at(17) ? 5 : 3
-    else if (f.kind === 'donuts') perHour = m < at(10) ? 6 : 2
+    else if (f.kind === 'donuts') perHour = (m < at(10) ? 6 : 2) * donutBoost
     else if (f.kind === 'pancakes') perHour = m < at(10, 30) ? 7 : 3
     else if (f.kind === 'bookstore') perHour = 4
     else if (f.kind === 'toyFactory') perHour = 8
@@ -1312,6 +1314,35 @@ function funEvents(g: Game, m: number) {
       sound.play('spooky')
     }
   }
+  roofMinute(g, m)
+}
+
+function roofMinute(g: Game, m: number) {
+  if (clearNight(g, m) && g.flags.saturnNight !== dayOf(g.time)) {
+    const obs = facilitiesOf(g, 'observatory')
+    if (obs.length) {
+      g.flags.saturnNight = dayOf(g.time)
+      const f = obs[0]
+      fx(g, facCenter(f), f.floor + f.height, '✨ Saw Saturn!', '#ffd43b')
+    }
+  }
+  const pads = facilitiesOf(g, 'helipad')
+  if (!pads.length) return
+  if (heliMinute(m, 'in') || heliMinute(m, 'sit')) sound.play('rotor')
+  if (!heliMinute(m, 'sit')) return
+  for (const pad of pads) {
+    const kinds = [...g.facilities.values()].filter((f) => f.id !== pad.id && isCommercial(f.kind) && isOpen(g, f)).map((f) => f.kind)
+    let n = 0
+    for (let i = 0; i < 6 && g.people.size < 9000; i++) {
+      const v = newPerson(g, 'visitor', 0)
+      enterFacility(g, v, pad)
+      v.returnTo = 0
+      const shop = kinds.length ? pickShop(g, v, kinds, pad.floor) : null
+      if (shop && startTrip(g, v, shop.id, 'shop')) n++
+      else { leaveFacility(g, v); g.people.delete(v.id) }
+    }
+    fx(g, facCenter(pad), pad.floor + 1, n ? `🚁 ${n} visitors` : '🚁 No way inside!', '#74c0fc')
+  }
 }
 
 function maybeUfo(g: Game, m: number) {
@@ -1389,6 +1420,7 @@ function quarterTick(g: Game) {
     upkeep += FACILITIES[f.kind].upkeep ?? 0
   }
   for (const s of g.shafts.values()) upkeep += TRANSPORTS[s.kind].upkeep * s.cars.length
+  upkeep = Math.max(0, upkeep - turbineCut(g))
   if (g.mode !== 'sandbox') { g.money -= upkeep; g.stats.expense += upkeep }
   g.stats.lastQuarter = { income: g.stats.income, expense: g.stats.expense }
   g.stats.income = 0

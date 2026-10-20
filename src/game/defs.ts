@@ -61,6 +61,14 @@ export type FacilityKind =
   | 'fazbear'
   | 'toyFactory'
   | 'indigoPark'
+  | 'observatory'
+  | 'helipad'
+  | 'turbine'
+  | 'waterTower'
+  | 'giantDonut'
+  | 'crown'
+  | 'dome'
+  | 'antenna'
 
 export type TransportKind = 'elevator' | 'serviceElevator' | 'expressElevator'
 
@@ -180,6 +188,22 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'Pizza and a singing animatronic band! But after midnight… the animatronics wander. 👀' },
   library: { kind: 'library', name: 'Library', emoji: '📖', category: 'shops', width: 24, height: 2, cost: 150000, stars: 1, pop: 8,
     blurb: 'Two floors of books and a story-time corner. Quiet, so neighbors don\'t mind.' },
+  observatory: { kind: 'observatory', name: 'Observatory', emoji: '🔭', category: 'build', width: 8, height: 2, cost: 200000, stars: 2, pop: 0, underground: 'no',
+    blurb: 'Silver dome for the roof. At night the telescope swings, and on a clear night you might see Saturn!' },
+  helipad: { kind: 'helipad', name: 'Helipad', emoji: '🚁', category: 'build', width: 12, height: 1, cost: 500000, stars: 3, pop: 0, underground: 'no',
+    blurb: 'Needs open sky. A helicopter visits every 3 hours from 8am to 5pm and six visitors hop out.' },
+  turbine: { kind: 'turbine', name: 'Wind Turbine', emoji: '🌬️', category: 'build', width: 6, height: 2, cost: 45000, stars: 1, pop: 0, underground: 'no',
+    blurb: 'Up to three, side by side. They spin faster in a storm and trim the upkeep of the floor below.' },
+  waterTower: { kind: 'waterTower', name: 'Water Tower', emoji: '🛢️', category: 'build', width: 6, height: 2, cost: 20000, stars: 1, pop: 0, underground: 'no',
+    blurb: 'A wooden tank with pigeons. Tap it and they scatter.' },
+  giantDonut: { kind: 'giantDonut', name: 'Giant Donut', emoji: '🍩', category: 'build', width: 10, height: 2, cost: 75000, stars: 1, pop: 0, underground: 'no',
+    blurb: 'A huge spinning donut on the roof. Donut Shops get three times the customers while it stands!' },
+  crown: { kind: 'crown', name: 'Crown', emoji: '👑', category: 'build', width: 8, height: 2, cost: 25000, stars: 1, pop: 0, underground: 'no',
+    blurb: 'A jewelled crown. It has to go on the very top, and only one spire can stand at a time.' },
+  dome: { kind: 'dome', name: 'Glass Dome', emoji: '🪴', category: 'build', width: 8, height: 2, cost: 25000, stars: 1, pop: 0, underground: 'no',
+    blurb: 'A glass dome with a garden. Placing it swaps whatever spire is already up there.' },
+  antenna: { kind: 'antenna', name: 'Radio Antenna', emoji: '📡', category: 'build', width: 4, height: 3, cost: 25000, stars: 1, pop: 0, underground: 'no',
+    blurb: 'A red light blinks, and a beacon sweeps the sky at night. Swaps the other spire.' },
 }
 
 export interface TransportDef {
