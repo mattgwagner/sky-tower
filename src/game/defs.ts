@@ -36,6 +36,7 @@ export type FacilityKind =
   | 'stairs'
   | 'escalator'
   | 'firePole'
+  | 'megaSlide'
   | 'iceCream'
   | 'arcade'
   | 'aquarium'
@@ -127,6 +128,8 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'Connects this floor to the one above. People only climb a few floors.' },
   firePole: { kind: 'firePole', name: 'Fireman Pole', emoji: '🚒', category: 'build', width: 3, height: 1, cost: 3000, stars: 1, pop: 0,
     blurb: 'Slide DOWN to the floor below, way faster than stairs! It only goes down. Stack them for a big drop.' },
+  megaSlide: { kind: 'megaSlide', name: 'Mega Slide', emoji: '🛝', category: 'build', width: 6, height: 3, cost: 60000, stars: 1, pop: 0, upkeep: 2000,
+    blurb: 'A giant twisty slide! Drag up or down to make it 2 to 5 floors tall. People hop in at the top and WHOOSH out the bottom.' },
   escalator: { kind: 'escalator', name: 'Escalator', emoji: '↗️', category: 'build', width: 8, height: 1, cost: 20000, stars: 3, pop: 0,
     blurb: 'Faster than stairs. Shoppers love them.' },
   iceCream: { kind: 'iceCream', name: 'Ice Cream Shop', emoji: '🍦', category: 'food', width: 10, height: 1, cost: 60000, stars: 1, pop: 3,
@@ -287,7 +290,7 @@ export function isResidential(k: FacilityKind) {
   return k === 'condo' || isHotel(k)
 }
 export function isConnector(k: FacilityKind) {
-  return k === 'stairs' || k === 'escalator' || k === 'firePole'
+  return k === 'stairs' || k === 'escalator' || k === 'firePole' || k === 'megaSlide'
 }
 export function isLobbyFloor(f: number) {
   return f === 0 || (f > 0 && f % SKY_LOBBY_EVERY === 0)

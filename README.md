@@ -101,6 +101,15 @@ Rocket Pad needs open sky above it and an elevator up to its floor; it launches 
 around 2:30pm. Some nights a UFO visits the roof. Name your tower on the title screen or in the ☰ menu; the name
 shows on a rooftop sign, on the blimp and on postcards.
 
+## Mega Slide
+
+Find it in the Build tab next to the fireman pole. Press on the floor where riders should land and drag up to make it
+2 to 5 floors tall (a plain click builds 3). People hop in on the floor above the top and come out at the bottom. It
+only goes down, about three times faster than stairs, so kids and visitors pick it over the stairs and elevators.
+Each slide comes in rainbow, aqua (with a splash) or orange. Tap it to see "Rides today". It costs 60,000 plus
+20,000 per floor. Code: `src/game/slide.ts` and `src/render/slide.ts`; `scripts/slidecheck.ts` checks someone rides
+one.
+
 ## Code map
 
 - `src/game/`: pure TypeScript simulation, no DOM.
@@ -114,6 +123,7 @@ shows on a rooftop sign, on the blimp and on postcards.
 - `src/game/poke.ts`: what each room says and plays when tapped.
 - `src/ui/postcard.ts`: renders the tower to a framed PNG and saves or shares it.
 - `src/ui/`: React HUD and input controller.
-- `scripts/simcheck.ts`, `scripts/simbig.ts`: headless smoke runs (`npx tsx scripts/simcheck.ts 3`).
+- `scripts/simcheck.ts`, `scripts/simbig.ts`, `scripts/slidecheck.ts`: headless smoke runs (`npm run sim` runs simcheck
+  and slidecheck).
 
 Saves are in `localStorage`, written automatically every game day.

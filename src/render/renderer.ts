@@ -6,6 +6,7 @@ import { TRAIN_EVERY, TRAIN_IN, climbSteps, entityNow, hidingOn, isOpen, launchC
 import type { Facility, Game, Person, Shaft } from '../game/state'
 import { dayOf, isWeekend, minuteOfDay } from '../game/state'
 import { hasPet } from '../game/people-info'
+import { SLIDE_LOOKS, slidePos, slideProgress } from '../game/slide'
 import { topFloor } from '../game/world'
 import { CLIMB_TOP, ZIP, INDIGO_LOOP, INDIGO_SCREEN, TOY_BELT, TOY_CASE, FAZ_COVE, FAZ_OFFICE, FAZ_STAGE, FAZ_TABLES, METRO_BOARD, METRO_TUNNEL, AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
 import type { Look } from './sprites'
@@ -13,6 +14,7 @@ import { drawLightning, drawRainbow, drawShootingStars, weatherFor } from './sky
 import { pokeWobble } from './poke-fx'
 import { drawHolidayAmbient, drawHolidayDecor, drawHolidayWear, holidaySky } from './holidays'
 import { holidayBanner } from '../game/holidays'
+import { drawSlide } from './slide'
 
 export interface Camera { x: number; y: number; zoom: number }
 
@@ -49,6 +51,7 @@ export function personPos(g: Game, p: Person): { tile: number; floor: number } |
       const L = p.legs[p.leg]
       const conn = L && g.facilities.get(L.via)
       if (!conn) return { tile: p.x, floor: p.floor }
+      if (conn.kind === 'megaSlide') return slidePos(conn, slideProgress(p, conn))
       const k = Math.min(1, p.climb / climbSteps(conn.kind))
       const prog = L.to > L.from ? k : 1 - k
       return { tile: conn.kind === 'firePole' ? conn.x + conn.width / 2 : conn.x + 0.5 + prog * (conn.width - 1), floor: conn.floor + prog }
@@ -413,8 +416,8 @@ function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: 
       }
     }
   } else {
-    const variant = f.kind === 'office' || f.kind === 'condo' || f.kind === 'shop' ? f.id % 4 : 0
-    const spr = sprite(f.kind, def.width, def.height, look, variant)
+    const variant = f.kind === 'office' || f.kind === 'condo' || f.kind === 'shop' ? f.id % 4 : f.kind === 'megaSlide' ? f.id % SLIDE_LOOKS.length : 0
+    const spr = sprite(f.kind, def.width, f.height, look, variant)
     if (f.kind === 'stairs' || f.kind === 'escalator') {
       // stairs rise into the floor above
       c.drawImage(spr, p.x, p.y, w, h)
@@ -619,6 +622,14 @@ function drawPeople(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: numb
       const L = p.legs[p.leg]
       const conn = g.facilities.get(L?.via ?? 0)
       if (!conn) continue
+      if (conn.kind === 'megaSlide') {
+        // zoomed in, drawSlide puts riders inside the tube; zoomed out, draw them here
+        if (z >= 0.6) continue
+        const q = slidePos(conn, slideProgress(p, conn))
+        const s = S(q.tile * T, floorTop(q.floor) + FH - 3)
+        drawPersonAt(c, s.x, s.y, z, personColor(p.shirt), 0, p.mood, p.shirt)
+        continue
+      }
       const k = Math.min(1, p.climb / climbSteps(conn.kind))
       const up = L.to > L.from
       const prog = up ? k : 1 - k
@@ -722,7 +733,7 @@ function drawOverlay(c: CanvasRenderingContext2D, g: Game, ov: Overlay, S: (x: n
       c.fillRect(p.x, p.y, w, h)
     } else {
       const def = FACILITIES[gh.kind]
-      c.drawImage(sprite(gh.kind, def.width, def.height, 'day', 0), p.x, p.y, w, h)
+      c.drawImage(sprite(gh.kind, def.width, gh.h, 'day', 0), p.x, p.y, w, h)
     }
     c.globalAlpha = 1
     c.strokeStyle = gh.ok ? '#40c057' : '#fa5252'
@@ -960,6 +971,7 @@ function drawPet(c: CanvasRenderingContext2D, x: number, yb: number, z: number, 
 /** Animated details for the Fun Zone rooms (drawn on top of the cached sprite). */
 function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: number, h: number, z: number, now: number, m: number) {
   switch (f.kind) {
+    case 'megaSlide': return drawSlide(c, g, f, p, z, now)
     case 'arcade': {
       if (!isOpen(g, f) && f.inside === 0) return
       for (let i = 0; i < ARCADE_CABS; i++) {

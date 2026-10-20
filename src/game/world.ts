@@ -6,6 +6,7 @@ import {
 import type { FacilityKind, TransportKind } from './defs'
 import type { Facility, Game, Msg, Shaft } from './state'
 import { cell, dayOf, row } from './state'
+import { SLIDE_MAX, SLIDE_MIN, slideCost } from './slide'
 
 export function log(g: Game, text: string, kind: Msg['kind'] = 'info', floor?: number, x?: number) {
   g.log.push({ id: g.nextId++, t: g.time, text, kind, floor, x })
@@ -80,17 +81,18 @@ function carveLobby(g: Game, f: number, x: number, w: number) {
 }
 
 /** Check whether a facility of `kind` can go with its left edge at x, bottom at floor. */
-export function checkFacility(g: Game, kind: FacilityKind, x: number, floor: number, width?: number): PlaceCheck {
+export function checkFacility(g: Game, kind: FacilityKind, x: number, floor: number, width?: number, height?: number): PlaceCheck {
   const def = FACILITIES[kind]
   const w = width ?? def.width
-  const h = def.height
+  const h = height ?? def.height
   if (!unlocked(g, def.stars)) return { ok: false, cost: 0, reason: `Unlocks at ${def.stars}★` }
   if (x < 0 || x + w > TOWER_WIDTH) return { ok: false, cost: 0, reason: 'Outside the lot' }
   if (floor < MIN_FLOOR || floor + h - 1 > MAX_FLOOR) return { ok: false, cost: 0, reason: 'Too high or too deep' }
   if (def.underground === 'only' && floor + h - 1 >= 0) return { ok: false, cost: 0, reason: 'Must be underground' }
   if (kind === 'lobby' && !isLobbyFloor(floor)) return { ok: false, cost: 0, reason: 'Lobbies go on floors 0, 15, 30, 45…' }
   if (kind === 'cathedral' && floor + h - 1 !== MAX_FLOOR) return { ok: false, cost: 0, reason: `Must reach the very top (floor ${MAX_FLOOR})` }
-  if (isConnector(kind) && floor >= MAX_FLOOR) return { ok: false, cost: 0, reason: 'Nothing above to connect to' }
+  if (kind === 'megaSlide' && (h < SLIDE_MIN || h > SLIDE_MAX)) return { ok: false, cost: 0, reason: `Slides drop ${SLIDE_MIN} to ${SLIDE_MAX} floors` }
+  if (isConnector(kind) && floor + h - 1 >= MAX_FLOOR) return { ok: false, cost: 0, reason: 'Nothing above to connect to' }
   if (floor < 0 && (kind === 'hotelSingle' || kind === 'hotelTwin' || kind === 'hotelSuite' || kind === 'condo' || kind === 'office'))
     return { ok: false, cost: 0, reason: 'Nobody wants to live or work underground' }
 
@@ -119,10 +121,10 @@ export function checkFacility(g: Game, kind: FacilityKind, x: number, floor: num
   }
   if (isConnector(kind)) {
     for (let i = x; i < x + w; i++) {
-      if (cell(g, floor + 1, i) === -1) return { ok: false, cost: 0, reason: 'Build the floor above first' }
+      if (cell(g, floor + h, i) === -1) return { ok: false, cost: 0, reason: 'Build the floor above first' }
     }
   }
-  const cost = kind === 'floor' ? unbuilt * FLOOR_COST : def.cost * (def.drag ? w : 1) + unbuilt * FLOOR_COST
+  const cost = kind === 'floor' ? unbuilt * FLOOR_COST : (kind === 'megaSlide' ? slideCost(h) : def.cost * (def.drag ? w : 1)) + unbuilt * FLOOR_COST
   if (kind === 'floor' && unbuilt === 0) return { ok: false, cost: 0, reason: 'Already built' }
   if (g.mode !== 'sandbox' && cost > g.money) return { ok: false, cost, reason: 'Not enough money' }
   return { ok: true, cost }
@@ -138,12 +140,13 @@ function blankFacility(id: number, kind: FacilityKind, x: number, floor: number,
   }
 }
 
-export function placeFacility(g: Game, kind: FacilityKind, x: number, floor: number, width?: number): Facility | null {
-  const chk = checkFacility(g, kind, x, floor, width)
+export function placeFacility(g: Game, kind: FacilityKind, x: number, floor: number, width?: number, height?: number): Facility | null {
+  const chk = checkFacility(g, kind, x, floor, width, height)
   if (!chk.ok) return null
   spend(g, chk.cost)
   const def = FACILITIES[kind]
   const w = width ?? def.width
+  const h = height ?? def.height
   if (kind === 'floor') {
     const r = row(g, floor, true)!
     for (let i = x; i < x + w; i++) if (r[i] === -1) r[i] = 0
@@ -151,15 +154,15 @@ export function placeFacility(g: Game, kind: FacilityKind, x: number, floor: num
     maybeGold(g, floor, x)
     return null
   }
-  if (isConnector(kind)) carveLobby(g, floor, x, w)
+  if (isConnector(kind)) for (let f = floor; f < floor + h; f++) carveLobby(g, f, x, w)
   const id = g.nextId++
-  const fac = blankFacility(id, kind, x, floor, w, def.height)
-  for (let f = floor; f < floor + def.height; f++) {
+  const fac = blankFacility(id, kind, x, floor, w, h)
+  for (let f = floor; f < floor + h; f++) {
     const r = row(g, f, true)!
     for (let i = x; i < x + w; i++) r[i] = id
   }
   g.facilities.set(id, fac)
-  for (let f = floor; f < floor + def.height; f++) bridgeGaps(g, f, x, x + w)
+  for (let f = floor; f < floor + h; f++) bridgeGaps(g, f, x, x + w)
   g.buildVersion++
   if (floor < 0) maybeGold(g, floor, x)
   return fac

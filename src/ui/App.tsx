@@ -358,7 +358,7 @@ function toolInfo(t: ToolId) {
 const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
   build: [
     { label: 'Floors', tools: ['lobby', 'floor'] },
-    { label: 'Getting around', tools: ['elevator', 'stairs', 'firePole', 'escalator', 'expressElevator', 'serviceElevator'] },
+    { label: 'Getting around', tools: ['elevator', 'stairs', 'firePole', 'megaSlide', 'escalator', 'expressElevator', 'serviceElevator'] },
   ],
   homes: [{ tools: ['office', 'condo'] }],
   hotel: [
@@ -525,6 +525,7 @@ function FacPanel({ f }: { f: Facility }) {
       <div className="facts">
         {f.inside > 0 && <span>👥 {f.inside} inside</span>}
         {isCommercial(f.kind) && <span>🧾 {f.customersToday} today · {f.customersYesterday} yesterday</span>}
+        {f.kind === 'megaSlide' && <span>🛝 {floorLabel(f.floor + f.height)} → {floorLabel(f.floor)} · Rides today: {f.rides ?? 0}</span>}
         {f.incomeTotal > 0 && <span>💰 earned {money(f.incomeTotal)}</span>}
       </div>
       {hasRent && f.kind !== 'parking' && (

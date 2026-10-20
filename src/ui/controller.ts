@@ -5,6 +5,7 @@ import type { FacilityKind, Mode, ToolId, TransportKind } from '../game/defs'
 import { afterBuild, evict, sound, step } from '../game/sim'
 import type { Facility, Game } from '../game/state'
 import { deserialize, newGame, serialize } from '../game/state'
+import { dragDrop } from '../game/slide'
 import { buildStarter } from '../game/starter'
 import { checkFacility, checkShaft, demolish, occupantAt, paintRun, placeFacility, placeShaft } from '../game/world'
 import type { Camera, Overlay } from '../render/renderer'
@@ -46,7 +47,7 @@ export class Controller {
   private acc = 0
   private lastFrame = 0
   private lastSaveDay = -1
-  private drag: null | { kind: 'pan'; sx: number; sy: number; cx: number; cy: number; moved: boolean } | { kind: 'run'; x0: number; floor: number } | { kind: 'shaft'; x: number; f0: number } | { kind: 'stamp'; floor: number } = null
+  private drag: null | { kind: 'pan'; sx: number; sy: number; cx: number; cy: number; moved: boolean } | { kind: 'run'; x0: number; floor: number } | { kind: 'shaft'; x: number; f0: number } | { kind: 'slide'; x: number; f0: number } | { kind: 'stamp'; floor: number } = null
   private mouse = { sx: 0, sy: 0 }
   private pointers = new Map<number, { x: number; y: number }>()
   private pinch: { d: number; zoom: number } | null = null
@@ -229,6 +230,12 @@ export class Controller {
       this.ov.ghost = { kind: fk, x: a, floor: this.drag.floor, w: b - a + 1, h: 1, ok: chk.ok, cost: chk.cost, reason: chk.reason }
       return
     }
+    if (this.drag?.kind === 'slide' && fk) {
+      const { floor, drop } = dragDrop(this.drag.f0, w.floor)
+      const chk = checkFacility(this.g, fk, this.drag.x, floor, undefined, drop)
+      this.ov.ghost = { kind: fk, x: this.drag.x, floor, w: FACILITIES[fk].width, h: drop, ok: chk.ok, cost: chk.cost, reason: chk.reason }
+      return
+    }
     if (this.drag?.kind === 'shaft' && sk) {
       const chk = checkShaft(this.g, sk, this.drag.x, this.drag.f0, w.floor)
       this.ov.shaftGhost = { x: this.drag.x, lo: Math.min(this.drag.f0, w.floor), hi: Math.max(this.drag.f0, w.floor), w: TRANSPORTS[sk].width, ok: chk.ok, cost: chk.cost, reason: chk.reason }
@@ -389,6 +396,7 @@ export class Controller {
       return
     }
     if (fk && FACILITIES[fk].drag) this.drag = { kind: 'run', x0: Math.floor(w.tile), floor: w.floor }
+    else if (fk === 'megaSlide') this.drag = { kind: 'slide', x: Math.round(w.tile - FACILITIES[fk].width / 2), f0: w.floor }
     else if (sk) this.drag = { kind: 'shaft', x: Math.round(w.tile - TRANSPORTS[sk].width / 2), f0: w.floor }
     else if (fk) { this.clickAt(sx, sy); this.drag = { kind: 'stamp', floor: w.floor } }
     this.hover(sx, sy)
@@ -452,6 +460,17 @@ export class Controller {
       paintRun(this.g, fk, a, b, d.floor)
       if (this.g.money === before && this.g.mode !== 'sandbox') this.fail(chk.reason)
       else { flashBuild(a, d.floor, b - a + 1, 1); this.built() }
+    }
+    if (d.kind === 'slide' && this.tool === 'megaSlide') {
+      const fk = this.tool
+      const { floor, drop } = dragDrop(d.f0, w.floor)
+      const chk = checkFacility(this.g, fk, d.x, floor, undefined, drop)
+      if (!chk.ok) this.fail(chk.reason)
+      else {
+        placeFacility(this.g, fk, d.x, floor, undefined, drop)
+        flashBuild(d.x, floor + drop - 1, FACILITIES[fk].width, drop)
+        this.built()
+      }
     }
     if (d.kind === 'shaft') {
       const sk = this.isShaftTool()!

@@ -30,6 +30,7 @@ export interface Facility {
   sad: number // consecutive unhappy days
   name?: string
   nearPark?: boolean
+  rides?: number // mega slide: rides today
 }
 
 export interface Car {

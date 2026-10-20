@@ -52,6 +52,7 @@ const POKES: Partial<Record<FacilityKind, Poke>> = {
   medical: { says: ['Say ahh 🩺', 'Just a tiny poke', 'All better! 🩹'], color: '#ffc9c9', sfx: 'ding' },
   recycling: { says: ['CRUNCH! ♻️', 'Reduce, reuse, recycle!', 'Clank clank'], color: '#8ce99a', sfx: 'build' },
   firePole: { says: ['WHOOOSH! 🚒', 'Slide time!', 'Wee-oo wee-oo! 🚨', 'Fire drill!'], color: '#ffa94d', sfx: 'boing' },
+  megaSlide: { says: ['WHEEE! 🛝', 'Faster! Faster!', 'My tummy! 🤢', 'Again! Again!'], color: '#ff8787', sfx: 'whistle' },
   stairs: { says: ['Step step step', 'Phew! 😮‍💨', 'Race you up!'], color: '#ced4da', sfx: 'click' },
   escalator: { says: ['Weee ⬆️', 'Stand on the right!', 'Hold the rail!'], color: '#ced4da', sfx: 'move' },
 }

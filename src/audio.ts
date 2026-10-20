@@ -1,6 +1,6 @@
 // Tiny WebAudio synth: sound effects + an easygoing lobby-music loop.
 export type Sfx = 'ding' | 'cash' | 'build' | 'star' | 'alarm' | 'boom' | 'party' | 'move' | 'bad' | 'click' | 'rocket' | 'roar' | 'spooky' | 'ufo' | 'boing'
-  | 'splash' | 'strike' | 'bell' | 'honk' | 'arcade' | 'thunder' | 'shutter' | 'twinkle' | 'meow' | 'woof' | 'train' | 'pop' | 'scare' | 'rush' | 'flicker' | 'heartbeat'
+  | 'splash' | 'strike' | 'bell' | 'honk' | 'arcade' | 'thunder' | 'shutter' | 'twinkle' | 'meow' | 'woof' | 'train' | 'pop' | 'scare' | 'rush' | 'flicker' | 'heartbeat' | 'whistle'
 
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
@@ -93,6 +93,7 @@ export function play(name: Sfx) {
     case 'heartbeat': for (let i = 0; i < 3; i++) { tone(60, t + i * 0.7, 0.15, 'sine', 0.5, undefined, 40); tone(55, t + i * 0.7 + 0.22, 0.15, 'sine', 0.4, undefined, 38) } break
     case 'scare': noise(t, 0.7, 0.6, 2400); tone(300, t, 0.7, 'sawtooth', 0.12, undefined, 1400); tone(310, t, 0.7, 'square', 0.06, undefined, 1500); break
     case 'train': for (let i = 0; i < 4; i++) noise(t + i * 0.13, 0.08, 0.3, 700); tone(440, t + 0.5, 0.5, 'square', 0.07); tone(554, t + 0.5, 0.5, 'square', 0.07); break
+    case 'whistle': tone(1600, t, 0.55, 'sine', 0.1, undefined, 380); noise(t + 0.45, 0.2, 0.25, 700); break
     case 'pop': tone(500, t, 0.07, 'sine', 0.18, undefined, 1400); break
   }
 }

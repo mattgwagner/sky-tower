@@ -1,5 +1,6 @@
 // Procedural pixel-art sprites for facilities, cached on offscreen canvases.
 import type { FacilityKind } from '../game/defs'
+import { slideLook } from '../game/slide'
 
 export const T = 8 // px per tile
 export const FH = 32 // px per floor
@@ -332,6 +333,42 @@ const painters: Partial<Record<FacilityKind, Painter>> = {
     r(c, '#ffc078', w / 2 - 1, 0, 2, h - 3)
     r(c, '#fff3bf', w / 2 - 1, 0, 1, h - 3)
     r(c, '#e03131', 2, h - 4, w - 4, 2)
+  },
+  megaSlide(c, w, h, look, variant) {
+    // one wall per floor, then a fat zig-zag tube from the hole in the ceiling to the floor
+    const dark = look === 'night'
+    const floors = Math.round(h / FH)
+    for (let i = 0; i < floors; i++) {
+      c.save(); c.translate(0, i * FH); shell(c, w, FH, '#e7f5ff', '#ced4da', dark); c.restore()
+    }
+    const pts: [number, number][] = []
+    for (let i = 0; i <= floors * 8; i++) {
+      const span = i / 8
+      const seg = Math.min(floors - 1, Math.floor(span))
+      const s = span - seg
+      const across = seg % 2 === 0 ? s : 1 - s
+      pts.push([T / 2 + across * (w - T), Math.max(3, span * FH - SLIDE_TUBE_DY)])
+    }
+    const tube = (color: string, width: number, dash?: number[]) => {
+      c.strokeStyle = color; c.lineWidth = width; c.lineJoin = 'round'; c.lineCap = 'round'
+      c.setLineDash(dash ?? [])
+      c.beginPath(); pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke()
+      c.setLineDash([])
+    }
+    const [ex, ey] = pts[pts.length - 1]
+    c.fillStyle = '#111'; c.beginPath(); c.ellipse(T / 2, 1.5, T / 2 + 1, 1.6, 0, 0, Math.PI * 2); c.fill()
+    const kind = slideLook(variant)
+    if (kind === 'rainbow') {
+      ;['#e03131', '#f76707', '#fab005', '#40c057', '#228be6', '#7048e8'].forEach((col, i) => tube(col, 9 - i * 1.3))
+    } else if (kind === 'aqua') {
+      c.fillStyle = '#4dabf7'; c.beginPath(); c.ellipse(ex, h - 3, 7, 2.5, 0, 0, Math.PI * 2); c.fill()
+      tube('#0b7285', 9); tube('#66d9e8', 6.5); tube('rgba(255,255,255,0.7)', 1.5, [4, 6])
+    } else {
+      tube('#c2410c', 9); tube('#ff922b', 6.5); tube('#e8590c', 6.5, [3, 7])
+    }
+    // landing mat at the bottom
+    r(c, kind === 'aqua' ? '#1971c2' : '#e03131', ex - 6, ey + 2, 12, 2)
+    if (dark) r(c, 'rgba(10,20,40,0.35)', 0, 0, w, h)
   },
   escalator(c, w, h) {
     c.fillStyle = '#adb5bd'
@@ -852,6 +889,7 @@ Object.assign(painters, {
   },
 } satisfies Partial<Record<FacilityKind, Painter>>)
 
+export const SLIDE_TUBE_DY = 6 // tube centreline sits this far above each floor line
 export const TOY_CASE = [12, 26] as const
 export const TOY_BELT = [50, 140] as const
 export const INDIGO_LOOP = [130, 54] as const // centre x, radius x

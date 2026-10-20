@@ -10,6 +10,7 @@ import type { ElevatorHooks } from './elevators'
 import { findRoute } from './routing'
 import { holidayRush, partyDay, stepHoliday, trickArrive, trickNext } from './holidays'
 import type { HolidaySim } from './holidays'
+import { SLIDE_STEPS, slideDayTick, slideLanded } from './slide'
 import type { Facility, Game, Person, PersonKind, Shaft } from './state'
 import { dayOf, floorLabel, isWeekend, minuteOfDay, quarterOf } from './state'
 import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
@@ -227,13 +228,14 @@ function stepPerson(g: Game, p: Person) {
       p.climb++
       const L = p.legs[p.leg]
       const conn = g.facilities.get(L.via)
-      const dur = climbSteps(conn?.kind)
+      const dur = climbSteps(conn?.kind) * Math.abs(L.to - L.from)
       if (p.climb >= dur) {
         p.floor = L.to
         p.leg++
         p.state = 'walking'
         if (conn?.kind === 'stairs') p.tripStress += 4
         if (conn?.kind === 'firePole') { p.mood = Math.max(0, p.mood - 6); if (Math.random() < 0.04) fx(g, p.x, p.floor, 'WHEEE! 🚒', '#ffa94d') }
+        if (conn?.kind === 'megaSlide') { const sfx = slideLanded(g, p, conn); if (sfx) sound.play(sfx) }
       }
       break
     }
@@ -242,7 +244,7 @@ function stepPerson(g: Game, p: Person) {
 
 /** Sim steps to cross one floor on a connector. */
 export function climbSteps(k?: FacilityKind) {
-  return k === 'escalator' ? 28 : k === 'firePole' ? 12 : 55
+  return k === 'escalator' ? 28 : k === 'firePole' ? 12 : k === 'megaSlide' ? SLIDE_STEPS : 55
 }
 
 function beginLeg(g: Game, p: Person) {
@@ -1336,6 +1338,7 @@ export function ufoX(g: Game) {
 function dayTick(g: Game) {
   const day = dayOf(g.time)
   g.stats.day = day
+  slideDayTick(g)
   for (const f of g.facilities.values()) {
     f.customersYesterday = f.customersToday
     f.customersToday = 0

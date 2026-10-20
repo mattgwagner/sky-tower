@@ -33,7 +33,7 @@ export function personDoing(g: Game, p: Person) {
   if (p.state === 'riding') return 'Riding the elevator'
   if (p.state === 'climbing') {
     const c = g.facilities.get(p.legs[p.leg]?.via ?? 0)
-    return c?.kind === 'firePole' ? 'Sliding down the fireman pole! 🚒' : c?.kind === 'escalator' ? 'Riding the escalator' : 'Taking the stairs'
+    return c?.kind === 'megaSlide' ? 'Whooshing down the Mega Slide! 🛝' : c?.kind === 'firePole' ? 'Sliding down the fireman pole! 🚒' : c?.kind === 'escalator' ? 'Riding the escalator' : 'Taking the stairs'
   }
   if (p.state === 'inside' && p.purpose === 'train') return 'Waiting on the platform for the train 🚇'
   if (p.state === 'inside') {

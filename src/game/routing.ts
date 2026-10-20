@@ -11,7 +11,8 @@ interface Node {
   staffOnly: boolean
   connLo: number // connector bottom floor
   isEsc: boolean
-  downOnly: boolean // fireman pole: you can slide down but not climb up
+  downOnly: boolean // fireman pole, mega slide: you can slide down but not climb up
+  perFloor: number // connector riding cost per floor
 }
 
 interface Graph {
@@ -32,6 +33,7 @@ const TRANSFER = 40
 const STAIR = 90 // per floor
 const ESC = 45
 const POLE = 15
+const SLIDE = 12
 
 function buildGraph(g: Game): Graph {
   const nodes: Node[] = []
@@ -49,16 +51,18 @@ function buildGraph(g: Game): Graph {
     const def = TRANSPORTS[s.kind]
     for (let f = s.lo; f <= s.hi; f++) {
       if (!s.stops[f]) continue
-      add({ via: s.id, floor: f, x: s.x + def.width / 2, kind: 'shaft', spf: def.stepsPerFloor, staffOnly: s.kind === 'serviceElevator', connLo: 0, isEsc: false, downOnly: false })
+      add({ via: s.id, floor: f, x: s.x + def.width / 2, kind: 'shaft', spf: def.stepsPerFloor, staffOnly: s.kind === 'serviceElevator', connLo: 0, isEsc: false, downOnly: false, perFloor: 0 })
     }
   }
   for (const fac of g.facilities.values()) {
     if (!isConnector(fac.kind)) continue
     const x = fac.x + FACILITIES[fac.kind].width / 2
     const isEsc = fac.kind === 'escalator'
-    const downOnly = fac.kind === 'firePole'
-    add({ via: fac.id, floor: fac.floor, x, kind: 'conn', spf: 0, staffOnly: false, connLo: fac.floor, isEsc, downOnly })
-    add({ via: fac.id, floor: fac.floor + 1, x, kind: 'conn', spf: 0, staffOnly: false, connLo: fac.floor, isEsc, downOnly })
+    const downOnly = fac.kind === 'firePole' || fac.kind === 'megaSlide'
+    const perFloor = fac.kind === 'megaSlide' ? SLIDE : fac.kind === 'firePole' ? POLE : isEsc ? ESC : STAIR
+    // a connector links its bottom floor to the floor above its top, in one leg
+    add({ via: fac.id, floor: fac.floor, x, kind: 'conn', spf: 0, staffOnly: false, connLo: fac.floor, isEsc, downOnly, perFloor })
+    add({ via: fac.id, floor: fac.floor + fac.height, x, kind: 'conn', spf: 0, staffOnly: false, connLo: fac.floor, isEsc, downOnly, perFloor })
   }
   // walkable segments per floor
   const seg = new Map<number, Int32Array>()
@@ -179,7 +183,7 @@ function dijkstra(g: Game, gr: Graph, fromFloor: number, fromX: number, toFloor:
       let c: number
       if (nd.downOnly && m.floor > nd.floor) continue
       if (nd.kind === 'shaft') c = WAIT * (staff && nd.staffOnly ? 0.5 : 1) + Math.abs(m.floor - nd.floor) * nd.spf * 0.6
-      else c = nd.downOnly ? POLE : nd.isEsc ? ESC : STAIR
+      else c = nd.perFloor * Math.abs(m.floor - nd.floor)
       const nd2 = d + c
       if (nd2 < dist[j]) { dist[j] = nd2; prev[j] = i; heap.push(nd2, j) }
     }
@@ -206,7 +210,6 @@ function dijkstra(g: Game, gr: Graph, fromFloor: number, fromX: number, toFloor:
     const b = gr.nodes[chain[k + 1]]
     if (a.via === b.via) legs.push({ via: a.via, from: a.floor, to: b.floor, x: a.x })
   }
-  // collapse consecutive same-via connector legs is unnecessary: each stairs only spans one floor
   if (!legs.length) return null
   return legs
 }
