@@ -142,6 +142,8 @@ export interface Game {
     entityNight?: number
     /** the day the tower was founded, for its birthday; old saves get the day they're loaded */
     founded?: number
+    /** Today's giant visitor, chosen once at midnight. Missing on older saves. */
+    giant?: { kind: 'ape' | 'dragon' | 'skywriter'; day: number; start: number }
   }
   bomb: Bomb | null
   pop: number

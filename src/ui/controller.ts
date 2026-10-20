@@ -12,6 +12,7 @@ import type { Camera, Overlay } from '../render/renderer'
 import { flashBuild, jumpscare, launchFireworks, personPos, render, screenToWorld } from '../render/renderer'
 import { registerPoke } from '../render/poke-fx'
 import { pokeFacility } from '../game/poke'
+import { apeHit, pokeGiant } from '../game/giants'
 import { catchHuggy } from '../game/sim'
 import { FH, T } from '../render/sprites'
 
@@ -281,6 +282,11 @@ export class Controller {
       return
     }
     if (this.tool === 'inspect') {
+      if (apeHit(this.g, w.tile, w.floor) && pokeGiant(this.g)) {
+        play('boing')
+        this.emit()
+        return
+      }
       const hg = this.g.flags.huggy
       if (hg) {
         const hx = (hg.x * T - this.cam.x) * this.cam.zoom + this.W / 2

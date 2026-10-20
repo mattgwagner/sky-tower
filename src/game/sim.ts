@@ -13,7 +13,10 @@ import type { HolidaySim } from './holidays'
 import { SLIDE_STEPS, slideDayTick, slideLanded } from './slide'
 import type { Facility, Game, Person, PersonKind, Shaft } from './state'
 import { dayOf, floorLabel, isWeekend, minuteOfDay, quarterOf } from './state'
+import { giantsArrive, giantsDay } from './giants'
 import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
+
+export { giantCount, giantNow, giantsArrive } from './giants'
 
 // ---------- sound hook (set by UI) ----------
 export const sound = {
@@ -1072,6 +1075,7 @@ function minuteTick(g: Game) {
     for (const p of g.people.values()) if (p.kind === 'maid' && p.state === 'inside' && p.at === p.home && !p.task) maidNext(g, p)
   }
   if (m % 60 === 0) hourTick(g, m)
+  giantsArrive(g)
 }
 
 function hourTick(g: Game, m: number) {
@@ -1370,6 +1374,7 @@ function dayTick(g: Game) {
     p.mood *= 0.6
   }
   if (day > 0 && day % DAYS_PER_QUARTER === 0) quarterTick(g)
+  giantsDay(g)
 }
 
 function quarterTick(g: Game) {

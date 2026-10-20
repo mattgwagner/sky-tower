@@ -110,6 +110,14 @@ Each slide comes in rainbow, aqua (with a splash) or orange. Tap it to see "Ride
 20,000 per floor. Code: `src/game/slide.ts` and `src/render/slide.ts`; `scripts/slidecheck.ts` checks someone rides
 one.
 
+## Giant visitors
+
+At most one a day, picked at midnight. A dragon will not show up on a night that already has a night visitor or a UFO.
+
+- **The Big Ape** — about one evening in six, 6pm to 7pm, once the tower is 20 floors tall. He climbs the outside, peeks in the windows, beats his chest on the roof while a little plane pulls a BE NICE banner, waves, and climbs back down. Tap him in Look mode.
+- **The Dragon** — about one night in eight, just after midnight, if the tower has a Rocket Pad or a Cathedral. He flies past, lands, and breathes a small flame. The roof lanterns stay lit until dawn.
+- **Skywriter** — about one clear afternoon in five. A plane writes the tower's name across the sky. The letters drift off over about 20 minutes.
+
 ## Code map
 
 - `src/game/`: pure TypeScript simulation, no DOM.

@@ -15,6 +15,7 @@ import { pokeWobble } from './poke-fx'
 import { drawHolidayAmbient, drawHolidayDecor, drawHolidayWear, holidaySky } from './holidays'
 import { holidayBanner } from '../game/holidays'
 import { drawSlide } from './slide'
+import { drawGiants } from './giants'
 
 export interface Camera { x: number; y: number; zoom: number }
 
@@ -360,6 +361,7 @@ export function render(c: CanvasRenderingContext2D, W: number, H: number, g: Gam
   for (const s of visibleShafts) drawShaft(c, g, s, S, z, fBot, fTop, now)
   drawPeople(c, g, S, z, fBot, fTop, now)
   if (drawHolidayAmbient(c, W, H, g, S, z, now)) launchFireworks(now, 10)
+  drawGiants(c, g, S, z, now)
   for (const f of g.facilities.values()) if (f.kind === 'rocketPad') drawRocket(c, g, f, S, z, now)
   drawUfo(c, g, S, z, now)
   drawEntity(c, g, S, z, now)
