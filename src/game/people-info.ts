@@ -2,6 +2,7 @@
 import { FACILITIES } from './defs'
 import type { Game, Person } from './state'
 import { floorLabel } from './state'
+import { COSTUMES } from './holidays'
 
 const FIRST = ['Ava', 'Ben', 'Cleo', 'Dev', 'Ella', 'Finn', 'Gus', 'Hana', 'Ivy', 'Jack', 'Kai', 'Lila', 'Max', 'Nia', 'Owen', 'Pia', 'Quinn', 'Rosa', 'Sam', 'Tess', 'Uma', 'Vic', 'Wes', 'Xena', 'Yuki', 'Zed', 'Mo', 'Lou', 'June', 'Otto', 'Bea', 'Raj', 'Luz', 'Theo', 'Mila', 'Ezra', 'Nora', 'Leo', 'Ines', 'Hugo']
 const LAST = ['Apple', 'Brooks', 'Chen', 'Diaz', 'Evans', 'Fox', 'Garcia', 'Hill', 'Ito', 'Jones', 'Kim', 'Lopez', 'Moss', 'Nguyen', 'Ortiz', 'Park', 'Reed', 'Singh', 'Tran', 'Vega', 'Wolfe', 'Young']
@@ -19,7 +20,7 @@ export function personRole(g: Game, p: Person) {
     case 'resident': return `Lives in the condo${where}`
     case 'guest': return `Hotel guest${where}`
     case 'vip': return `Very Important Person${where}`
-    case 'visitor': return 'Visitor'
+    case 'visitor': return p.costume !== undefined ? `Trick-or-treater (${COSTUMES[p.costume % COSTUMES.length]})` : 'Visitor'
     case 'maid': return 'Housekeeper'
     case 'guard': return 'Security guard'
   }
@@ -45,6 +46,7 @@ export function personDoing(g: Game, p: Person) {
     case 'home': return p.kind === 'guest' || p.kind === 'vip' ? 'Going to their room' : 'Going home'
     case 'exit': return 'Leaving the tower'
     case 'shop': return `Going to the ${destName}`
+    case 'trick': return 'Trick-or-treating! 🍬'
     case 'clean': return 'Off to clean a hotel room'
     case 'fire': return 'Rushing to put out a fire!'
     case 'search': case 'sweep': return 'Searching for the bomb!'

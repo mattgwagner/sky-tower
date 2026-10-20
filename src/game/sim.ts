@@ -8,6 +8,8 @@ import type { FacilityKind } from './defs'
 import { joinQueue, leaveQueue, stepShaft } from './elevators'
 import type { ElevatorHooks } from './elevators'
 import { findRoute } from './routing'
+import { holidayRush, partyDay, stepHoliday, trickArrive, trickNext } from './holidays'
+import type { HolidaySim } from './holidays'
 import type { Facility, Game, Person, PersonKind, Shaft } from './state'
 import { dayOf, floorLabel, isWeekend, minuteOfDay, quarterOf } from './state'
 import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
@@ -318,6 +320,8 @@ function arrive(g: Game, p: Person) {
       schedule(p, g.time + stay, 'leaveShop')
       return
     }
+    case 'trick':
+      return trickArrive(g, p, fac, (f) => enterFacility(g, p, f), holidaySim)
     case 'clean': {
       if (!fac) { releaseTask(g, p); return goBackToPost(g, p) }
       enterFacility(g, p, fac)
@@ -536,7 +540,7 @@ function stayFor(g: Game, k: FacilityKind) {
 export function isOpen(g: Game, f: Facility): boolean {
   if (f.fire > 0 || !f.reachable) return false
   const m = minuteOfDay(g.time)
-  if (f.kind === 'partyHall' && !isWeekend(g.time)) return false
+  if (f.kind === 'partyHall' && !isWeekend(g.time) && !partyDay(g)) return false
   return (HOURS[f.kind] ?? FUN_HOURS[f.kind] ?? []).some(([a, b]) => m >= a && m < b)
 }
 
@@ -600,6 +604,7 @@ function spawnVisitors(g: Game) {
     else if (f.kind === 'hauntedHouse') perHour = m >= at(19) ? 10 : 5
     else if (f.kind === 'dinoMuseum') perHour = 10
     else if (f.kind === 'rocketPad') perHour = m >= at(10, 30) && m < at(11, 45) ? 30 : 0
+    perHour *= holidayRush(g, f.kind)
     if (perHour <= 0) continue
     if (Math.random() < (perHour * demand * appeal) / 60) {
       const v = newPerson(g, 'visitor', 0)
@@ -712,6 +717,9 @@ function doAct(g: Game, p: Person, act: string) {
       return
     case 'leaveShop':
       goBack(g, p)
+      return
+    case 'trick':
+      trickNext(g, p, holidaySim)
       return
     case 'doneClean': {
       const r = g.facilities.get(p.task)
@@ -1088,7 +1096,10 @@ function hourTick(g: Game, m: number) {
   maybeUfo(g, m)
   huggyHour(g, m)
   maybeEntity(g, m)
+  stepHoliday(g, m, holidaySim)
 }
+
+const holidaySim: HolidaySim = { newPerson, startTrip, evict, schedule }
 
 // ---------- metro trains ----------
 

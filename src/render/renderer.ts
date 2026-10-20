@@ -11,6 +11,8 @@ import { CLIMB_TOP, ZIP, INDIGO_LOOP, INDIGO_SCREEN, TOY_BELT, TOY_CASE, FAZ_COV
 import type { Look } from './sprites'
 import { drawLightning, drawRainbow, drawShootingStars, weatherFor } from './sky-fx'
 import { pokeWobble } from './poke-fx'
+import { drawHolidayAmbient, drawHolidayDecor, drawHolidayWear, holidaySky } from './holidays'
+import { holidayBanner } from '../game/holidays'
 
 export interface Camera { x: number; y: number; zoom: number }
 
@@ -108,7 +110,7 @@ const CLOUDS = Array.from({ length: 9 }, (_, i) => ({ x: i * 420 + (i * 131) % 2
 
 function drawSky(c: CanvasRenderingContext2D, W: number, H: number, g: Game, cam: Camera, now: number) {
   const hour = minuteOfDay(g.time) / 60
-  const [top, bot, night] = skyColors(hour)
+  const [top, bot, night] = holidaySky(g, skyColors(hour), hour)
   const grd = c.createLinearGradient(0, 0, 0, H)
   grd.addColorStop(0, top)
   grd.addColorStop(1, bot)
@@ -354,6 +356,7 @@ export function render(c: CanvasRenderingContext2D, W: number, H: number, g: Gam
   drawTowerSign(c, g, S, z, night)
   for (const s of visibleShafts) drawShaft(c, g, s, S, z, fBot, fTop, now)
   drawPeople(c, g, S, z, fBot, fTop, now)
+  if (drawHolidayAmbient(c, W, H, g, S, z, now)) launchFireworks(now, 10)
   for (const f of g.facilities.values()) if (f.kind === 'rocketPad') drawRocket(c, g, f, S, z, now)
   drawUfo(c, g, S, z, now)
   drawEntity(c, g, S, z, now)
@@ -420,6 +423,7 @@ function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: 
   if (f.kind === 'parking' && f.reachable) drawCar(c, p.x + 10 * z, p.y + h - 3 * z, z, f.id)
   if (f.kind === 'cathedral') drawSpire(c, p.x + w / 2, p.y, z)
   if (z >= 0.6) drawFun(c, g, f, p, w, h, z, now, m)
+  drawHolidayDecor(c, g, f, p, w, h, z, now, m)
   if (isHotel(f.kind) && z >= 1.2) drawDoorPlate(c, g, f, p, w, h, z)
   const ent = entityNow(g)
   if (ent && ent.kind === 'rush' && ent.floor === f.floor && f.height === 1) {
@@ -604,6 +608,7 @@ function drawPeople(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: numb
       if (hidingOn(g, p.floor)) continue
       const s = S(p.x * T, floorTop(p.floor) + FH - 3)
       drawPersonAt(c, s.x, s.y, z, personColor(p.shirt), Math.floor(p.x * 1.5) % 2, p.mood, p.shirt)
+      drawHolidayWear(c, g, p, s.x, s.y, z)
       const pet = hasPet(p)
       if (pet && z >= 0.6) {
         const tx = p.leg < p.legs.length ? p.legs[p.leg].x : p.goalX
@@ -621,6 +626,7 @@ function drawPeople(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: numb
       const wy = floorTop(conn.floor) + FH - 3 - prog * FH
       const s = S(wx, wy)
       drawPersonAt(c, s.x, s.y, z, personColor(p.shirt), Math.floor(now / 150) % 2, p.mood, p.shirt)
+      drawHolidayWear(c, g, p, s.x, s.y, z)
     }
   }
   // queues at shafts
@@ -1474,7 +1480,7 @@ function drawBlimp(c: CanvasRenderingContext2D, W: number, H: number, g: Game, n
   if (cycle > 40) return
   const k = cycle / 40
   const raw = ((g.name ?? '').trim() || 'SKY TOWER').toUpperCase()
-  const text = raw.length > 18 ? raw.slice(0, 17) + '…' : raw
+  const text = holidayBanner(g, raw.length > 18 ? raw.slice(0, 17) + '…' : raw)
   c.font = '900 13px "Nunito", sans-serif'
   const rx = Math.max(70, c.measureText(text).width / 2 + 26)
   const x = W + 160 - k * (W + 420)

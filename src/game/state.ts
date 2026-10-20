@@ -88,6 +88,7 @@ export interface Person {
   qShaft: number
   qDir: 1 | -1
   task: number // maid: room id, guard: target facility/floor
+  costume?: number // trick-or-treaters: index into COSTUMES in holidays.ts
 }
 
 export interface Msg {
@@ -138,6 +139,8 @@ export interface Game {
     entity?: { kind: 'rush' | 'seek'; floor: number; start: number; a: number; b: number } | null
     guided?: boolean
     entityNight?: number
+    /** the day the tower was founded, for its birthday; old saves get the day they're loaded */
+    founded?: number
   }
   bomb: Bomb | null
   pop: number

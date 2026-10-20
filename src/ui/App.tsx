@@ -7,6 +7,7 @@ import type { Facility, Shaft } from '../game/state'
 import { clockLabel, dayOf, floorLabel, isWeekend, minuteOfDay, money, quarterOf, yearOf } from '../game/state'
 import { addCar, removeCar, resizeShaft, unlocked } from '../game/world'
 import { evict } from '../game/sim'
+import { holidayBadge } from '../game/holidays'
 import { totalWaiting } from '../game/elevators'
 import { Controller } from './controller'
 import { personDoing, personName, personRole, personThought, petLine } from '../game/people-info'
@@ -321,6 +322,7 @@ function TopBar({ onHelp, onMenu, onSnap }: { onHelp: () => void; onMenu: () => 
     { s: 8, label: '⏩', title: 'Super fast (4)' },
   ]
   const day = dayOf(g.time) % 3
+  const badge = holidayBadge(g)
   return (
     <div className="topbar">
       <div className="brand">{g.name?.trim() ? <span className="tower-name">{g.name}</span> : <>SKY<span>TOWER</span></>}</div>
@@ -331,6 +333,7 @@ function TopBar({ onHelp, onMenu, onSnap }: { onHelp: () => void; onMenu: () => 
         {night ? '🌙' : '☀️'} {clockLabel(g.time)}
         <small>{isWeekend(g.time) ? 'Weekend' : `Weekday ${day + 1}`} · Q{quarterOf(g.time)} · Year {yearOf(g.time)}</small>
       </div>
+      {badge && <div className="stat holiday" title="Today's holiday">{badge}</div>}
       <div className="speeds">
         {speeds.map((x) => (
           <button key={x.s} title={x.title} className={ctl.speed === x.s ? 'on' : ''} onClick={() => { ctl.speed = x.s; play('click'); ctl.emit() }}>{x.label}</button>

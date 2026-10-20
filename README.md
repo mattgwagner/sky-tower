@@ -63,6 +63,26 @@ Fan homages with original pixel art, scary-silly rather than gory:
   floor flicker and Rush tears down the hall while everyone hides; otherwise Seek's eyes open on a floor's walls before
   it runs across. Hotel rooms carry gold four-digit door plates, and the Library has a blind Figure after 9pm.
 
+## Holidays
+
+The tower keeps a calendar. A badge in the top bar shows today's holiday, and the news feed announces it that morning.
+
+- **Spooky Week** (all of quarter 3): jack-o-lanterns in the lobbies, cobwebs on the shops, bats at dusk and a
+  purple-orange sunset. From 6 to 9pm trick-or-treaters (a ghost, a dino, an astronaut) ride the elevators and knock
+  on condo doors, about one per 40 people and never more than 12; they're all home by 10pm. The Candy Shop and the
+  Haunted House get twice the customers.
+- **Snow Day** (the first snowy day of winter): a snowman grows in every Sky Park, kids have a snowball fight outside
+  the lobby, icicles hang from the roof line, and everyone wears a hat and scarf.
+- **Heart Day** (quarter 1, day 2): hearts float out of condos and booked hotel rooms, the Restaurant lights a candle,
+  and the blimp's banner gets hearts.
+- **Tower Birthday** (every 12 days after the tower was founded): bunting and a birthday banner on the roof, confetti
+  all day, a free party in the Party Hall (it opens even on a weekday), cake at noon and fireworks at 8pm. A tower
+  saved before this change counts its birthday from the day it is next played.
+- **New Year**: a countdown in the top bar for the last ten minutes of the year, then fireworks and a
+  `HAPPY NEW YEAR!` splash.
+
+`scripts/holidaycheck.ts` walks a test tower through a year and prints trick-or-treater, party and shop counts.
+
 ## Metro trains
 
 A Metro Station gets a train every 30 game minutes from 5am to midnight: it pulls out of the tunnel, opens its doors

@@ -2,12 +2,7 @@
 import { play } from '../audio'
 import type { Game } from '../game/state'
 import { dayOf, minuteOfDay } from '../game/state'
-
-function dayHash(d: number) {
-  let x = (d + 1) * 2654435761
-  x ^= x >>> 13
-  return (x >>> 0) % 100
-}
+import { dayHash, snowsOn } from '../game/holidays'
 
 export interface Weather { rain: boolean; snow: boolean; storm: boolean; rainbow: boolean }
 
@@ -15,9 +10,8 @@ export interface Weather { rain: boolean; snow: boolean; storm: boolean; rainbow
 export function weatherFor(g: Game): Weather {
   const d = dayOf(g.time)
   const h = dayHash(d)
-  const q = Math.floor(d / 3) % 4
   const m = minuteOfDay(g.time)
-  const snow = q === 3 && h < 55
+  const snow = snowsOn(d)
   const rainy = !snow && h < 18
   const rain = rainy && m > 600 && m < 1080
   const storm = rain && h < 6
