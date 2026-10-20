@@ -317,7 +317,7 @@ function splash(c: CanvasRenderingContext2D, W: number, H: number, g: Game, now:
   c.restore()
 }
 
-let birthdayFireworks = -1
+let birthdayFireworks: { g: Game; day: number } | null = null
 
 /** Ambient holiday bits over the whole scene. Returns true when it's time for birthday fireworks. */
 export function drawHolidayAmbient(c: CanvasRenderingContext2D, W: number, H: number, g: Game, S: ToScreen, z: number, now: number): boolean {
@@ -342,7 +342,7 @@ export function drawHolidayAmbient(c: CanvasRenderingContext2D, W: number, H: nu
       if (m >= 7 * 60) confetti(c, g, S, z, now)
       bunting(c, g, S, z)
       const d = dayOf(g.time)
-      if (m >= 20 * 60 && m < 21 * 60 && birthdayFireworks !== d) { birthdayFireworks = d; return true }
+      if (m >= 20 * 60 && m < 21 * 60 && (birthdayFireworks?.g !== g || birthdayFireworks.day !== d)) { birthdayFireworks = { g, day: d }; return true }
       return false
     }
   }
