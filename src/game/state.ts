@@ -148,6 +148,12 @@ export interface Game {
     saturnNight?: number
     /** water-tower poke: pigeons on this tank fly off until `at` (performance.now) ages out */
     pigeon?: { id: number; at: number }
+    /** Loose Sky Zoo monkey, sitting on a room. `since` is the sim minute it landed there. */
+    monkey?: { floor: number; x: number; since: number } | null
+    /** Banana peels left on rooms the monkey already visited. Gone the next morning. */
+    peels?: { floor: number; x: number; day: number }[]
+    /** Zookeeper walking a caught monkey back to the zoo. */
+    monkeyCarry?: { floor: number; x: number; zooFloor: number; zooX: number; start: number; until: number } | null
   }
   bomb: Bomb | null
   pop: number

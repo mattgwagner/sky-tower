@@ -14,6 +14,8 @@ import { registerPoke } from '../render/poke-fx'
 import { pokeFacility } from '../game/poke'
 import { apeHit, pokeGiant } from '../game/giants'
 import { catchHuggy } from '../game/sim'
+import { catchMonkey } from '../game/zoo'
+import { looseMonkeyWorld } from '../render/zoo'
 import { FH, T } from '../render/sprites'
 
 const LEGACY_KEY = 'skytower.save.v1'
@@ -292,6 +294,13 @@ export class Controller {
         const hx = (hg.x * T - this.cam.x) * this.cam.zoom + this.W / 2
         const hy = ((-(hg.floor + 1) * FH + 10) - this.cam.y) * this.cam.zoom + this.H / 2
         if (Math.hypot(hx - sx, hy - sy) < Math.max(16, 9 * this.cam.zoom)) { catchHuggy(this.g); this.emit(); return }
+      }
+      const mk = this.g.flags.monkey
+      if (mk) {
+        const spot = looseMonkeyWorld(mk.floor, mk.x)
+        const mx = (spot.wx - this.cam.x) * this.cam.zoom + this.W / 2
+        const my = (spot.wy - this.cam.y) * this.cam.zoom + this.H / 2
+        if (Math.hypot(mx - sx, my - sy) < Math.max(16, 10 * this.cam.zoom)) { catchMonkey(this.g); this.emit(); return }
       }
       const pid = this.personAt(sx, sy)
       if (pid) {

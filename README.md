@@ -129,6 +129,17 @@ The 🏗️ Build tab has a Roof group, after the elevators. Every topper, inclu
 - **Giant Donut**: a spinning donut sign. While it stands, every Donut Shop gets three times the customers.
 - **Crown, Glass Dome, Radio Antenna**: one spire on the very top of the tower. Placing another swaps it. The antenna's red light blinks, and a beacon sweeps at night. The tower name sign stays off the toppers, and a placed spire takes the place of the cathedral's plain point.
 
+## Sky Zoo
+
+Fun → Wow. Two floors: penguins slide down an ice ramp into a pool, a giraffe pokes its head over the upstairs
+railing, and monkeys swing on a tyre. A zookeeper walks between them with a bucket. After dark the penguins huddle
+and the monkeys sleep in a pile.
+
+Once a day at 10am, about a third of the time, a monkey escapes (never while Huggy is loose). It sits on a random
+room, moves every hour, and leaves a banana peel that disappears the next morning. Tap it in Look mode — `Gotcha! 🍌`
+— and the zookeeper carries it home for a small reward. If nobody catches it by 6pm, it swings back by itself.
+The room it is sitting on says `🍌` when you poke it.
+
 ## Code map
 
 - `src/game/`: pure TypeScript simulation, no DOM.

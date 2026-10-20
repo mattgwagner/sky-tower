@@ -12,6 +12,7 @@ import { topFloor } from '../game/world'
 import { CLIMB_TOP, ZIP, INDIGO_LOOP, INDIGO_SCREEN, TOY_BELT, TOY_CASE, FAZ_COVE, FAZ_OFFICE, FAZ_STAGE, FAZ_TABLES, METRO_BOARD, METRO_TUNNEL, AQ_PAD, ARCADE_CABS, ARCADE_X, BOWL_PINS, CANDY_POPS, FH, GOLF_HOLE, GOLF_MILL, TRAMPS, ROCKET_X, SHIRTS, T, sprite } from './sprites'
 import type { Look } from './sprites'
 import { drawLightning, drawRainbow, drawShootingStars, weatherFor } from './sky-fx'
+import { drawLooseMonkey, drawZoo } from './zoo'
 import { pokeWobble } from './poke-fx'
 import { drawHolidayAmbient, drawHolidayDecor, drawHolidayWear, holidaySky } from './holidays'
 import { holidayBanner } from '../game/holidays'
@@ -368,6 +369,7 @@ export function render(c: CanvasRenderingContext2D, W: number, H: number, g: Gam
   drawUfo(c, g, S, z, now)
   drawEntity(c, g, S, z, now)
   drawHuggyVent(c, g, S, z, now)
+  drawLooseMonkey(c, g, S, z, now)
   drawFires(c, g, visibleFacs, S, z, now)
   drawFlashes(c, S, z, dt)
   drawSelectedPerson(c, g, ov, S, z, now)
@@ -1341,6 +1343,10 @@ function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: nu
         c.fillRect(bx - flap, by - z, flap, 2 * z); c.fillRect(bx + 0.6 * z, by - z, flap, 2 * z)
         c.fillStyle = '#212529'; c.fillRect(bx, by - z, 0.6 * z, 2 * z)
       }
+      return
+    }
+    case 'zoo': {
+      drawZoo(c, g, f, p, w, h, z, now, m)
       return
     }
   }

@@ -15,6 +15,7 @@ import type { Facility, Game, Person, PersonKind, Shaft } from './state'
 import { dayOf, floorLabel, isWeekend, minuteOfDay, quarterOf } from './state'
 import { giantsArrive, giantsDay } from './giants'
 import { clearNight, heliMinute, turbineCut } from './roof'
+import { zooHour } from './zoo'
 import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
 
 export { giantCount, giantNow, giantsArrive } from './giants'
@@ -514,6 +515,7 @@ const FUN_HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
   miniGolf: [[at(10), at(21)]],
   bowling: [[at(12), at(23)]],
   rollerRink: [[at(14), at(23)]],
+  zoo: [[at(9), at(18)]],
 }
 const LAUNCH = at(12)
 
@@ -539,6 +541,7 @@ function stayFor(g: Game, k: FacilityKind) {
     case 'hauntedHouse': return rnd(25, 40)
     case 'dinoMuseum': return rnd(50, 90)
     case 'rocketPad': return Math.max(15, LAUNCH + 15 - minuteOfDay(g.time))
+    case 'zoo': return rnd(40, 80)
     default: return rnd(20, 40)
   }
 }
@@ -611,6 +614,7 @@ function spawnVisitors(g: Game) {
     else if (f.kind === 'hauntedHouse') perHour = m >= at(19) ? 10 : 5
     else if (f.kind === 'dinoMuseum') perHour = 10
     else if (f.kind === 'rocketPad') perHour = m >= at(10, 30) && m < at(11, 45) ? 30 : 0
+    else if (f.kind === 'zoo') perHour = 9
     perHour *= holidayRush(g, f.kind)
     if (perHour <= 0) continue
     if (Math.random() < (perHour * demand * appeal) / 60) {
@@ -1105,6 +1109,7 @@ function hourTick(g: Game, m: number) {
   huggyHour(g, m)
   maybeEntity(g, m)
   stepHoliday(g, m, holidaySim)
+  zooHour(g, m)
 }
 
 const holidaySim: HolidaySim = { newPerson, startTrip, evict, schedule }

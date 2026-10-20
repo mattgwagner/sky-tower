@@ -4,6 +4,7 @@ import type { FacilityKind } from './defs'
 import type { Facility, Game } from './state'
 import { minuteOfDay } from './state'
 import { trainPhase } from './sim'
+import { monkeyOn } from './zoo'
 import { fx } from './world'
 
 interface Poke { says: string[]; color?: string; sfx?: Sfx }
@@ -63,6 +64,7 @@ const POKES: Partial<Record<FacilityKind, Poke>> = {
   crown: { says: ['So shiny!'], color: '#ffd43b', sfx: 'twinkle' },
   dome: { says: ['A garden in the clouds!'], color: '#8ce99a', sfx: 'twinkle' },
   antenna: { says: ['Beep… beep…'], color: '#ff6b6b', sfx: 'ding' },
+  zoo: { says: ['🐧 Waddle waddle', '🦒 Hello down there!', '🐒 Ooh ooh ah ah!', 'Feeding time!'], color: '#ffd43b', sfx: 'pop' },
 }
 
 const lastPoke = new Map<number, number>()
@@ -73,6 +75,13 @@ export function isPokable(k: FacilityKind) {
 
 /** Make the room react. Returns the sound to play, or null if this room has nothing to say. */
 export function pokeFacility(g: Game, f: Facility, now: number): Sfx | null {
+  if (monkeyOn(g, f)) {
+    const last = lastPoke.get(f.id) ?? -1e9
+    if (now - last < 350) return null
+    lastPoke.set(f.id, now)
+    fx(g, f.x + f.width / 2, f.floor + f.height - 1, '🍌', '#ffd43b')
+    return 'pop'
+  }
   const p = POKES[f.kind]
   if (!p) return null
   const last = lastPoke.get(f.id) ?? -1e9

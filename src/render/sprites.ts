@@ -1,6 +1,7 @@
 // Procedural pixel-art sprites for facilities, cached on offscreen canvases.
 import type { FacilityKind } from '../game/defs'
 import { slideLook } from '../game/slide'
+import { paintZoo } from './zoo'
 
 export const T = 8 // px per tile
 export const FH = 32 // px per floor
@@ -975,6 +976,8 @@ Object.assign(painters, {
 } satisfies Partial<Record<FacilityKind, Painter>>)
 
 export const SLIDE_TUBE_DY = 6 // tube centreline sits this far above each floor line
+Object.assign(painters, { zoo: paintZoo })
+
 export const TOY_CASE = [12, 26] as const
 export const TOY_BELT = [50, 140] as const
 export const INDIGO_LOOP = [130, 54] as const // centre x, radius x
