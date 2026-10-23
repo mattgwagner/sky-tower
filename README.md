@@ -188,6 +188,10 @@ It is the only place open for breakfast, lunch, and dinner (7am to 10pm).
 
 Poke it for free samples, sizzle, hot dumplings, or lemonade for 25 cents.
 
+## Sky Playground
+
+Fun → Get moving. One floor, on a roof (it needs open sky, same as the Rocket Pad). Swings move, the merry-go-round spins, and the seesaw goes up and down. There's a little twisty slide, monkey bars, and a sandbox with a bucket, with safety netting around the edge. Kids play there from 8am to 7pm. Sunny weekend afternoons are the busy ones, and an ice cream cart rolls in if the tower has an Ice Cream Shop. Rain shuts it: puddles on the mats, and the room panel says it is too rainy to play. On a snow day a snowman sits in the sandbox. At night the swings still sway and a couple of fireflies come out. Kites fly overhead. Condos and hotel rooms on the floor just below get a little happier, the same way a Sky Park helps the rooms beside it. Code: `src/game/playground.ts` and `src/render/playground.ts`.
+
 ## Stickers
 
 Tap **📒 Stickers** in the top bar or the ☰ menu. Earned stickers are in colour and a little crooked; the rest are a grey outline with a hint. Secret ones stay blank until you get them. A new sticker slides down from the top, and if you earn a bunch they wait their turn. Another part of the game can add its own with one `defineSticker()` call.

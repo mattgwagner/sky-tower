@@ -16,6 +16,7 @@ import { dayOf, floorLabel, isWeekend, minuteOfDay, quarterOf } from './state'
 import { giantsArrive } from './giants'
 import { surpriseDay, surpriseMinute } from './surprises'
 import { clearNight, heliMinute, turbineCut } from './roof'
+import { playgroundPerHour, playgroundRainedOut } from './playground'
 import { zooHour } from './zoo'
 import { frogsHour } from './frogs'
 import { marketRush } from './market'
@@ -524,6 +525,7 @@ const FUN_HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
   zoo: [[at(9), at(18)]],
   rainforest: [[at(9), at(19, 30)]],
   market: [[at(7), at(22)]],
+  playground: [[at(8), at(19)]],
 }
 const LAUNCH = at(12)
 
@@ -552,6 +554,7 @@ function stayFor(g: Game, k: FacilityKind) {
     case 'zoo': return rnd(40, 80)
     case 'rainforest': return rnd(40, 70)
     case 'market': return rnd(18, 36)
+    case 'playground': return rnd(25, 50)
     default: return rnd(20, 40)
   }
 }
@@ -560,7 +563,9 @@ export function isOpen(g: Game, f: Facility): boolean {
   if (f.fire > 0 || !f.reachable) return false
   const m = minuteOfDay(g.time)
   if (f.kind === 'partyHall' && !isWeekend(g.time) && !partyDay(g)) return false
-  return (HOURS[f.kind] ?? FUN_HOURS[f.kind] ?? []).some(([a, b]) => m >= a && m < b)
+  const open = (HOURS[f.kind] ?? FUN_HOURS[f.kind] ?? []).some(([a, b]) => m >= a && m < b)
+  if (open && f.kind === 'playground' && playgroundRainedOut(g)) return false
+  return open
 }
 
 function pickShop(g: Game, _p: Person, kinds: FacilityKind[], fromFloor: number): Facility | null {
@@ -627,6 +632,7 @@ function spawnVisitors(g: Game) {
     else if (f.kind === 'zoo') perHour = 9
     else if (f.kind === 'rainforest') perHour = 8
     else if (f.kind === 'market') perHour = marketRush(m, isWeekend(g.time))
+    else if (f.kind === 'playground') perHour = playgroundPerHour(g)
     perHour *= holidayRush(g, f.kind)
     if (perHour <= 0) continue
     if (Math.random() < (perHour * demand * appeal) / 60) {
@@ -837,6 +843,11 @@ function refreshEnvironment(g: Game) {
     if (f.kind === 'office' || isResidential(f.kind)) {
       for (const pk of facilitiesOf(g, 'park')) {
         if (pk.floor === f.floor && pk.x < f.x + f.width + 10 && pk.x + pk.width > f.x - 10) { f.nearPark = true; break }
+      }
+    }
+    if (isResidential(f.kind) && !f.nearPark) {
+      for (const pg of facilitiesOf(g, 'playground')) {
+        if (pg.floor === f.floor + 1 && pg.x < f.x + f.width && f.x < pg.x + pg.width) { f.nearPark = true; break }
       }
     }
     if (isResidential(f.kind)) {

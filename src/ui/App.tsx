@@ -11,6 +11,7 @@ import { rainforestStatus } from '../game/frogs'
 import { evict } from '../game/sim'
 import { holidayBadge } from '../game/holidays'
 import { marketPanel, marketPhase } from '../game/market'
+import { playgroundRainedOut, playgroundSwing } from '../game/playground'
 import { totalWaiting } from '../game/elevators'
 import { stickerProgress, stickersApi } from '../game/stickers'
 import { Controller } from './controller'
@@ -37,7 +38,7 @@ if (import.meta.env.DEV) {
   void Promise.all([import('../game/world'), import('../game/sim'), import('../render/sky-fx'), import('../game/surprises')]).then(([world, sim, sky, surprises]) => {
     // forceSurprise('ufo') starts that surprise now, for screenshots
     const forceSurprise = (id: SurpriseId) => surprises.forceSurprise(ctl.g, id)
-    w.api = { ...world, ...sim, ...sky, stickers: stickersApi, forceSurprise }
+    w.api = { ...world, ...sim, ...sky, stickers: stickersApi, forceSurprise, playgroundSwing }
   })
 }
 
@@ -393,7 +394,7 @@ const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
   ],
   fun: [
     { label: 'Chill out', tools: ['park', 'arcade', 'pool', 'aquarium', 'rainforest'] },
-    { label: 'Get moving', tools: ['trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink'] },
+    { label: 'Get moving', tools: ['trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink', 'playground'] },
     { label: 'Wow!', tools: ['dinoMuseum', 'rocketPad', 'zoo'] },
     { label: 'Spooky 🕯️', tools: ['hauntedHouse', 'toyFactory', 'indigoPark'] },
   ],
@@ -523,7 +524,7 @@ function FacPanel({ f }: { f: Facility }) {
   if (tenant) status = f.occupied ? (f.kind === 'office' ? 'Rented' : 'Sold — family lives here') : f.kind === 'office' ? 'For rent' : 'For sale'
   else if (isHotel(f.kind)) status = f.roaches ? '🪳 Cockroaches!' : f.booked ? 'Guests checked in' : f.dirty ? 'Needs cleaning' : 'Ready for guests'
   else if (f.kind === 'market') status = f.fire ? 'On fire!' : f.reachable ? marketPanel(marketPhase(minuteOfDay(g.time))) : 'Closed — no way to get here'
-  else if (isCommercial(f.kind)) status = f.fire ? 'On fire!' : f.reachable ? 'Open for business' : 'Closed — no way to get here'
+  else if (isCommercial(f.kind)) status = f.fire ? 'On fire!' : !f.reachable ? 'Closed — no way to get here' : f.kind === 'playground' && playgroundRainedOut(g) ? 'Too rainy to play. Puddle-jumping later!' : 'Open for business'
   else if (f.kind === 'turbine') status = 'Making power'
   else status = f.reachable ? 'Working' : 'Not connected'
   if (f.kind === 'rainforest') status = rainforestStatus(g, f) ?? status
@@ -674,7 +675,7 @@ function Help({ onClose }: { onClose: () => void }) {
         <p><b>7. Go higher.</b> Put sky lobbies on floors 15, 30, 45… then use ⚡ Express elevators to zip between them.</p>
         <p><b>🪩 Party Elevator.</b> Works just like an elevator, but there's a DJ inside and everyone dances. Tap it in Look mode!</p>
         <p><b>👆 Poke things!</b> In Look mode, tap any room to see what it does. The T-Rex roars, the shark splashes, the ghosts say boo. Press 📸 to make a postcard of your tower.</p>
-        <p><b>8. Fun 🎪.</b> A trampoline park, bowling, a pool, an aquarium with a shark, a haunted house and a dino museum. Put a 🚀 Rocket Pad on a roof and watch it blast off at noon! Name your tower in the ☰ menu.</p>
+        <p><b>8. Fun 🎪.</b> A trampoline park, bowling, a pool, an aquarium with a shark, a haunted house and a dino museum. Put a 🚀 Rocket Pad on a roof and watch it blast off at noon! A 🎠 Sky Playground goes on a roof too: swings, a merry-go-round and a seesaw. Name your tower in the ☰ menu.</p>
         <p><b>🐸 Frogs!</b> The Rainforest frogs sing every night at 7pm, and they go extra hoppy on rainy days.</p>
         <p><b>9. Stars.</b> Hit the population goal and build what the goal card asks for. Each star unlocks new buildings. The Cathedral on top earns the TOWER rating.</p>
         <p className="keys">Controls: drag to move around · scroll or pinch to zoom · Space pause · 1–4 speed · B demolish · Esc stop building · M happiness view</p>

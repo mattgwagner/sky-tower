@@ -72,6 +72,7 @@ export type FacilityKind =
   | 'zoo'
   | 'rainforest'
   | 'market'
+  | 'playground'
 
 export type TransportKind = 'elevator' | 'serviceElevator' | 'expressElevator' | 'partyElevator'
 
@@ -213,6 +214,8 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'A misty jungle full of tiny bright frogs. They sing every night at 7pm, and they LOVE rainy days!' },
   market: { kind: 'market', name: 'Food Market', emoji: '🧺', category: 'food', width: 30, height: 1, cost: 150000, stars: 1, pop: 6,
     blurb: 'Four stands under striped awnings. Farmers market in the morning, night market after dark!' },
+  playground: { kind: 'playground', name: 'Sky Playground', emoji: '🎠', category: 'fun', width: 20, height: 1, cost: 80000, stars: 1, pop: 4, underground: 'no',
+    blurb: 'Swings, a spinning merry-go-round and a seesaw, up in the sky! Build it on a roof.' },
 }
 
 export interface TransportDef {
@@ -293,16 +296,14 @@ export const SPEND: Partial<Record<FacilityKind, number>> = {
   bookstore: 300, library: 60, fazbear: 500, toyFactory: 600, indigoPark: 700,
   trampoline: 400, climbing: 300, miniGolf: 250, bowling: 450, rollerRink: 350,
   pizza: 350, tacos: 250, sushi: 700, donuts: 150, pancakes: 300, candy: 150, market: 350,
-  iceCream: 200, arcade: 350, pool: 250, aquarium: 550, hauntedHouse: 450, dinoMuseum: 650, rocketPad: 1000, zoo: 500,
-  rainforest: 500,
+  iceCream: 200, arcade: 350, pool: 250, aquarium: 550, hauntedHouse: 450, dinoMuseum: 650, rocketPad: 1000, zoo: 500, rainforest: 500, playground: 100,
 }
 export const SHOP_CAPACITY: Partial<Record<FacilityKind, number>> = {
   fastFood: 14, restaurant: 18, shop: 8, cinema: 60, partyHall: 40,
   bookstore: 10, library: 30, fazbear: 30, toyFactory: 30, indigoPark: 40,
   trampoline: 24, climbing: 10, miniGolf: 14, bowling: 20, rollerRink: 20,
   pizza: 12, tacos: 8, sushi: 12, donuts: 8, pancakes: 14, candy: 8, market: 24,
-  iceCream: 10, arcade: 16, pool: 20, aquarium: 40, hauntedHouse: 24, dinoMuseum: 50, rocketPad: 40, zoo: 36,
-  rainforest: 30,
+  iceCream: 10, arcade: 16, pool: 20, aquarium: 40, hauntedHouse: 24, dinoMuseum: 50, rocketPad: 40, zoo: 36, rainforest: 30, playground: 20,
 }
 
 /** Places to eat, by meal. */
@@ -314,8 +315,7 @@ export const FOOD: FacilityKind[] = [...LUNCH, ...BREAKFAST, 'candy', 'fazbear']
 /** Fun Zone places people visit like shops. */
 export const ATTRACTIONS: FacilityKind[] = [
   'iceCream', 'arcade', 'pool', 'aquarium', 'hauntedHouse', 'dinoMuseum', 'rocketPad',
-  'trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink', 'bookstore', 'library', 'toyFactory', 'indigoPark', 'zoo',
-  'rainforest',
+  'trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink', 'bookstore', 'library', 'toyFactory', 'indigoPark', 'zoo', 'rainforest', 'playground',
 ]
 
 export function isHotel(k: FacilityKind) {

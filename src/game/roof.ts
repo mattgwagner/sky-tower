@@ -8,7 +8,7 @@ import { weatherFor } from '../render/sky-fx'
 export const TURBINE_MAX = 3
 
 const OPEN_SKY: ReadonlySet<string> = new Set([
-  'rocketPad', 'observatory', 'helipad', 'turbine', 'waterTower', 'giantDonut', 'crown', 'dome', 'antenna',
+  'rocketPad', 'observatory', 'helipad', 'turbine', 'waterTower', 'giantDonut', 'crown', 'dome', 'antenna', 'playground',
 ])
 
 const SPIRES: ReadonlySet<string> = new Set(['crown', 'dome', 'antenna'])
