@@ -75,8 +75,8 @@ export function drawFeverLights(
   c.restore()
 }
 
-function dancer(c: Ctx, x: number, y: number, z: number, shirt: string, move: Move, now: number, i: number) {
-  const s = z
+function dancer(c: Ctx, x: number, y: number, z: number, shirt: string, move: Move, now: number, i: number, scale = 1) {
+  const s = z * scale
   if (move === 'worm') {
     const wiggle = Math.sin(now / 120 + i) * 2 * s
     px(c, shirt, x + wiggle, y - 4 * s, 10 * s, 3 * s)
@@ -234,7 +234,8 @@ export function drawDisco(
       return 'wave'
     }
     for (const i of [0, 1] as const) {
-      dancer(c, X(spotsX[i]), Y(sh - 6), z, SHIRTS[(f.id + i) % SHIRTS.length], moveFor(i), now, i)
+      const scale = mode === 'kids' ? (i === 0 ? 0.68 : 1.08) : 1
+      dancer(c, X(spotsX[i]), Y(sh - 6), z, SHIRTS[(f.id + i) % SHIRTS.length], moveFor(i), now, i, scale)
       if (show.phase === 'winner' && i === show.winner) trophy(c, X(spotsX[i]), Y(sh - 6), z)
     }
   }
@@ -245,8 +246,10 @@ export function drawDisco(
   for (let i = 0; i < n; i++) {
     if (onShow && (i === 0 || i === 1)) continue
     const x = floorL + 8 + ((i + 0.5) / n) * (floorR - floorL - 16)
-    const move: Move = frozen ? 'robot' : spinning === i ? 'spin' : moveAt(f.id * 3 + i, now)
-    dancer(c, X(x), Y(sh - 6), z, SHIRTS[(f.id + i) % SHIRTS.length], move, now, i)
+    // During the dance-off the rest of the floor cheers. Kids' disco mixes short kids with taller parents.
+    const move: Move = frozen ? 'robot' : spinning === i ? 'spin' : onShow ? 'wave' : moveAt(f.id * 3 + i, now)
+    const scale = mode === 'kids' ? (i % 2 === 0 ? 0.68 : 1.08) : 1
+    dancer(c, X(x), Y(sh - 6), z, SHIRTS[(f.id + i) % SHIRTS.length], move, now, i, scale)
   }
   if (onShow) {
     px(c, '#111', X(28), Y(6), 78 * z, 12 * z)
