@@ -71,7 +71,7 @@ export type FacilityKind =
   | 'antenna'
   | 'zoo'
 
-export type TransportKind = 'elevator' | 'serviceElevator' | 'expressElevator'
+export type TransportKind = 'elevator' | 'serviceElevator' | 'expressElevator' | 'partyElevator'
 
 export type ToolId = FacilityKind | TransportKind | 'bulldoze' | 'inspect'
 
@@ -232,6 +232,8 @@ export const TRANSPORTS: Record<TransportKind, TransportDef> = {
     blurb: 'Staff only — housekeepers and guards use it so guests don\'t wait.' },
   expressElevator: { kind: 'expressElevator', name: 'Express Elevator', emoji: '⚡', width: 6, cost: 400000, carCost: 150000, perFloorCost: 3000, maxSpan: 200, capacity: 42, stepsPerFloor: 3, stars: 3, upkeep: 15000,
     blurb: 'Zooms between lobbies (0, 15, 30…) and basements only.' },
+  partyElevator: { kind: 'partyElevator', name: 'Party Elevator', emoji: '🪩', width: 4, cost: 260000, carCost: 100000, perFloorCost: 2000, maxSpan: 30, capacity: 21, stepsPerFloor: 9, stars: 1, upkeep: 7000,
+    blurb: 'An elevator with a DJ inside. Everyone dances on the way up!' },
 }
 
 export const CATEGORIES: { id: Category; name: string; emoji: string; blurb: string }[] = [

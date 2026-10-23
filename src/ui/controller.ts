@@ -11,7 +11,7 @@ import { checkFacility, checkShaft, demolish, occupantAt, paintRun, placeFacilit
 import type { Camera, Overlay } from '../render/renderer'
 import { flashBuild, jumpscare, launchFireworks, personPos, render, screenToWorld, worldToScreen } from '../render/renderer'
 import { registerPoke } from '../render/poke-fx'
-import { pokeFacility } from '../game/poke'
+import { pokeFacility, pokeRider, pokeShaft } from '../game/poke'
 import { apeHit, pokeGiant } from '../game/giants'
 import { bump, stepStickers } from '../game/stickers'
 import type { Sticker, StickerSnap } from '../game/stickers'
@@ -370,7 +370,9 @@ export class Controller {
         this.person = pid
         this.selected = 0
         this.follow = true
-        play('click')
+        const sfx = pokeRider(this.g, pid, performance.now())
+        if (sfx) bump(this.g, 'pokes')
+        play(sfx ?? 'click')
         this.emit()
         return
       }
@@ -379,6 +381,7 @@ export class Controller {
       this.selected = id
       if (id) play('click')
       if (o.fac) this.poke(o.fac)
+      else if (o.shaft) { const sfx = pokeShaft(this.g, o.shaft, w.floor, performance.now()); if (sfx) { bump(this.g, 'pokes'); play(sfx) } }
       this.emit()
     }
   }

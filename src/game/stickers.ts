@@ -90,7 +90,7 @@ function shaftScan(g: Game): { any: boolean; express: boolean } {
   let express = false
   for (const s of g.shafts.values()) {
     if (s.kind === 'expressElevator') express = true
-    if (s.kind === 'elevator' || s.kind === 'expressElevator' || s.kind === 'serviceElevator') any = true
+    if (s.kind === 'elevator' || s.kind === 'expressElevator' || s.kind === 'serviceElevator' || s.kind === 'partyElevator') any = true
   }
   lifts = { any, express }
   return lifts

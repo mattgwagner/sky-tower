@@ -119,6 +119,19 @@ Each slide comes in rainbow, aqua (with a splash) or orange. Tap it to see "Ride
 20,000 per floor. Code: `src/game/slide.ts` and `src/render/slide.ts`; `scripts/slidecheck.ts` checks someone rides
 one.
 
+## Party Elevator
+
+Build tab → Getting around, 🪩. It moves exactly like the plain 🛗 Elevator (same speed, 21 riders, up to 30 floors,
+skip-a-floor stops), costs a little more (260,000, then 100,000 a car) and has a bit more upkeep. The car is a tiny
+nightclub: a spinning mirror ball throws light dots on the walls, a DJ in headphones scratches a turntable, the dance
+floor tiles change colour, and the riders bob with their arms up. The shaft has neon strips in the car's colour. When
+the doors open, coloured light spills onto that floor with confetti and a 🎵.
+
+During the day it's chill: slow colour shifts and the DJ nods along. After 8pm the neon pulses to a beat, everything
+speeds up, and a moving car leaves a coloured trail. Tap it in Look mode for `DROP THE BEAT! 🎧`. Tap a rider to read
+`This is the BEST elevator`. Code: `src/render/party.ts`, plus `pokeShaft` in `src/game/poke.ts`;
+`scripts/partycheck.ts` checks people really ride it.
+
 ## Giant visitors
 
 Each is a surprise (above). A dragon never lands on a night Huggy or a night visitor is still out.

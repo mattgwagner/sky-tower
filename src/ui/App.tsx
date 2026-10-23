@@ -372,7 +372,7 @@ function toolInfo(t: ToolId) {
 const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
   build: [
     { label: 'Floors', tools: ['lobby', 'floor'] },
-    { label: 'Getting around', tools: ['elevator', 'stairs', 'firePole', 'megaSlide', 'escalator', 'expressElevator', 'serviceElevator'] },
+    { label: 'Getting around', tools: ['elevator', 'stairs', 'firePole', 'megaSlide', 'escalator', 'expressElevator', 'serviceElevator', 'partyElevator'] },
     { label: 'Roof', tools: ['observatory', 'helipad', 'turbine', 'waterTower', 'giantDonut', 'crown', 'dome', 'antenna'] },
   ],
   homes: [{ tools: ['office', 'condo'] }],
@@ -667,6 +667,7 @@ function Help({ onClose }: { onClose: () => void }) {
         <p><b>5. Food & fun.</b> Workers want lunch 🍔 and families love breakfast 🥞. Find them all in the 🍕 Food tab. Visitors come for restaurants, shops, and movies. More people means more customers.</p>
         <p><b>6. Hotels.</b> Guests check in at night and leave in the morning. Housekeeping 🧹 cleans rooms. Skip cleaning and you'll get cockroaches 🪳!</p>
         <p><b>7. Go higher.</b> Put sky lobbies on floors 15, 30, 45… then use ⚡ Express elevators to zip between them.</p>
+        <p><b>🪩 Party Elevator.</b> Works just like an elevator, but there's a DJ inside and everyone dances. Tap it in Look mode!</p>
         <p><b>👆 Poke things!</b> In Look mode, tap any room to see what it does. The T-Rex roars, the shark splashes, the ghosts say boo. Press 📸 to make a postcard of your tower.</p>
         <p><b>8. Fun 🎪.</b> A trampoline park, bowling, a pool, an aquarium with a shark, a haunted house and a dino museum. Put a 🚀 Rocket Pad on a roof and watch it blast off at noon! Name your tower in the ☰ menu.</p>
         <p><b>9. Stars.</b> Hit the population goal and build what the goal card asks for. Each star unlocks new buildings. The Cathedral on top earns the TOWER rating.</p>

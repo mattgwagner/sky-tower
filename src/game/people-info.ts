@@ -30,7 +30,7 @@ export function personDoing(g: Game, p: Person) {
   const dest = g.facilities.get(p.goalFac)
   const destName = dest ? FACILITIES[dest.kind].name.toLowerCase() : ''
   if (p.state === 'waiting') return `Waiting for the elevator (${Math.round(p.wait / 10)} min)`
-  if (p.state === 'riding') return 'Riding the elevator'
+  if (p.state === 'riding') return partyRider(g, p) ? 'Dancing in the Party Elevator! 🪩' : 'Riding the elevator'
   if (p.state === 'climbing') {
     const c = g.facilities.get(p.legs[p.leg]?.via ?? 0)
     return c?.kind === 'megaSlide' ? 'Whooshing down the Mega Slide! 🛝' : c?.kind === 'firePole' ? 'Sliding down the fireman pole! 🚒' : c?.kind === 'escalator' ? 'Riding the escalator' : 'Taking the stairs'
@@ -94,8 +94,17 @@ const FUN_THOUGHTS: Partial<Record<string, string[]>> = {
   candy: ['Don\'t tell my dentist! 🍭', 'The biggest lollipop they have!', 'Gummy worms! Gummy bears!'],
 }
 
+const PARTY_THOUGHTS = ['This is the BEST elevator', 'I rode it three times on purpose']
+
+function partyRider(g: Game, p: Person) {
+  if (p.state !== 'riding') return false
+  for (const s of g.shafts.values()) if (s.kind === 'partyElevator' && s.cars.some((c) => c.riders.includes(p.id))) return true
+  return false
+}
+
 export function personThought(g: Game, p: Person) {
   if (p.kind === 'vip') return p.mood > 30 ? 'Hmph. This service is dreadful.' : 'Rather splendid, I must say.'
+  if (partyRider(g, p)) return PARTY_THOUGHTS[p.id % PARTY_THOUGHTS.length]
   if (p.mood > 70) return 'This elevator is SO slow! 😤'
   if (p.mood > 45) return 'Ugh, I\'ve been waiting forever…'
   if (p.mood > 25) return 'Come on, come on…'

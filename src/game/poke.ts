@@ -1,8 +1,10 @@
 // Tap-to-poke: every room does something silly when you tap it in Look mode.
 import type { Sfx } from '../audio'
 import type { FacilityKind } from './defs'
-import type { Facility, Game } from './state'
+import type { Facility, Game, Shaft } from './state'
 import { minuteOfDay } from './state'
+import { carPos } from './elevators'
+import { TRANSPORTS } from './defs'
 import { trainPhase } from './sim'
 import { monkeyOn } from './zoo'
 import { fx } from './world'
@@ -113,4 +115,32 @@ export function pokeFacility(g: Game, f: Facility, now: number): Sfx | null {
   const text = says[Math.floor(Math.random() * says.length)]
   fx(g, f.x + f.width / 2, f.floor + f.height - 1, text, p.color)
   return p.sfx ?? null
+}
+
+const PARTY_SAYS = ['DROP THE BEAT! 🎧', '🪩 Party time!', 'Wicka wicka 🎶', 'Elevator music? NO. PARTY music.']
+
+/** Tap the Party Elevator: the car nearest the tap shouts. Other elevators stay quiet. */
+export function pokeShaft(g: Game, s: Shaft, floor: number, now: number): Sfx | null {
+  if (s.kind !== 'partyElevator') return null
+  const last = lastPoke.get(s.id) ?? -1e9
+  if (now - last < 350) return null
+  lastPoke.set(s.id, now)
+  let at = floor
+  let best = Infinity
+  for (const car of s.cars) {
+    const pos = carPos(s, car)
+    if (Math.abs(pos - floor) < best) { best = Math.abs(pos - floor); at = Math.round(pos) }
+  }
+  fx(g, s.x + TRANSPORTS[s.kind].width / 2, at, PARTY_SAYS[Math.floor(Math.random() * PARTY_SAYS.length)], '#da77f2')
+  return 'party'
+}
+
+/** Tap someone dancing in a Party Elevator car: the car shouts too. */
+export function pokeRider(g: Game, pid: number, now: number): Sfx | null {
+  for (const s of g.shafts.values()) {
+    if (s.kind !== 'partyElevator') continue
+    const car = s.cars.find((c) => c.riders.includes(pid))
+    if (car) return pokeShaft(g, s, carPos(s, car), now)
+  }
+  return null
 }

@@ -19,6 +19,7 @@ import { holidayBanner } from '../game/holidays'
 import { drawSlide } from './slide'
 import { drawGiants } from './giants'
 import { drawRoofTopper } from './roof'
+import { drawPartyCar, drawPartyDoors, drawPartyShaft } from './party'
 
 export interface Camera { x: number; y: number; zoom: number }
 
@@ -548,9 +549,10 @@ const CAR_COLORS: Record<string, [string, string]> = {
   elevator: ['#f2c14e', '#b8860b'],
   serviceElevator: ['#94d82d', '#5c940d'],
   expressElevator: ['#ff6b6b', '#c92a2a'],
+  partyElevator: ['#da77f2', '#862e9c'],
 }
 
-function drawShaft(c: CanvasRenderingContext2D, _g: Game, s: Shaft, S: (x: number, y: number) => { x: number; y: number }, z: number, fBot: number, fTop: number, now: number) {
+function drawShaft(c: CanvasRenderingContext2D, g: Game, s: Shaft, S: (x: number, y: number) => { x: number; y: number }, z: number, fBot: number, fTop: number, now: number) {
   const def = TRANSPORTS[s.kind]
   const w = def.width * T * z
   for (let f = Math.max(s.lo, fBot); f <= Math.min(s.hi, fTop); f++) {
@@ -569,6 +571,7 @@ function drawShaft(c: CanvasRenderingContext2D, _g: Game, s: Shaft, S: (x: numbe
       c.fillStyle = '#2f323d'
       c.fillRect(p.x, p.y + FH * z - 3 * z, w, 3 * z)
     }
+    if (s.kind === 'partyElevator') drawPartyShaft(c, g, p.x, p.y, w, z, now)
     // floor indicator light when people wait
     const q = s.q[f]
     if (q && (q.up.length || q.down.length)) {
@@ -604,14 +607,15 @@ function drawShaft(c: CanvasRenderingContext2D, _g: Game, s: Shaft, S: (x: numbe
         c.fillRect(rx, ry - 1.5 * z, 2 * z, 1.5 * z)
       }
     }
+    if (s.kind === 'partyElevator') drawPartyCar(c, g, car, cx, cy, cw, ch, z, now, S(0, floorTop(s.hi)).y, S(0, floorTop(s.lo) + FH).y)
     if (car.state === 'doors') {
       // doors sliding
       const open = Math.min(1, (22 - car.timer) / 5)
       c.fillStyle = trim
       c.fillRect(cx, cy, (cw / 2) * (1 - open), ch)
       c.fillRect(cx + cw - (cw / 2) * (1 - open), cy, (cw / 2) * (1 - open), ch)
+      if (s.kind === 'partyElevator') drawPartyDoors(c, g, car, p.x, cy, w, ch, z, now, open)
     }
-    void now
   }
 }
 
