@@ -380,16 +380,16 @@ export class Controller {
       this.follow = false
       this.selected = id
       if (id) play('click')
-      if (o.fac) this.poke(o.fac)
+      if (o.fac) this.poke(o.fac, w.tile, w.floor)
       else if (o.shaft) { const sfx = pokeShaft(this.g, o.shaft, w.floor, performance.now()); if (sfx) { bump(this.g, 'pokes'); play(sfx) } }
       this.emit()
     }
   }
 
   /** Tap a room in Look mode and it does something silly. */
-  poke(f: Facility) {
+  poke(f: Facility, tile?: number, floor?: number) {
     const now = performance.now()
-    const sfx = pokeFacility(this.g, f, now)
+    const sfx = pokeFacility(this.g, f, now, tile, floor)
     if (sfx === null) return
     bump(this.g, 'pokes'); bump(this.g, 'poke:' + f.kind)
     registerPoke(f.id, now)

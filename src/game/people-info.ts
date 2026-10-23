@@ -96,6 +96,7 @@ const FUN_THOUGHTS: Partial<Record<string, string[]>> = {
   rainforest: ['Can I find the blue one?', 'It\'s so misty in here!', 'That frog is staring at me 👀'],
   playground: ['Swings first!', 'Last one up is a rotten egg', 'I can see my house from here!'],
   concertHall: ['ENCORE! ENCORE!', 'I got front row!', 'The drummer is SO loud', 'Cats can play jazz??'],
+  disco: ['Watch my moves!', 'I\'m doing the robot 🤖', 'My feet are tired but I can\'t stop'],
 }
 
 const PARTY_THOUGHTS = ['This is the BEST elevator', 'I rode it three times on purpose']

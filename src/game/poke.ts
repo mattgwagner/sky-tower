@@ -7,6 +7,7 @@ import { carPos } from './elevators'
 import { TRANSPORTS } from './defs'
 import { trainPhase } from './sim'
 import { monkeyOn } from './zoo'
+import { discoPoke } from './disco'
 import { fx } from './world'
 
 interface Poke { says: string[]; color?: string; sfx?: Sfx }
@@ -71,6 +72,7 @@ const POKES: Partial<Record<FacilityKind, Poke>> = {
   rainforest: { says: ['RIBBIT! 🐸', 'Boing boing!', '*zaps a fly* 🪰', 'I\'m not poisonous, I\'m FABULOUS'], color: '#8ce99a', sfx: 'boing' },
   playground: { says: ['WHEEEE! 🎠', 'Push me higher!', 'Tag, you\'re it!', 'I\'m the king of the slide!'], color: '#ffd43b', sfx: 'boing' },
   concertHall: { says: ['Is this thing on? 🎤', 'One, two, three, FOUR! 🎸', 'Shhh, the show\'s starting'], color: '#ff8787', sfx: 'party' },
+  disco: { says: ['DROP THE BEAT! 🎧', 'Bubbles! 🫧', 'Everybody FREEZE! … ok go'], color: '#da77f2', sfx: 'party' },
 }
 
 const lastPoke = new Map<number, number>()
@@ -80,7 +82,7 @@ export function isPokable(k: FacilityKind) {
 }
 
 /** Make the room react. Returns the sound to play, or null if this room has nothing to say. */
-export function pokeFacility(g: Game, f: Facility, now: number): Sfx | null {
+export function pokeFacility(g: Game, f: Facility, now: number, tile?: number, floor?: number): Sfx | null {
   if (monkeyOn(g, f)) {
     const last = lastPoke.get(f.id) ?? -1e9
     if (now - last < 350) return null
@@ -93,6 +95,7 @@ export function pokeFacility(g: Game, f: Facility, now: number): Sfx | null {
   const last = lastPoke.get(f.id) ?? -1e9
   if (now - last < 350) return null
   lastPoke.set(f.id, now)
+  if (f.kind === 'disco') return discoPoke(g, f, now, tile ?? f.x + 4, floor ?? f.floor)
   if (f.kind === 'fazbear') {
     const night = minuteOfDay(g.time) < 6 * 60
     const says = night ? ['JUMPSCARE! 😱', 'Hurr hurr hurr…', 'Was that Foxy?! 🦊', 'Check the cameras! 📹', 'Close the door!! 🚪']

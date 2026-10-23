@@ -13,6 +13,7 @@ import { evict } from '../game/sim'
 import { holidayBadge } from '../game/holidays'
 import { marketPanel, marketPhase } from '../game/market'
 import { playgroundRainedOut, playgroundSwing } from '../game/playground'
+import { discoBeat, discoFlashCount, discoMode, discoStatus, danceOffNow, feverOn, feverSpin } from '../game/disco'
 import { totalWaiting } from '../game/elevators'
 import { stickerProgress, stickersApi } from '../game/stickers'
 import { Controller } from './controller'
@@ -39,7 +40,7 @@ if (import.meta.env.DEV) {
   void Promise.all([import('../game/world'), import('../game/sim'), import('../render/sky-fx'), import('../game/surprises')]).then(([world, sim, sky, surprises]) => {
     // forceSurprise('ufo') starts that surprise now, for screenshots
     const forceSurprise = (id: SurpriseId) => surprises.forceSurprise(ctl.g, id)
-    w.api = { ...world, ...sim, ...sky, stickers: stickersApi, forceSurprise, playgroundSwing }
+    w.api = { ...world, ...sim, ...sky, stickers: stickersApi, forceSurprise, playgroundSwing, discoMode, feverOn, feverSpin, danceOffNow, discoBeat, discoFlashCount }
   })
 }
 
@@ -395,7 +396,7 @@ const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
   ],
   fun: [
     { label: 'Chill out', tools: ['park', 'arcade', 'pool', 'aquarium', 'rainforest'] },
-    { label: 'Get moving', tools: ['trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink', 'playground'] },
+    { label: 'Get moving', tools: ['trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink', 'playground', 'disco'] },
     { label: 'Wow!', tools: ['dinoMuseum', 'rocketPad', 'zoo'] },
     { label: 'Spooky 🕯️', tools: ['hauntedHouse', 'toyFactory', 'indigoPark'] },
   ],
@@ -530,6 +531,7 @@ function FacPanel({ f }: { f: Facility }) {
   else status = f.reachable ? 'Working' : 'Not connected'
   if (f.kind === 'rainforest') status = rainforestStatus(g, f) ?? status
   if (f.kind === 'concertHall') status = concertStatus(g, f) ?? status
+  if (f.kind === 'disco') status = discoStatus(g, f) ?? status
   return (
     <div className="panel">
       <div className="panel-head">
@@ -680,6 +682,7 @@ function Help({ onClose }: { onClose: () => void }) {
         <p><b>8. Fun 🎪.</b> A trampoline park, bowling, a pool, an aquarium with a shark, a haunted house and a dino museum. Put a 🚀 Rocket Pad on a roof and watch it blast off at noon! A 🎠 Sky Playground goes on a roof too: swings, a merry-go-round and a seesaw. Name your tower in the ☰ menu.</p>
         <p><b>🐸 Frogs!</b> The Rainforest frogs sing every night at 7pm, and they go extra hoppy on rainy days.</p>
         <p><b>🎤 Concert Hall.</b> A different band every night at 7:30pm (Sunday is a 2pm matinee). Fill every seat for a SOLD OUT show!</p>
+        <p><b>🪩 Disco.</b> A light-up dance floor. Kids' disco until 7, night club after, and a dance-off at 10. Tap the DJ!</p>
         <p><b>9. Stars.</b> Hit the population goal and build what the goal card asks for. Each star unlocks new buildings. The Cathedral on top earns the TOWER rating.</p>
         <p className="keys">Controls: drag to move around · scroll or pinch to zoom · Space pause · 1–4 speed · B demolish · Esc stop building · M happiness view</p>
       </div>

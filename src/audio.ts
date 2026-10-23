@@ -1,6 +1,6 @@
 // Tiny WebAudio synth: sound effects + an easygoing lobby-music loop.
 export type Sfx = 'ding' | 'cash' | 'build' | 'star' | 'alarm' | 'boom' | 'party' | 'move' | 'bad' | 'click' | 'rocket' | 'roar' | 'spooky' | 'ufo' | 'boing' | 'rotor'
-  | 'splash' | 'strike' | 'bell' | 'honk' | 'arcade' | 'thunder' | 'shutter' | 'twinkle' | 'meow' | 'woof' | 'train' | 'pop' | 'scare' | 'rush' | 'flicker' | 'heartbeat' | 'whistle'
+  | 'splash' | 'strike' | 'bell' | 'honk' | 'arcade' | 'thunder' | 'shutter' | 'twinkle' | 'meow' | 'woof' | 'train' | 'pop' | 'scare' | 'rush' | 'flicker' | 'heartbeat' | 'whistle' | 'scratch'
 
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
@@ -96,6 +96,7 @@ export function play(name: Sfx) {
     case 'whistle': tone(1600, t, 0.55, 'sine', 0.1, undefined, 380); noise(t + 0.45, 0.2, 0.25, 700); break
     case 'pop': tone(500, t, 0.07, 'sine', 0.18, undefined, 1400); break
     case 'rotor': noise(t, 0.45, 0.28, 420); tone(92, t, 0.4, 'sawtooth', 0.05); tone(98, t, 0.4, 'sawtooth', 0.04); break
+    case 'scratch': noise(t, 0.16, 0.35, 2800); tone(240, t, 0.18, 'sawtooth', 0.08, undefined, 70); break
   }
 }
 

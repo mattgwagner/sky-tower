@@ -19,6 +19,7 @@ import { clearNight, heliMinute, turbineCut } from './roof'
 import { playgroundPerHour, playgroundRainedOut } from './playground'
 import { zooHour } from './zoo'
 import { frogsHour } from './frogs'
+import { discoAfterWeekend, discoFx, discoMinute, discoPerHour } from './disco'
 import { marketRush } from './market'
 import { concertDoors, concertMinute, concertOpen, concertPerHour, concertStay } from './concert'
 import { bump } from './stickers'
@@ -30,6 +31,7 @@ export { giantCount, giantNow, giantsArrive } from './giants'
 export const sound = {
   play: (_name: Sfx) => {},
 }
+let discoWired = false
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a)
 const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
@@ -527,6 +529,7 @@ const FUN_HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
   rainforest: [[at(9), at(19, 30)]],
   market: [[at(7), at(22)]],
   playground: [[at(8), at(19)]],
+  disco: [[at(16), at(24)], [at(0), at(1)]], // same windows as DISCO_HOURS; weekends add 1–2am in isOpen
 }
 const LAUNCH = at(12)
 
@@ -557,6 +560,7 @@ function stayFor(g: Game, k: FacilityKind) {
     case 'market': return rnd(18, 36)
     case 'playground': return rnd(25, 50)
     case 'concertHall': return concertStay(g)
+    case 'disco': return rnd(40, 90)
     default: return rnd(20, 40)
   }
 }
@@ -567,6 +571,7 @@ export function isOpen(g: Game, f: Facility): boolean {
   if (f.kind === 'partyHall' && !isWeekend(g.time) && !partyDay(g)) return false
   if (f.kind === 'concertHall') return concertOpen(g)
   const open = (HOURS[f.kind] ?? FUN_HOURS[f.kind] ?? []).some(([a, b]) => m >= a && m < b)
+    || (f.kind === 'disco' && discoAfterWeekend(g))
   if (open && f.kind === 'playground' && playgroundRainedOut(g)) return false
   return open
 }
@@ -637,6 +642,7 @@ function spawnVisitors(g: Game) {
     else if (f.kind === 'market') perHour = marketRush(m, isWeekend(g.time))
     else if (f.kind === 'playground') perHour = playgroundPerHour(g)
     else if (f.kind === 'concertHall') perHour = concertPerHour(g)
+    else if (f.kind === 'disco') perHour = discoPerHour(g)
     perHour *= holidayRush(g, f.kind)
     if (perHour <= 0) continue
     const doors = f.kind === 'concertHall' ? concertDoors(g) : 1
@@ -1319,6 +1325,9 @@ export function launchClock(g: Game) {
 }
 
 function funEvents(g: Game, m: number) {
+  // Wired on the first minute, after every module has finished loading.
+  if (!discoWired) { discoWired = true; discoFx.play = (name) => sound.play(name) }
+  discoMinute(g, m)
   const countdown: Record<number, string> = { [LAUNCH - 15]: '3…', [LAUNCH - 10]: '2…', [LAUNCH - 5]: '1…' }
   for (const f of g.facilities.values()) {
     if (!f.reachable || f.fire) continue

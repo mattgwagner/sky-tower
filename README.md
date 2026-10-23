@@ -210,6 +210,18 @@ act is a one-off (a penguin band, or the dragon on drums). Stickers: Opening Nig
 acts), and a secret one for the Mystery Band. Code: `src/game/concert.ts`, `src/render/concert.ts`;
 `scripts/concertcheck.ts` runs in `npm run sim`.
 
+## Disco
+
+Fun → Get moving. Two floors, about twenty-eight tiles wide. A checkerboard dance floor lights up with the beat, a mirror ball throws spots on the walls, and there's a DJ booth, speaker stacks, a bubble machine and a little fog. It opens at 4pm.
+
+- **4pm–7pm:** Kids' Disco. Rainbow floor, bubbles, and the sign says `KIDS' DISCO`. The room says `Kids' Disco is on! 🫧`
+- **7pm–1am:** Night club. Purple and blue lights, lasers, fog, and the sign switches to `NIGHT CLUB`. It gets busy after 9. The room says `Night club is open 🪩`
+- **Weekends** are busier and stay open until 2am.
+- **10pm dance-off**, if at least four people are inside. The music cuts, two dancers take turns, the crowd cheers, and the winner holds up a trophy. News line: `Dance-off winner: <name>!`
+- **Disco Fever** is a surprise (one draw a day, with everything else). On a day it hits, at 9pm the whole tower's windows pulse and people in the halls spin. It is short.
+
+Tap the DJ for a record scratch and `DROP THE BEAT! 🎧`. Tap a floor tile and the nearest dancer spins. Code: `src/game/disco.ts` and `src/render/disco.ts`.
+
 ## Stickers
 
 Tap **📒 Stickers** in the top bar or the ☰ menu. Earned stickers are in colour and a little crooked; the rest are a grey outline with a hint. Secret ones stay blank until you get them. A new sticker slides down from the top, and if you earn a bunch they wait their turn. Another part of the game can add its own with one `defineSticker()` call.

@@ -171,6 +171,12 @@ export interface Game {
     surprise?: { id: SurpriseId | null; day: number; at: number } | null
     /** Yesterday's draw, kept so a surprise due after midnight still starts. */
     lastSurprise?: { id: SurpriseId | null; day: number; at: number } | null
+    /** Sim minute Disco Fever started. Missing on older saves. */
+    discoFever?: number
+    /** Bumped when the DJ is poked, so the floor pattern flips. */
+    discoPattern?: number
+    /** Tonight's 10pm dance-off, once the floor has a crowd. */
+    danceOff?: { id: number; start: number; a: string; b: string; winner: 0 | 1; floor: number; x: number; told: boolean } | null
   }
   bomb: Bomb | null
   pop: number

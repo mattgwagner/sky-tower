@@ -17,6 +17,8 @@ import { drawRainforest } from './frogs'
 import { drawMarket } from './market'
 import { drawPlayground } from './playground'
 import { drawConcertHall } from './concert'
+import { drawDisco, drawFeverLights } from './disco'
+import { feverOn, feverSpin } from '../game/disco'
 import { pokeWobble } from './poke-fx'
 import { drawHolidayAmbient, drawHolidayDecor, drawHolidayWear, holidaySky } from './holidays'
 import { holidayBanner } from '../game/holidays'
@@ -438,6 +440,7 @@ function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: 
   if (f.kind === 'parking' && f.reachable) drawCar(c, p.x + 10 * z, p.y + h - 3 * z, z, f.id)
   if (f.kind === 'cathedral' && !hasSpire(g)) drawSpire(c, p.x + w / 2, p.y, z)
   if (z >= 0.6) drawFun(c, g, f, p, w, h, z, now, m)
+  if (feverOn(g)) drawFeverLights(c, f.kind, p, w, h, z, now, f.id)
   drawHolidayDecor(c, g, f, p, w, h, z, now, m)
   if (isHotel(f.kind) && z >= 1.2) drawDoorPlate(c, g, f, p, w, h, z)
   const ent = entityNow(g)
@@ -449,7 +452,7 @@ function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: 
   }
   if (wob) c.restore()
   // people inside
-  if (z >= 0.75 && f.inside > 0 && f.kind !== 'lobby' && f.kind !== 'parking' && f.kind !== 'market' && f.kind !== 'playground' && !hidingOn(g, f.floor)) {
+  if (z >= 0.75 && f.inside > 0 && f.kind !== 'lobby' && f.kind !== 'parking' && f.kind !== 'market' && f.kind !== 'playground' && f.kind !== 'disco' && !hidingOn(g, f.floor)) {
     const n = Math.min(f.inside, Math.max(1, Math.floor(f.width / 3)))
     const slot = (f.width * T) / (n + 1)
     for (let i = 0; i < n; i++) {
@@ -629,7 +632,16 @@ function drawPeople(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: numb
       if (p.floor < fBot || p.floor > fTop) continue
       if (hidingOn(g, p.floor)) continue
       const s = S(p.x * T, floorTop(p.floor) + FH - 3)
-      drawPersonAt(c, s.x, s.y, z, personColor(p.shirt), Math.floor(p.x * 1.5) % 2, p.mood, p.shirt)
+      const spin = feverSpin(g, now, p.id)
+      if (spin != null) {
+        // Squash through zero so a spin stays in the hallway instead of tipping through the floor.
+        const squash = Math.sin(spin)
+        c.save()
+        c.translate(s.x, s.y)
+        c.scale(Math.abs(squash) < 0.18 ? Math.sign(squash || 1) * 0.18 : squash, 1)
+        drawPersonAt(c, 0, 0, z, personColor(p.shirt), 1, p.mood, p.shirt)
+        c.restore()
+      } else drawPersonAt(c, s.x, s.y, z, personColor(p.shirt), Math.floor(p.x * 1.5) % 2, p.mood, p.shirt)
       drawHolidayWear(c, g, p, s.x, s.y, z)
       const pet = hasPet(p)
       if (pet && z >= 0.6) {
@@ -1367,6 +1379,10 @@ function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: nu
       return
     }
     case 'concertHall': return drawConcertHall(c, g, f, p, w, h, z, now, m)
+    case 'disco': {
+      drawDisco(c, g, f, p, w, h, z, now)
+      return
+    }
   }
 }
 

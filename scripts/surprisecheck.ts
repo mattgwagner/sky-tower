@@ -25,6 +25,7 @@ must('hotelSuite', 110, 5)
 must('housekeeping', 60, 6)
 must('concertHall', 110, 7)
 must('rocketPad', 110, TOP + 1)
+must('disco', 148, 8)
 g.mode = 'family'
 g.stars = 3
 g.flags.seed = Number(process.env.SEED ?? 2)
@@ -33,7 +34,7 @@ afterBuild(g)
 // The issue's groups: the three giants share one budget, and so do Rush and Seek.
 const GROUP: Record<SurpriseId, string> = {
   huggy: 'huggy', monkey: 'monkey', rush: 'rush/seek', seek: 'rush/seek', ufo: 'ufo',
-  ape: 'giants', dragon: 'giants', skywriter: 'giants', vip: 'vip', mysteryBand: 'mysteryBand',
+  ape: 'giants', dragon: 'giants', skywriter: 'giants', vip: 'vip', mysteryBand: 'mysteryBand', disco: 'disco',
 }
 
 // Draws alone, over many seeds on this same tower: the long-run rate per week for each group.
@@ -70,6 +71,7 @@ const mark: Record<SurpriseId, (g: Game) => unknown> = {
   skywriter: (g) => g.flags.giant?.start,
   vip: (g) => g.flags.vipVisit,
   mysteryBand: (g) => g.flags.concertMystery,
+  disco: (g) => g.flags.discoFever,
 }
 const started: { id: SurpriseId; day: number; t: number }[] = []
 const dud: string[] = []

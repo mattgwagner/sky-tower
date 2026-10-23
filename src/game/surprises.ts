@@ -8,10 +8,11 @@ import { isHotel } from './defs'
 import { facilitiesOf, topFloor } from './world'
 import { escapeMonkey } from './zoo'
 import { dayIsClear, startGiant } from './giants'
+import { startDiscoFever } from './disco'
 import { releaseHuggy, startEntity, startUfo, startVip } from './sim'
 import { DOORS, showAt, startMysteryBand } from './concert'
 
-export type SurpriseId = 'huggy' | 'monkey' | 'rush' | 'seek' | 'ufo' | 'ape' | 'dragon' | 'skywriter' | 'vip' | 'mysteryBand'
+export type SurpriseId = 'huggy' | 'monkey' | 'rush' | 'seek' | 'ufo' | 'ape' | 'dragon' | 'skywriter' | 'vip' | 'mysteryBand' | 'disco'
 
 interface Surprise {
   id: SurpriseId
@@ -64,6 +65,8 @@ export const SURPRISES: Surprise[] = [
   { id: 'mysteryBand', weight: 0.4, eligible: (g) => facilitiesOf(g, 'concertHall').some((f) => f.reachable), at: (_g, d) => showAt(d) - DOORS, start: (g) => startMysteryBand(g) },
   // Filler: a VIP visit on a weekday once the hotel has a Suite, and not while the last one is still checking out.
   { id: 'vip', weight: 0.5, eligible: (g, d) => !g.flags.vip && g.stars >= 3 && !isWeekend(d * 1440) && facilitiesOf(g, 'hotelSuite').length > 0 && !vipStaying(g), at: () => 13 * 60, start: (g) => startVip(g) },
+  // Light weight so a UFO still lands in surprisecheck's seed-2 month, and Disco Fever still shows up.
+  { id: 'disco', weight: 0.45, eligible: (g) => facilitiesOf(g, 'disco').length > 0, at: () => 21 * 60, start: (g) => startDiscoFever(g) },
 ]
 
 const byId = (id: SurpriseId) => SURPRISES.find((s) => s.id === id)!
