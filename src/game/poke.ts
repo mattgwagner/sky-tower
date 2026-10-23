@@ -30,6 +30,7 @@ const POKES: Partial<Record<FacilityKind, Poke>> = {
   sushi: { says: ['🍣 All aboard the sushi train!', 'Wasabi! 🔥', 'Chopsticks, go!'], color: '#ffa94d', sfx: 'train' },
   donuts: { says: ['Mmm, donuts 🍩', 'Sprinkles!', 'Donut worry!'], color: '#ffa94d', sfx: 'pop' },
   pancakes: { says: ['FLIP! 🥞', 'Syrup waterfall!', 'Stack it higher!'], color: '#ffa94d', sfx: 'pop' },
+  market: { says: ['Free samples! 🍉', 'Sizzle sizzle 🍢', 'Hot dumplings! 🥟', 'Lemonade, 25 cents! 🍋'], color: '#ffa94d', sfx: 'pop' },
   candy: { says: ['Sugar rush! 🍭', 'Gummy bears! 🐻', 'Don\'t tell the dentist!'], color: '#f783ac', sfx: 'twinkle' },
   fastFood: { says: ['Order up! 🍔', 'Fries with that?', 'Milkshake! 🥤'], color: '#ffa94d', sfx: 'pop' },
   restaurant: { says: ['Bon appétit! 🍝', 'Table for two?', 'Compliments to the chef! 👨‍🍳'], color: '#ffa94d', sfx: 'ding' },

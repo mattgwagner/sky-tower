@@ -3,6 +3,7 @@ import type { FacilityKind } from '../game/defs'
 import { slideLook } from '../game/slide'
 import { paintZoo } from './zoo'
 import { paintRainforest } from './frogs'
+import { paintMarket } from './market'
 
 export const T = 8 // px per tile
 export const FH = 32 // px per floor
@@ -979,6 +980,7 @@ Object.assign(painters, {
 export const SLIDE_TUBE_DY = 6 // tube centreline sits this far above each floor line
 Object.assign(painters, { zoo: paintZoo })
 Object.assign(painters, { rainforest: paintRainforest })
+Object.assign(painters, { market: paintMarket })
 
 export const TOY_CASE = [12, 26] as const
 export const TOY_BELT = [50, 140] as const

@@ -84,6 +84,7 @@ const FUN_THOUGHTS: Partial<Record<string, string[]>> = {
   sushi: ['I\'m grabbing every plate that goes by! 🍣', 'Can I use chopsticks? Let\'s find out.', 'The plates ride a train!'],
   donuts: ['Sprinkle donut, obviously. 🍩', 'Just one donut. Okay, two.', 'Donut worry, be happy!'],
   pancakes: ['Pancakes with SO much syrup 🥞', 'A stack taller than me!', 'Best breakfast ever.'],
+  market: ['I want one of EVERYTHING', 'Which stand first?', 'The dumplings smell SO good'],
   bookstore: ['A new dragon book! 🐉', 'I want to pet the shop cat.', 'Just ONE more chapter…'],
   library: ['Shhh… reading time 📖', 'I\'m going to read ALL the books.', 'Story time is the best time!'],
   trampoline: ['Watch me do a FLIP! 🤸', 'Higher! HIGHER!', 'Into the foam pit!'],

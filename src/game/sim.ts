@@ -18,6 +18,7 @@ import { surpriseDay, surpriseMinute } from './surprises'
 import { clearNight, heliMinute, turbineCut } from './roof'
 import { zooHour } from './zoo'
 import { frogsHour } from './frogs'
+import { marketRush } from './market'
 import { bump } from './stickers'
 import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
 
@@ -522,6 +523,7 @@ const FUN_HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
   rollerRink: [[at(14), at(23)]],
   zoo: [[at(9), at(18)]],
   rainforest: [[at(9), at(19, 30)]],
+  market: [[at(7), at(22)]],
 }
 const LAUNCH = at(12)
 
@@ -549,6 +551,7 @@ function stayFor(g: Game, k: FacilityKind) {
     case 'rocketPad': return Math.max(15, LAUNCH + 15 - minuteOfDay(g.time))
     case 'zoo': return rnd(40, 80)
     case 'rainforest': return rnd(40, 70)
+    case 'market': return rnd(18, 36)
     default: return rnd(20, 40)
   }
 }
@@ -623,6 +626,7 @@ function spawnVisitors(g: Game) {
     else if (f.kind === 'rocketPad') perHour = m >= at(10, 30) && m < at(11, 45) ? 30 : 0
     else if (f.kind === 'zoo') perHour = 9
     else if (f.kind === 'rainforest') perHour = 8
+    else if (f.kind === 'market') perHour = marketRush(m, isWeekend(g.time))
     perHour *= holidayRush(g, f.kind)
     if (perHour <= 0) continue
     if (Math.random() < (perHour * demand * appeal) / 60) {

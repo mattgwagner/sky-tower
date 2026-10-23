@@ -10,6 +10,7 @@ import { addCar, removeCar, resizeShaft, unlocked } from '../game/world'
 import { rainforestStatus } from '../game/frogs'
 import { evict } from '../game/sim'
 import { holidayBadge } from '../game/holidays'
+import { marketPanel, marketPhase } from '../game/market'
 import { totalWaiting } from '../game/elevators'
 import { stickerProgress, stickersApi } from '../game/stickers'
 import { Controller } from './controller'
@@ -382,6 +383,7 @@ const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
     { label: 'Staff', tools: ['housekeeping'] },
   ],
   food: [
+    { label: 'Market hall', tools: ['market'] },
     { label: 'Breakfast & treats', tools: ['donuts', 'pancakes', 'iceCream', 'candy'] },
     { label: 'Lunch & dinner', tools: ['fastFood', 'tacos', 'pizza', 'fazbear', 'restaurant', 'sushi'] },
   ],
@@ -520,6 +522,7 @@ function FacPanel({ f }: { f: Facility }) {
   let status = ''
   if (tenant) status = f.occupied ? (f.kind === 'office' ? 'Rented' : 'Sold — family lives here') : f.kind === 'office' ? 'For rent' : 'For sale'
   else if (isHotel(f.kind)) status = f.roaches ? '🪳 Cockroaches!' : f.booked ? 'Guests checked in' : f.dirty ? 'Needs cleaning' : 'Ready for guests'
+  else if (f.kind === 'market') status = f.fire ? 'On fire!' : f.reachable ? marketPanel(marketPhase(minuteOfDay(g.time))) : 'Closed — no way to get here'
   else if (isCommercial(f.kind)) status = f.fire ? 'On fire!' : f.reachable ? 'Open for business' : 'Closed — no way to get here'
   else if (f.kind === 'turbine') status = 'Making power'
   else status = f.reachable ? 'Working' : 'Not connected'
@@ -666,7 +669,7 @@ function Help({ onClose }: { onClose: () => void }) {
         <p><b>2. Elevators.</b> Choose 🛗 Elevator, then click and <i>drag up</i> from the lobby. One elevator reaches 30 floors. Click it later to add more cars.</p>
         <p><b>3. Bring people in.</b> Offices 💼 pay rent each quarter. Condos 🏠 sell for a big chunk of money. Rooms flashing 🚫 can't be reached yet.</p>
         <p><b>4. Keep them happy.</b> Watch the colors: <span style={{ color: '#ff9f43' }}>orange</span> and <span style={{ color: '#ff2d2d' }}>red</span> people are fed up with waiting. Press 😊 to see how every room feels. Unhappy tenants move out.</p>
-        <p><b>5. Food & fun.</b> Workers want lunch 🍔 and families love breakfast 🥞. Find them all in the 🍕 Food tab. Visitors come for restaurants, shops, and movies. More people means more customers.</p>
+        <p><b>5. Food & fun.</b> Workers want lunch 🍔 and families love breakfast 🥞. Find them all in the 🍕 Food tab. The food market 🧺 is a farmers market in the morning and a night market after dark. Visitors come for restaurants, shops, and movies. More people means more customers.</p>
         <p><b>6. Hotels.</b> Guests check in at night and leave in the morning. Housekeeping 🧹 cleans rooms. Skip cleaning and you'll get cockroaches 🪳!</p>
         <p><b>7. Go higher.</b> Put sky lobbies on floors 15, 30, 45… then use ⚡ Express elevators to zip between them.</p>
         <p><b>🪩 Party Elevator.</b> Works just like an elevator, but there's a DJ inside and everyone dances. Tap it in Look mode!</p>

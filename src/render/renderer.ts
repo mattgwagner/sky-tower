@@ -14,6 +14,7 @@ import type { Look } from './sprites'
 import { drawLightning, drawRainbow, drawShootingStars, weatherFor } from './sky-fx'
 import { drawLooseMonkey, drawZoo } from './zoo'
 import { drawRainforest } from './frogs'
+import { drawMarket } from './market'
 import { pokeWobble } from './poke-fx'
 import { drawHolidayAmbient, drawHolidayDecor, drawHolidayWear, holidaySky } from './holidays'
 import { holidayBanner } from '../game/holidays'
@@ -446,7 +447,7 @@ function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: 
   }
   if (wob) c.restore()
   // people inside
-  if (z >= 0.75 && f.inside > 0 && f.kind !== 'lobby' && f.kind !== 'parking' && !hidingOn(g, f.floor)) {
+  if (z >= 0.75 && f.inside > 0 && f.kind !== 'lobby' && f.kind !== 'parking' && f.kind !== 'market' && !hidingOn(g, f.floor)) {
     const n = Math.min(f.inside, Math.max(1, Math.floor(f.width / 3)))
     const slot = (f.width * T) / (n + 1)
     for (let i = 0; i < n; i++) {
@@ -1355,6 +1356,10 @@ function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: nu
       return
     }
     case 'rainforest': return drawRainforest(c, g, f, p, w, h, z, now, m)
+    case 'market': {
+      drawMarket(c, g, f, p, w, h, z, now, m)
+      return
+    }
   }
 }
 

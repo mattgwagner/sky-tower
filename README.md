@@ -175,6 +175,19 @@ news says so once a day, and being there for it earns the 🐸 Frog Chorus stick
 three times as often and the room panel says `Rainy day! The frogs LOVE it.` Open 9am to 7:30pm so visitors catch the
 chorus. Code: `src/game/frogs.ts`, `src/render/frogs.ts`.
 
+## Food Market
+
+Food → Market hall. One floor, about thirty tiles wide. Four stands sit under striped awnings: fruit, a grill, dumpling baskets, and lemonade. A vendor stands behind each one, and visitors line up at a stand instead of milling around the room. String lights hang over the aisle.
+
+It is the only place open for breakfast, lunch, and dinner (7am to 10pm).
+
+- **Morning:** farmers market. Fruit and lemonade are busy, and the grill is not lit yet. The room says `Farmers market is open!`
+- **Lunch:** every stand is open, and this is the rush.
+- **Evening:** the sign switches to `NIGHT MARKET`, the string lights and paper lanterns glow, and the grill is the star. The room says `Night market! 🏮`
+- **Weekends** are busier the whole day.
+
+Poke it for free samples, sizzle, hot dumplings, or lemonade for 25 cents.
+
 ## Stickers
 
 Tap **📒 Stickers** in the top bar or the ☰ menu. Earned stickers are in colour and a little crooked; the rest are a grey outline with a hint. Secret ones stay blank until you get them. A new sticker slides down from the top, and if you earn a bunch they wait their turn. Another part of the game can add its own with one `defineSticker()` call.
