@@ -200,7 +200,8 @@ export function drawMarket(
     if (visitor.state === 'inside' && visitor.at === f.id) lines[standFor(visitor.id, phase)].push(visitor)
   }
   for (let s = 0; s < lines.length; s++) {
-    const line = lines[s].sort((a, b) => a.id - b.id).slice(0, 4)
+    const cap = phase === 'morning' ? (s === 0 || s === 3 ? 5 : 2) : phase === 'night' ? (s === 1 ? 5 : 3) : 4
+    const line = lines[s].sort((a, b) => a.id - b.id).slice(0, cap)
     for (let i = 0; i < line.length; i++) {
       const bob = Math.sin(now / 300 + line[i].id) > 0.65 ? 1 : 0
       shopper(c, X(STAND_X[s] + 20 + i * 6), p.y + h - z, z, line[i].shirt, bob)

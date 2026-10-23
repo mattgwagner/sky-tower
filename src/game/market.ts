@@ -32,11 +32,12 @@ export function marketPanel(phase: MarketPhase): string {
   return PANELS[phase]
 }
 
-/** Grill stays dark until lunch. At night most of the line drifts to the skewers. */
+/** Grill stays dark until lunch. Its morning crowd splits between fruit and lemonade. At night most of the line drifts to the skewers. */
 export function standFor(id: number, phase: MarketPhase): number {
   const roll = id % 4
   if (phase === 'morning') {
-    if (roll === 1) return id % 2 === 0 ? 0 : 3
+    // id % 4 === 1 is always odd, so id % 2 cannot split them.
+    if (roll === 1) return (id >> 2) % 2 === 0 ? 0 : 3
     return roll
   }
   if (phase === 'night') {
