@@ -8,6 +8,7 @@ import type { SurpriseId } from '../game/surprises'
 import { clockLabel, dayOf, floorLabel, isWeekend, minuteOfDay, money, quarterOf, yearOf } from '../game/state'
 import { addCar, removeCar, resizeShaft, unlocked } from '../game/world'
 import { rainforestStatus } from '../game/frogs'
+import { concertStatus } from '../game/concert'
 import { evict } from '../game/sim'
 import { holidayBadge } from '../game/holidays'
 import { marketPanel, marketPhase } from '../game/market'
@@ -390,7 +391,7 @@ const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
   ],
   shops: [
     { label: 'Stores', tools: ['shop', 'bookstore', 'library'] },
-    { label: 'Shows', tools: ['cinema', 'partyHall'] },
+    { label: 'Shows', tools: ['cinema', 'partyHall', 'concertHall'] },
   ],
   fun: [
     { label: 'Chill out', tools: ['park', 'arcade', 'pool', 'aquarium', 'rainforest'] },
@@ -528,6 +529,7 @@ function FacPanel({ f }: { f: Facility }) {
   else if (f.kind === 'turbine') status = 'Making power'
   else status = f.reachable ? 'Working' : 'Not connected'
   if (f.kind === 'rainforest') status = rainforestStatus(g, f) ?? status
+  if (f.kind === 'concertHall') status = concertStatus(g, f) ?? status
   return (
     <div className="panel">
       <div className="panel-head">
@@ -677,6 +679,7 @@ function Help({ onClose }: { onClose: () => void }) {
         <p><b>👆 Poke things!</b> In Look mode, tap any room to see what it does. The T-Rex roars, the shark splashes, the ghosts say boo. Press 📸 to make a postcard of your tower.</p>
         <p><b>8. Fun 🎪.</b> A trampoline park, bowling, a pool, an aquarium with a shark, a haunted house and a dino museum. Put a 🚀 Rocket Pad on a roof and watch it blast off at noon! A 🎠 Sky Playground goes on a roof too: swings, a merry-go-round and a seesaw. Name your tower in the ☰ menu.</p>
         <p><b>🐸 Frogs!</b> The Rainforest frogs sing every night at 7pm, and they go extra hoppy on rainy days.</p>
+        <p><b>🎤 Concert Hall.</b> A different band every night at 7:30pm (Sunday is a 2pm matinee). Fill every seat for a SOLD OUT show!</p>
         <p><b>9. Stars.</b> Hit the population goal and build what the goal card asks for. Each star unlocks new buildings. The Cathedral on top earns the TOWER rating.</p>
         <p className="keys">Controls: drag to move around · scroll or pinch to zoom · Space pause · 1–4 speed · B demolish · Esc stop building · M happiness view</p>
       </div>

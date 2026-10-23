@@ -192,6 +192,24 @@ Poke it for free samples, sizzle, hot dumplings, or lemonade for 25 cents.
 
 Fun → Get moving. One floor, on a roof (it needs open sky, same as the Rocket Pad). Swings move, the merry-go-round spins, and the seesaw goes up and down. There's a little twisty slide, monkey bars, and a sandbox with a bucket, with safety netting around the edge. Kids play there from 8am to 7pm. Sunny weekend afternoons are the busy ones, and an ice cream cart rolls in if the tower has an Ice Cream Shop. Rain shuts it: puddles on the mats, and the room panel says it is too rainy to play. On a snow day a snowman sits in the sandbox. At night the swings still sway and a couple of fireflies come out. Kites fly overhead. Condos and hotel rooms on the floor just below get a little happier, the same way a Sky Park helps the rooms beside it. Code: `src/game/playground.ts` and `src/render/playground.ts`.
 
+## Concert Hall
+
+Shops → Shows, next to the Movie Theater and Party Hall. Unlocks at 2★, three floors high: a stage with a red curtain,
+lights on a truss and speaker stacks, raked seats on the floor, a balcony upstairs, and a marquee with the act.
+
+One show a day, a different act for each day of the week (`dayOf(time) % 7`, Monday first): 🎻 Orchestra, 🎷 Jazz
+Cats (cats in sunglasses), 🎶 Kids' Choir, 🤖 Robot Band, 🎸 Rock Night (stage flames), 🌟 Pop Star (confetti and a light
+show), 🎹 Piano Matinee. Shows start at 7:30pm, except Sunday's 2pm matinee. Doors open an hour before and the crowd
+files in, the house lights dim, the curtain opens, notes float up, the balcony waves glowsticks after dark, and the last
+15 minutes are the ENCORE, when everyone jumps. Ticket payday at curtain if 20 or more are in their seats. A full house
+(90) flips the marquee to `SOLD OUT!`.
+
+**Mystery Band** is a surprise from `surprises.ts`, about once every three weeks once a Concert Hall can be reached:
+the marquee reads `??? MYSTERY GUEST ???` until the curtain, the crowd comes twice as fast, tickets pay double, and the
+act is a one-off (a penguin band, or the dragon on drums). Stickers: Opening Night, SOLD OUT!, Seen Them All (all seven
+acts), and a secret one for the Mystery Band. Code: `src/game/concert.ts`, `src/render/concert.ts`;
+`scripts/concertcheck.ts` runs in `npm run sim`.
+
 ## Stickers
 
 Tap **📒 Stickers** in the top bar or the ☰ menu. Earned stickers are in colour and a little crooked; the rest are a grey outline with a hint. Secret ones stay blank until you get them. A new sticker slides down from the top, and if you earn a bunch they wait their turn. Another part of the game can add its own with one `defineSticker()` call.

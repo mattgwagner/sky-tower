@@ -157,6 +157,12 @@ export interface Game {
     monkeyCarry?: { floor: number; x: number; zooFloor: number; zooX: number; start: number; until: number } | null
     /** Day the Rainforest frogs last started their 7pm chorus. */
     frogChorus?: number
+    /** Concert Hall acts seen, one bit per LINEUP entry. */
+    concertActs?: number
+    /** Day the Concert Hall marquee flipped to SOLD OUT. */
+    concertSoldOut?: number
+    /** Day of the Mystery Band surprise. */
+    concertMystery?: number
     /** Sim minute the UFO arrived. Older saves only have ufoDay, which meant 10pm. */
     ufoAt?: number
     /** Seeds this tower's surprise draws, so a reload never re-rolls a day. Set at the first draw. */

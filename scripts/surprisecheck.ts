@@ -23,6 +23,7 @@ must('zoo', 110, 3)
 for (const x of [60, 64, 68]) must('hotelSingle', x, 5)
 must('hotelSuite', 110, 5)
 must('housekeeping', 60, 6)
+must('concertHall', 110, 7)
 must('rocketPad', 110, TOP + 1)
 g.mode = 'family'
 g.stars = 3
@@ -32,7 +33,7 @@ afterBuild(g)
 // The issue's groups: the three giants share one budget, and so do Rush and Seek.
 const GROUP: Record<SurpriseId, string> = {
   huggy: 'huggy', monkey: 'monkey', rush: 'rush/seek', seek: 'rush/seek', ufo: 'ufo',
-  ape: 'giants', dragon: 'giants', skywriter: 'giants', vip: 'vip',
+  ape: 'giants', dragon: 'giants', skywriter: 'giants', vip: 'vip', mysteryBand: 'mysteryBand',
 }
 
 // Draws alone, over many seeds on this same tower: the long-run rate per week for each group.
@@ -68,6 +69,7 @@ const mark: Record<SurpriseId, (g: Game) => unknown> = {
   dragon: (g) => g.flags.giant?.start,
   skywriter: (g) => g.flags.giant?.start,
   vip: (g) => g.flags.vipVisit,
+  mysteryBand: (g) => g.flags.concertMystery,
 }
 const started: { id: SurpriseId; day: number; t: number }[] = []
 const dud: string[] = []
@@ -118,7 +120,7 @@ const near = (k: string, lo: number, hi: number) => {
 }
 near('quiet', 2.5, 3.5)
 near('huggy', 0.7, 1.3); near('monkey', 0.7, 1.3); near('rush/seek', 0.7, 1.3)
-near('ufo', 0.3, 0.7); near('giants', 0.3, 0.7); near('vip', 0.1, 0.6)
+near('ufo', 0.3, 0.7); near('giants', 0.3, 0.7); near('vip', 0.1, 0.6); near('mysteryBand', 0.15, 0.5)
 fail.push(...dud.map((x) => `start did nothing: ${x}`))
 
 console.log(`${surpriseDays} surprise days, ${DAYS - surpriseDays} quiet, in ${(ms / 1000).toFixed(1)}s`)

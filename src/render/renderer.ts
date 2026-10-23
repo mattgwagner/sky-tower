@@ -16,6 +16,7 @@ import { drawLooseMonkey, drawZoo } from './zoo'
 import { drawRainforest } from './frogs'
 import { drawMarket } from './market'
 import { drawPlayground } from './playground'
+import { drawConcertHall } from './concert'
 import { pokeWobble } from './poke-fx'
 import { drawHolidayAmbient, drawHolidayDecor, drawHolidayWear, holidaySky } from './holidays'
 import { holidayBanner } from '../game/holidays'
@@ -1365,6 +1366,7 @@ function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: nu
       drawPlayground(c, g, f, p, w, h, z, now, m)
       return
     }
+    case 'concertHall': return drawConcertHall(c, g, f, p, w, h, z, now, m)
   }
 }
 

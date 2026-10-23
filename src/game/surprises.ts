@@ -9,8 +9,9 @@ import { facilitiesOf, topFloor } from './world'
 import { escapeMonkey } from './zoo'
 import { dayIsClear, startGiant } from './giants'
 import { releaseHuggy, startEntity, startUfo, startVip } from './sim'
+import { DOORS, showAt, startMysteryBand } from './concert'
 
-export type SurpriseId = 'huggy' | 'monkey' | 'rush' | 'seek' | 'ufo' | 'ape' | 'dragon' | 'skywriter' | 'vip'
+export type SurpriseId = 'huggy' | 'monkey' | 'rush' | 'seek' | 'ufo' | 'ape' | 'dragon' | 'skywriter' | 'vip' | 'mysteryBand'
 
 interface Surprise {
   id: SurpriseId
@@ -59,6 +60,8 @@ export const SURPRISES: Surprise[] = [
   { id: 'ape', weight: 1 / 6, eligible: (g) => topFloor(g) >= 20, at: () => 18 * 60, start: (g) => startGiant(g, 'ape') },
   { id: 'dragon', weight: 1 / 6, eligible: (g) => perch(g) && !lateNight(g), at: () => 10, start: (g) => startGiant(g, 'dragon') },
   { id: 'skywriter', weight: 1 / 6, eligible: (_g, d) => dayIsClear(d), at: () => 14 * 60, start: (g) => startGiant(g, 'skywriter') },
+  // A secret act at the Concert Hall about once every three weeks, announced when the doors open.
+  { id: 'mysteryBand', weight: 0.4, eligible: (g) => facilitiesOf(g, 'concertHall').some((f) => f.reachable), at: (_g, d) => showAt(d) - DOORS, start: (g) => startMysteryBand(g) },
   // Filler: a VIP visit on a weekday once the hotel has a Suite, and not while the last one is still checking out.
   { id: 'vip', weight: 0.5, eligible: (g, d) => !g.flags.vip && g.stars >= 3 && !isWeekend(d * 1440) && facilitiesOf(g, 'hotelSuite').length > 0 && !vipStaying(g), at: () => 13 * 60, start: (g) => startVip(g) },
 ]

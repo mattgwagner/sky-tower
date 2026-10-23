@@ -3,6 +3,7 @@ import type { FacilityKind } from '../game/defs'
 import { slideLook } from '../game/slide'
 import { paintZoo } from './zoo'
 import { paintRainforest } from './frogs'
+import { paintConcertHall } from './concert'
 import { paintMarket } from './market'
 import { paintPlayground } from './playground'
 
@@ -983,6 +984,7 @@ Object.assign(painters, { zoo: paintZoo })
 Object.assign(painters, { rainforest: paintRainforest })
 Object.assign(painters, { market: paintMarket })
 Object.assign(painters, { playground: paintPlayground })
+Object.assign(painters, { concertHall: paintConcertHall })
 
 export const TOY_CASE = [12, 26] as const
 export const TOY_BELT = [50, 140] as const

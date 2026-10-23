@@ -20,6 +20,7 @@ import { playgroundPerHour, playgroundRainedOut } from './playground'
 import { zooHour } from './zoo'
 import { frogsHour } from './frogs'
 import { marketRush } from './market'
+import { concertDoors, concertMinute, concertOpen, concertPerHour, concertStay } from './concert'
 import { bump } from './stickers'
 import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
 
@@ -555,6 +556,7 @@ function stayFor(g: Game, k: FacilityKind) {
     case 'rainforest': return rnd(40, 70)
     case 'market': return rnd(18, 36)
     case 'playground': return rnd(25, 50)
+    case 'concertHall': return concertStay(g)
     default: return rnd(20, 40)
   }
 }
@@ -563,6 +565,7 @@ export function isOpen(g: Game, f: Facility): boolean {
   if (f.fire > 0 || !f.reachable) return false
   const m = minuteOfDay(g.time)
   if (f.kind === 'partyHall' && !isWeekend(g.time) && !partyDay(g)) return false
+  if (f.kind === 'concertHall') return concertOpen(g)
   const open = (HOURS[f.kind] ?? FUN_HOURS[f.kind] ?? []).some(([a, b]) => m >= a && m < b)
   if (open && f.kind === 'playground' && playgroundRainedOut(g)) return false
   return open
@@ -633,9 +636,12 @@ function spawnVisitors(g: Game) {
     else if (f.kind === 'rainforest') perHour = 8
     else if (f.kind === 'market') perHour = marketRush(m, isWeekend(g.time))
     else if (f.kind === 'playground') perHour = playgroundPerHour(g)
+    else if (f.kind === 'concertHall') perHour = concertPerHour(g)
     perHour *= holidayRush(g, f.kind)
     if (perHour <= 0) continue
-    if (Math.random() < (perHour * demand * appeal) / 60) {
+    const doors = f.kind === 'concertHall' ? concertDoors(g) : 1
+    for (let i = 0; i < doors; i++) {
+      if (Math.random() >= (perHour * demand * appeal) / 60 / doors) continue
       const v = newPerson(g, 'visitor', 0)
       v.returnTo = 0
       if (!startTrip(g, v, f.id, 'shop')) g.people.delete(v.id)
@@ -1342,6 +1348,7 @@ function funEvents(g: Game, m: number) {
     }
   }
   roofMinute(g, m)
+  concertMinute(g, m)
 }
 
 function roofMinute(g: Game, m: number) {
