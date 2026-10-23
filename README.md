@@ -162,6 +162,19 @@ room, moves every hour, and leaves a banana peel that disappears the next mornin
 — and the zookeeper carries it home for a small reward. If nobody catches it by 6pm, it swings back by itself.
 The room it is sitting on says `🍌` when you poke it.
 
+## Rainforest Frogs
+
+Fun → Chill out, next to the Aquarium. Two floors of misty glass terrarium: a waterfall into a lily-pad pond, giant
+leaves, vines, a mossy log and a few mushrooms. Lime, blue, orange and red-and-black frogs hop between leaves, a
+red-eyed tree frog sticks to the glass, one frog zaps flies with its tongue, and a toucan sits on a branch up top.
+Mist drifts along the lid and drips run down the glass. After dark the mushrooms and fireflies glow and the frogs'
+eyes shine.
+
+Every night at 7pm the frogs sing: each one puffs its throat in turn and `ribbit`s float up for 20 sim minutes. The
+news says so once a day, and being there for it earns the 🐸 Frog Chorus sticker. On a rainy afternoon the frogs hop
+three times as often and the room panel says `Rainy day! The frogs LOVE it.` Open 9am to 7:30pm so visitors catch the
+chorus. Code: `src/game/frogs.ts`, `src/render/frogs.ts`.
+
 ## Stickers
 
 Tap **📒 Stickers** in the top bar or the ☰ menu. Earned stickers are in colour and a little crooked; the rest are a grey outline with a hint. Secret ones stay blank until you get them. A new sticker slides down from the top, and if you earn a bunch they wait their turn. Another part of the game can add its own with one `defineSticker()` call.

@@ -67,6 +67,7 @@ const POKES: Partial<Record<FacilityKind, Poke>> = {
   dome: { says: ['A garden in the clouds!'], color: '#8ce99a', sfx: 'twinkle' },
   antenna: { says: ['Beep… beep…'], color: '#ff6b6b', sfx: 'ding' },
   zoo: { says: ['🐧 Waddle waddle', '🦒 Hello down there!', '🐒 Ooh ooh ah ah!', 'Feeding time!'], color: '#ffd43b', sfx: 'pop' },
+  rainforest: { says: ['RIBBIT! 🐸', 'Boing boing!', '*zaps a fly* 🪰', 'I\'m not poisonous, I\'m FABULOUS'], color: '#8ce99a', sfx: 'boing' },
 }
 
 const lastPoke = new Map<number, number>()

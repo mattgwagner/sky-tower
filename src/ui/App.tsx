@@ -7,6 +7,7 @@ import type { Facility, Shaft } from '../game/state'
 import type { SurpriseId } from '../game/surprises'
 import { clockLabel, dayOf, floorLabel, isWeekend, minuteOfDay, money, quarterOf, yearOf } from '../game/state'
 import { addCar, removeCar, resizeShaft, unlocked } from '../game/world'
+import { rainforestStatus } from '../game/frogs'
 import { evict } from '../game/sim'
 import { holidayBadge } from '../game/holidays'
 import { totalWaiting } from '../game/elevators'
@@ -389,7 +390,7 @@ const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
     { label: 'Shows', tools: ['cinema', 'partyHall'] },
   ],
   fun: [
-    { label: 'Chill out', tools: ['park', 'arcade', 'pool', 'aquarium'] },
+    { label: 'Chill out', tools: ['park', 'arcade', 'pool', 'aquarium', 'rainforest'] },
     { label: 'Get moving', tools: ['trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink'] },
     { label: 'Wow!', tools: ['dinoMuseum', 'rocketPad', 'zoo'] },
     { label: 'Spooky 🕯️', tools: ['hauntedHouse', 'toyFactory', 'indigoPark'] },
@@ -522,6 +523,7 @@ function FacPanel({ f }: { f: Facility }) {
   else if (isCommercial(f.kind)) status = f.fire ? 'On fire!' : f.reachable ? 'Open for business' : 'Closed — no way to get here'
   else if (f.kind === 'turbine') status = 'Making power'
   else status = f.reachable ? 'Working' : 'Not connected'
+  if (f.kind === 'rainforest') status = rainforestStatus(g, f) ?? status
   return (
     <div className="panel">
       <div className="panel-head">
@@ -670,6 +672,7 @@ function Help({ onClose }: { onClose: () => void }) {
         <p><b>🪩 Party Elevator.</b> Works just like an elevator, but there's a DJ inside and everyone dances. Tap it in Look mode!</p>
         <p><b>👆 Poke things!</b> In Look mode, tap any room to see what it does. The T-Rex roars, the shark splashes, the ghosts say boo. Press 📸 to make a postcard of your tower.</p>
         <p><b>8. Fun 🎪.</b> A trampoline park, bowling, a pool, an aquarium with a shark, a haunted house and a dino museum. Put a 🚀 Rocket Pad on a roof and watch it blast off at noon! Name your tower in the ☰ menu.</p>
+        <p><b>🐸 Frogs!</b> The Rainforest frogs sing every night at 7pm, and they go extra hoppy on rainy days.</p>
         <p><b>9. Stars.</b> Hit the population goal and build what the goal card asks for. Each star unlocks new buildings. The Cathedral on top earns the TOWER rating.</p>
         <p className="keys">Controls: drag to move around · scroll or pinch to zoom · Space pause · 1–4 speed · B demolish · Esc stop building · M happiness view</p>
       </div>

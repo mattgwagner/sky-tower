@@ -17,6 +17,7 @@ import { giantsArrive } from './giants'
 import { surpriseDay, surpriseMinute } from './surprises'
 import { clearNight, heliMinute, turbineCut } from './roof'
 import { zooHour } from './zoo'
+import { frogsHour } from './frogs'
 import { bump } from './stickers'
 import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
 
@@ -520,6 +521,7 @@ const FUN_HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
   bowling: [[at(12), at(23)]],
   rollerRink: [[at(14), at(23)]],
   zoo: [[at(9), at(18)]],
+  rainforest: [[at(9), at(19, 30)]],
 }
 const LAUNCH = at(12)
 
@@ -546,6 +548,7 @@ function stayFor(g: Game, k: FacilityKind) {
     case 'dinoMuseum': return rnd(50, 90)
     case 'rocketPad': return Math.max(15, LAUNCH + 15 - minuteOfDay(g.time))
     case 'zoo': return rnd(40, 80)
+    case 'rainforest': return rnd(40, 70)
     default: return rnd(20, 40)
   }
 }
@@ -619,6 +622,7 @@ function spawnVisitors(g: Game) {
     else if (f.kind === 'dinoMuseum') perHour = 10
     else if (f.kind === 'rocketPad') perHour = m >= at(10, 30) && m < at(11, 45) ? 30 : 0
     else if (f.kind === 'zoo') perHour = 9
+    else if (f.kind === 'rainforest') perHour = 8
     perHour *= holidayRush(g, f.kind)
     if (perHour <= 0) continue
     if (Math.random() < (perHour * demand * appeal) / 60) {
@@ -1112,6 +1116,7 @@ function hourTick(g: Game, m: number) {
   huggyHour(g, m)
   stepHoliday(g, m, holidaySim)
   zooHour(g, m)
+  frogsHour(g, m)
 }
 
 const holidaySim: HolidaySim = { newPerson, startTrip, evict, schedule }

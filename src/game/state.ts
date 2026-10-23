@@ -155,6 +155,8 @@ export interface Game {
     peels?: { floor: number; x: number; day: number }[]
     /** Zookeeper walking a caught monkey back to the zoo. */
     monkeyCarry?: { floor: number; x: number; zooFloor: number; zooX: number; start: number; until: number } | null
+    /** Day the Rainforest frogs last started their 7pm chorus. */
+    frogChorus?: number
     /** Sim minute the UFO arrived. Older saves only have ufoDay, which meant 10pm. */
     ufoAt?: number
     /** Seeds this tower's surprise draws, so a reload never re-rolls a day. Set at the first draw. */

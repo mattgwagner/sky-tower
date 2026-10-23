@@ -70,6 +70,7 @@ export type FacilityKind =
   | 'dome'
   | 'antenna'
   | 'zoo'
+  | 'rainforest'
 
 export type TransportKind = 'elevator' | 'serviceElevator' | 'expressElevator' | 'partyElevator'
 
@@ -207,6 +208,8 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'A red light blinks, and a beacon sweeps the sky at night. Swaps the other spire.' },
   zoo: { kind: 'zoo', name: 'Sky Zoo', emoji: '🦒', category: 'fun', width: 28, height: 2, cost: 600000, stars: 2, pop: 10,
     blurb: 'Penguins slide, a giraffe says hello, and the monkeys swing. One of them escapes sometimes!' },
+  rainforest: { kind: 'rainforest', name: 'Rainforest Frogs', emoji: '🐸', category: 'fun', width: 24, height: 2, cost: 350000, stars: 2, pop: 10,
+    blurb: 'A misty jungle full of tiny bright frogs. They sing every night at 7pm, and they LOVE rainy days!' },
 }
 
 export interface TransportDef {
@@ -288,6 +291,7 @@ export const SPEND: Partial<Record<FacilityKind, number>> = {
   trampoline: 400, climbing: 300, miniGolf: 250, bowling: 450, rollerRink: 350,
   pizza: 350, tacos: 250, sushi: 700, donuts: 150, pancakes: 300, candy: 150,
   iceCream: 200, arcade: 350, pool: 250, aquarium: 550, hauntedHouse: 450, dinoMuseum: 650, rocketPad: 1000, zoo: 500,
+  rainforest: 500,
 }
 export const SHOP_CAPACITY: Partial<Record<FacilityKind, number>> = {
   fastFood: 14, restaurant: 18, shop: 8, cinema: 60, partyHall: 40,
@@ -295,6 +299,7 @@ export const SHOP_CAPACITY: Partial<Record<FacilityKind, number>> = {
   trampoline: 24, climbing: 10, miniGolf: 14, bowling: 20, rollerRink: 20,
   pizza: 12, tacos: 8, sushi: 12, donuts: 8, pancakes: 14, candy: 8,
   iceCream: 10, arcade: 16, pool: 20, aquarium: 40, hauntedHouse: 24, dinoMuseum: 50, rocketPad: 40, zoo: 36,
+  rainforest: 30,
 }
 
 /** Places to eat, by meal. */
@@ -307,6 +312,7 @@ export const FOOD: FacilityKind[] = [...LUNCH, ...BREAKFAST, 'candy', 'fazbear']
 export const ATTRACTIONS: FacilityKind[] = [
   'iceCream', 'arcade', 'pool', 'aquarium', 'hauntedHouse', 'dinoMuseum', 'rocketPad',
   'trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink', 'bookstore', 'library', 'toyFactory', 'indigoPark', 'zoo',
+  'rainforest',
 ]
 
 export function isHotel(k: FacilityKind) {

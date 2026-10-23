@@ -92,6 +92,7 @@ const FUN_THOUGHTS: Partial<Record<string, string[]>> = {
   bowling: ['STRIKE! 🎳', 'Bumpers up, please.', 'I picked the sparkly ball.'],
   rollerRink: ['Wheee! 🛼', 'I can skate backwards!', 'Don\'t fall, don\'t fall…'],
   candy: ['Don\'t tell my dentist! 🍭', 'The biggest lollipop they have!', 'Gummy worms! Gummy bears!'],
+  rainforest: ['Can I find the blue one?', 'It\'s so misty in here!', 'That frog is staring at me 👀'],
 }
 
 const PARTY_THOUGHTS = ['This is the BEST elevator', 'I rode it three times on purpose']

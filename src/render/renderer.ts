@@ -13,6 +13,7 @@ import { CLIMB_TOP, ZIP, INDIGO_LOOP, INDIGO_SCREEN, TOY_BELT, TOY_CASE, FAZ_COV
 import type { Look } from './sprites'
 import { drawLightning, drawRainbow, drawShootingStars, weatherFor } from './sky-fx'
 import { drawLooseMonkey, drawZoo } from './zoo'
+import { drawRainforest } from './frogs'
 import { pokeWobble } from './poke-fx'
 import { drawHolidayAmbient, drawHolidayDecor, drawHolidayWear, holidaySky } from './holidays'
 import { holidayBanner } from '../game/holidays'
@@ -1353,6 +1354,7 @@ function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: nu
       drawZoo(c, g, f, p, w, h, z, now, m)
       return
     }
+    case 'rainforest': return drawRainforest(c, g, f, p, w, h, z, now, m)
   }
 }
 
