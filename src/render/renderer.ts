@@ -1,5 +1,5 @@
 // Canvas renderer: sky, city, ground, tower cut-away, elevators, people, effects.
-import { FACILITIES, TOWER_WIDTH, TRANSPORTS, isCommercial, isConnector, isHotel, isLobbyFloor } from '../game/defs'
+import { FACILITIES, MIN_FLOOR, TOWER_WIDTH, TRANSPORTS, isCommercial, isConnector, isHotel, isLobbyFloor } from '../game/defs'
 import type { FacilityKind } from '../game/defs'
 import { carPos } from '../game/elevators'
 import { TRAIN_EVERY, TRAIN_IN, climbSteps, entityNow, hidingOn, isOpen, launchClock, trainPhase, ufoTime, ufoX } from '../game/sim'
@@ -209,11 +209,11 @@ function drawGround(c: CanvasRenderingContext2D, W: number, H: number, cam: Came
   c.fillRect(0, gy, W, H - gy)
   // strata + rocks
   c.fillStyle = 'rgba(0,0,0,0.12)'
-  for (let i = 1; i < 12; i++) c.fillRect(0, gy + i * FH * cam.zoom - 1, W, Math.max(1, cam.zoom))
+  for (let i = 1; i < 2 - MIN_FLOOR; i++) c.fillRect(0, gy + i * FH * cam.zoom - 1, W, Math.max(1, cam.zoom))
   c.fillStyle = 'rgba(255,255,255,0.06)'
-  for (let i = 0; i < 60; i++) {
-    const wx = ((i * 7919) % 4000) - 1000
-    const wy = ((i * 6007) % (FH * 10)) + 6
+  for (let i = 0; i < 90; i++) {
+    const wx = ((i * 7919) % (LOT_W + 2000)) - 1000
+    const wy = ((i * 6007) % (FH * -MIN_FLOOR)) + 6
     const p = worldToScreen(cam, W, H, wx, wy)
     c.fillRect(p.x, p.y, 6 * cam.zoom, 3 * cam.zoom)
   }

@@ -1,8 +1,8 @@
 // The simulation: people, schedules, hotel, economy, rating and events.
 import type { Sfx } from '../audio'
 import {
-  ATTRACTIONS, BREAKFAST, DAYS_PER_QUARTER, DINNER, FOOD, LUNCH, FACILITIES, HOTEL_NIGHT, MAX_FLOOR, MINUTES_PER_STEP, OFFICE_RENT, CONDO_PRICE,
-  RENT_HAPPY, RENT_MULT, SHOP_CAPACITY, SPEND, TRANSPORTS, isCommercial, isConnector, isHotel, isResidential, starRules,
+  ATTRACTIONS, BREAKFAST, CATHEDRAL_TOP, DAYS_PER_QUARTER, DINNER, FOOD, LUNCH, FACILITIES, HOTEL_NIGHT, MINUTES_PER_STEP, OFFICE_RENT, CONDO_PRICE,
+  RENT_HAPPY, RENT_MULT, SHOP_CAPACITY, SPEND, TOWER_WIDTH, TRANSPORTS, isCommercial, isConnector, isHotel, isResidential, starRules,
 } from './defs'
 import type { FacilityKind } from './defs'
 import { joinQueue, leaveQueue, stepShaft } from './elevators'
@@ -352,7 +352,7 @@ function arrive(g: Game, p: Person) {
     }
     case 'search': {
       // walk the floor end to end
-      const segEnd = p.x < 120 ? floorExtent(g, p.floor)[1] : floorExtent(g, p.floor)[0]
+      const segEnd = p.x < TOWER_WIDTH / 2 ? floorExtent(g, p.floor)[1] : floorExtent(g, p.floor)[0]
       p.purpose = 'sweep'
       p.goalX = segEnd
       p.legs = []
@@ -935,7 +935,7 @@ export function starProgress(g: Game) {
   const needs = r.needs.map((n) => {
     let done = false
     if (n.id === 'vip') done = g.flags.vip
-    else if (n.id === 'cathedral') done = facilitiesOf(g, 'cathedral').some((c) => c.floor + c.height - 1 === MAX_FLOOR)
+    else if (n.id === 'cathedral') done = facilitiesOf(g, 'cathedral').some((c) => c.floor + c.height - 1 === CATHEDRAL_TOP)
     else done = have(n.id as FacilityKind)
     return { ...n, done }
   })
@@ -1420,7 +1420,7 @@ function ufoMinute(g: Game) {
 /** The middle of the highest floor, where the UFO likes to hover. */
 export function ufoX(g: Game) {
   const r = g.floors.get(topFloor(g))
-  if (!r) return 120
+  if (!r) return TOWER_WIDTH / 2
   let a = 0
   while (a < r.length && r[a] === -1) a++
   let b = r.length - 1

@@ -1,8 +1,12 @@
 // Static definitions: facility catalog, rating rules, tuning constants.
 
-export const TOWER_WIDTH = 240 // tile units across
-export const MAX_FLOOR = 100 // top floor index (101 floors above ground incl. lobby)
-export const MIN_FLOOR = -10 // deepest basement
+export const TOWER_WIDTH = 360 // tile units across
+/** Saves before version 2 were this wide; deserialize centres them on the wider lot. */
+export const OLD_TOWER_WIDTH = 240
+export const MAX_FLOOR = 150 // top floor index (151 floors above ground incl. lobby)
+export const MIN_FLOOR = -15 // deepest basement
+/** The Cathedral (and the TOWER rating) tops out here, below the bonus sky up to MAX_FLOOR. */
+export const CATHEDRAL_TOP = 100
 export const SKY_LOBBY_EVERY = 15
 
 export const FLOOR_COST = 500 // per tile of bare floor
@@ -137,7 +141,7 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
   metro: { kind: 'metro', name: 'Metro Station', emoji: '🚇', category: 'services', width: 30, height: 3, cost: 1000000, stars: 4, pop: 30, underground: 'only',
     blurb: 'Brings crowds of visitors. Needed for 5★.' },
   cathedral: { kind: 'cathedral', name: 'Cathedral', emoji: '⛪', category: 'services', width: 40, height: 5, cost: 3000000, stars: 5, pop: 20,
-    blurb: 'Build it on the very top (floors 96-100) to earn TOWER rating!' },
+    blurb: `Build it on floors ${CATHEDRAL_TOP - 4}-${CATHEDRAL_TOP} to earn TOWER rating!` },
   stairs: { kind: 'stairs', name: 'Stairs', emoji: '🪜', category: 'build', width: 8, height: 1, cost: 5000, stars: 1, pop: 0,
     blurb: 'Connects this floor to the one above. People only climb a few floors.' },
   firePole: { kind: 'firePole', name: 'Fireman Pole', emoji: '🚒', category: 'build', width: 3, height: 1, cost: 3000, stars: 1, pop: 0,

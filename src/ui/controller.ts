@@ -1,6 +1,6 @@
 // Glue between the input layer, the simulation and the renderer.
 import { play, setMusic, audioPrefs } from '../audio'
-import { FACILITIES, STEPS_PER_SECOND, TOWER_WIDTH, TRANSPORTS } from '../game/defs'
+import { FACILITIES, MAX_FLOOR, MIN_FLOOR, STEPS_PER_SECOND, TOWER_WIDTH, TRANSPORTS } from '../game/defs'
 import type { FacilityKind, Mode, ToolId, TransportKind } from '../game/defs'
 import { afterBuild, evict, sound, step, ufoTime, ufoX } from '../game/sim'
 import type { Facility, Game } from '../game/state'
@@ -244,7 +244,7 @@ export class Controller {
     const c = this.cam
     c.zoom = Math.max(0.3, Math.min(4, c.zoom))
     c.x = Math.max(-200, Math.min(TOWER_WIDTH * T + 200, c.x))
-    c.y = Math.max(-102 * FH, Math.min(12 * FH, c.y))
+    c.y = Math.max(-(MAX_FLOOR + 2) * FH, Math.min((2 - MIN_FLOOR) * FH, c.y))
   }
 
   zoomAt(sx: number, sy: number, factor: number) {

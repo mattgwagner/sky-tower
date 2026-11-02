@@ -1,6 +1,6 @@
 // Building, demolishing and grid queries.
 import {
-  FACILITIES, FLOOR_COST, MAX_FLOOR, MIN_FLOOR, TOWER_WIDTH, TRANSPORTS,
+  CATHEDRAL_TOP, FACILITIES, FLOOR_COST, MAX_FLOOR, MIN_FLOOR, TOWER_WIDTH, TRANSPORTS,
   isConnector, isLobbyFloor,
 } from './defs'
 import type { FacilityKind, TransportKind } from './defs'
@@ -93,7 +93,7 @@ export function checkFacility(g: Game, kind: FacilityKind, x: number, floor: num
   if (floor < MIN_FLOOR || floor + h - 1 > MAX_FLOOR) return { ok: false, cost: 0, reason: 'Too high or too deep' }
   if (def.underground === 'only' && floor + h - 1 >= 0) return { ok: false, cost: 0, reason: 'Must be underground' }
   if (kind === 'lobby' && !isLobbyFloor(floor)) return { ok: false, cost: 0, reason: 'Lobbies go on floors 0, 15, 30, 45…' }
-  if (kind === 'cathedral' && floor + h - 1 !== MAX_FLOOR) return { ok: false, cost: 0, reason: `Must reach the very top (floor ${MAX_FLOOR})` }
+  if (kind === 'cathedral' && floor + h - 1 !== CATHEDRAL_TOP) return { ok: false, cost: 0, reason: `Must top out on floor ${CATHEDRAL_TOP}` }
   if (kind === 'megaSlide' && (h < SLIDE_MIN || h > SLIDE_MAX)) return { ok: false, cost: 0, reason: `Slides drop ${SLIDE_MIN} to ${SLIDE_MAX} floors` }
   if (isConnector(kind) && floor + h - 1 >= MAX_FLOOR) return { ok: false, cost: 0, reason: 'Nothing above to connect to' }
   if (floor < 0 && (kind === 'hotelSingle' || kind === 'hotelTwin' || kind === 'hotelSuite' || kind === 'condo' || kind === 'office'))

@@ -1,5 +1,5 @@
 import type { FacilityKind, Mode, RentLevel, TransportKind } from './defs'
-import { MAX_FLOOR, MIN_FLOOR, TOWER_WIDTH } from './defs'
+import { MAX_FLOOR, MIN_FLOOR, OLD_TOWER_WIDTH, TOWER_WIDTH } from './defs'
 import type { SurpriseId } from './surprises'
 
 export interface Facility {
@@ -121,7 +121,8 @@ export interface Fx {
 }
 
 export interface Game {
-  version: 1
+  /** 2 = the 360-wide lot. Version 1 saves are 240 wide and get centred on load. */
+  version: 1 | 2
   mode: Mode
   disasters: boolean
   money: number
@@ -196,7 +197,7 @@ export const START_MONEY = 2_000_000
 
 export function newGame(mode: Mode, disasters: boolean, name = ''): Game {
   return {
-    version: 1,
+    version: 2,
     name,
     mode,
     disasters,
@@ -285,6 +286,7 @@ export function serialize(g: Game): string {
 
 export function deserialize(json: string): Game {
   const s = JSON.parse(json) as SaveShape
+  if ((s.version ?? 1) < 2) widenLot(s, (TOWER_WIDTH - OLD_TOWER_WIDTH) / 2)
   return {
     ...s,
     stickers: s.stickers ?? [],
@@ -295,4 +297,26 @@ export function deserialize(json: string): Game {
     people: new Map(s.people.map((p) => [p.id, p])),
     fx: [],
   }
+}
+
+/** Pad every row with unbuilt tiles on both sides and move everything that stores a tile x by dx. */
+function widenLot(s: SaveShape, dx: number) {
+  s.version = 2
+  s.floors = s.floors.map(([f, r]) => [f, [...Array<number>(dx).fill(-1), ...r, ...Array<number>(TOWER_WIDTH - dx - r.length).fill(-1)]])
+  for (const f of s.facilities) f.x += dx
+  for (const sh of s.shafts) sh.x += dx
+  for (const p of s.people) {
+    p.x += dx
+    p.goalX += dx
+    for (const l of p.legs) l.x += dx
+  }
+  for (const m of s.log) if (m.x !== undefined) m.x += dx
+  if (s.bomb) s.bomb.x += dx
+  const fl = s.flags
+  if (fl.huggy) fl.huggy.x += dx
+  if (fl.monkey) fl.monkey.x += dx
+  for (const p of fl.peels ?? []) p.x += dx
+  if (fl.monkeyCarry) { fl.monkeyCarry.x += dx; fl.monkeyCarry.zooX += dx }
+  if (fl.entity) { fl.entity.a += dx; fl.entity.b += dx }
+  if (fl.danceOff) fl.danceOff.x += dx
 }

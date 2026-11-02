@@ -1,6 +1,6 @@
 // Headless check: a starter tower whose only elevator is a Party Elevator still gets people around all day.
 import { newGame } from '../src/game/state'
-import { buildStarter } from '../src/game/starter'
+import { STARTER_X, buildStarter } from '../src/game/starter'
 import { afterBuild, step } from '../src/game/sim'
 import { addCar, demolish, placeShaft } from '../src/game/world'
 
@@ -9,7 +9,7 @@ const fail = (msg: string) => { console.error(`partycheck FAILED: ${msg}`); proc
 const g = newGame('sandbox', false)
 buildStarter(g)
 for (const s of [...g.shafts.values()]) demolish(g, s.id, () => {})
-const party = placeShaft(g, 'partyElevator', 116, 0, 8)
+const party = placeShaft(g, 'partyElevator', STARTER_X + 116, 0, 8)
 if (!party) fail('could not place a party elevator')
 addCar(g, party!)
 afterBuild(g)

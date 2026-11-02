@@ -1,5 +1,5 @@
 // Sticker book. Other features add one with defineSticker() — don't edit STICKERS for that.
-import { FOOD, MAX_FLOOR, MIN_FLOOR, isHotel } from './defs'
+import { CATHEDRAL_TOP, FOOD, MAX_FLOOR, MIN_FLOOR, isHotel } from './defs'
 import type { FacilityKind } from './defs'
 import { totalWaiting } from './elevators'
 import type { Game } from './state'
@@ -77,7 +77,7 @@ function roomScan(g: Game): Rooms {
     if (f.kind === 'condo' && f.occupied) found.condo = true
     if (!found.shop && (f.kind === 'shop' || FOOD.includes(f.kind))) found.shop = true
     if (!found.hotel && isHotel(f.kind) && (f.booked || f.occupied)) found.hotel = true
-    if (!found.cathedral && f.kind === 'cathedral' && f.floor + f.height - 1 === MAX_FLOOR) found.cathedral = true
+    if (!found.cathedral && f.kind === 'cathedral' && f.floor + f.height - 1 === CATHEDRAL_TOP) found.cathedral = true
     if (f.roaches) found.roaches = true
   }
   rooms = found
@@ -227,12 +227,14 @@ export const STICKERS: Sticker[] = [
 
   sticker('lucky', 'Lucky Number', '🎰', 'Your money ended in 777', (g) => Math.abs(Math.round(g.money)) % 1000 === 777, true),
   sticker('ghost', 'Ghost Town', '👻', 'Nobody was here at noon', (g) => g.people.size === 0 && minute(g) === 12 * 60, true),
-  sticker('cathedral', 'Cathedral on Top', '⛪', 'A cathedral on the very top floor', cathedralTop, true),
+  sticker('cathedral', 'Cathedral on Top', '⛪', `A cathedral up on floor ${CATHEDRAL_TOP}`, cathedralTop, true),
   sticker('gold', 'Strike Gold', '✨', 'You dug up gold', (g) => g.flags.goldFound, true),
   sticker('piggy', 'Uh Oh', '💸', 'The piggy bank went empty', (g) => g.money < 0, true),
   sticker('deep', 'Mole People', '🕳️', 'You dug all the way down', (g) => bottomFloor(g) <= MIN_FLOOR, true),
   sticker('roach', 'Bug Hunt', '🪳', 'Cockroaches moved in', bugs, true),
 ]
+
+defineSticker({ id: 'space-elevator', name: 'Space Elevator', emoji: '🛰️', hint: `Reach floor ${MAX_FLOOR}`, secret: false, check: (g) => top(g) >= MAX_FLOOR })
 
 /** Check every sticker once per game minute. Returns the ones just earned. */
 export function stepStickers(g: Game, s: StickerSnap = NO_SNAP): Sticker[] {
