@@ -9,7 +9,7 @@ import { dragDrop } from '../game/slide'
 import { buildStarter } from '../game/starter'
 import { checkFacility, checkShaft, demolish, occupantAt, paintRun, placeFacility, placeShaft, topFloor } from '../game/world'
 import type { Camera, Overlay } from '../render/renderer'
-import { flashBuild, huggyWorld, jumpscare, launchFireworks, personPos, render, screenToWorld, worldToScreen } from '../render/renderer'
+import { flashBuild, huggyBubble, huggyWorld, jumpscare, launchFireworks, personPos, render, screenToWorld, worldToScreen } from '../render/renderer'
 import { registerPoke } from '../render/poke-fx'
 import { pokeFacility, pokeRider, pokeShaft } from '../game/poke'
 import { apeHit, pokeGiant } from '../game/giants'
@@ -486,7 +486,8 @@ export class Controller {
     if (!hg) return false
     const spot = huggyWorld(hg.floor, hg.x)
     const p = worldToScreen(this.cam, this.W, this.H, spot.wx, spot.wy)
-    return Math.hypot(p.x - sx, p.y - sy) < Math.max(16, 9 * this.cam.zoom)
+    const b = huggyBubble(this.cam.zoom)
+    return Math.hypot(p.x - sx, p.y - sy) < Math.max(16, 9 * this.cam.zoom) || Math.hypot(p.x + b.dx - sx, p.y + b.dy - sy) < 12
   }
 
   /** "Help me look": bring the camera near Huggy's floor, a few floors off so it's still a hunt. */

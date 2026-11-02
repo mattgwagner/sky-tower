@@ -1215,8 +1215,12 @@ function trains(g: Game, m: number) {
 export const nightOf = (g: Game) => dayOf(g.time) - (minuteOfDay(g.time) < at(6) ? 1 : 0)
 const isNight = (m: number) => m >= at(20) || m < at(6)
 
+/** Rooms Huggy can hide over: anything wide enough to have a vent, except his own factory. */
+const huggyRooms = (g: Game) => [...g.facilities.values()].filter((f) => f.kind !== 'toyFactory' && f.width >= 4 && f.kind !== 'lobby' && !isConnector(f.kind) && f.kind !== 'rocketPad')
+export const huggyCanHide = (g: Game) => huggyRooms(g).length > 0
+
 function hideHuggy(g: Game, factory: Facility) {
-  const rooms = [...g.facilities.values()].filter((f) => f.id !== factory.id && f.width >= 4 && f.kind !== 'lobby' && !isConnector(f.kind) && f.kind !== 'rocketPad')
+  const rooms = huggyRooms(g).filter((f) => f.id !== factory.id)
   if (!rooms.length) return false
   const r = pick(rooms)
   g.flags.huggy = { floor: r.floor + r.height - 1, x: r.x + 1.5 + Math.random() * (r.width - 3) }

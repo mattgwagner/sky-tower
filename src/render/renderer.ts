@@ -1823,6 +1823,9 @@ export function huggyWorld(floor: number, x: number) {
   return { wx: x * T, wy: floorTop(floor) + 10 }
 }
 
+/** The "?" bubble's offset from Huggy's head, in screen px; tapping it counts as tapping him. */
+export const huggyBubble = (z: number) => ({ dx: Math.max(16, 10 * z), dy: -Math.max(12, 6 * z) })
+
 /** Last hiding spot drawn, so a move to a new vent leaves a whoosh behind. */
 let huggyWas: { g: Game; floor: number; x: number } | null = null
 let huggyWhoosh: { wx: number; wy: number; t: number } | null = null
@@ -1883,7 +1886,8 @@ function drawHuggyVent(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: n
     c.restore()
   }
   // a "?" bubble beside the vent: there's something in there!
-  const bx = head.x + Math.max(16, 10 * z), by = head.y - Math.max(12, 6 * z) + Math.sin(now / 300) * 1.5
+  const bub = huggyBubble(z)
+  const bx = head.x + bub.dx, by = head.y + bub.dy + Math.sin(now / 300) * 1.5
   c.save()
   c.fillStyle = '#fff'; c.beginPath(); c.arc(bx, by, 8, 0, Math.PI * 2); c.fill()
   c.strokeStyle = '#1c7ed6'; c.lineWidth = 1.5; c.stroke()

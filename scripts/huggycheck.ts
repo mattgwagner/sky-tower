@@ -42,6 +42,20 @@ function tower(seed: number) {
   delete g.flags.huggyLastOut
   if (drawSurprise(g, 5) !== 'huggy') fail('a save without huggyLastOut did not get Huggy at the next draw')
 }
+// A factory with nowhere to hide never draws Huggy, so the pity night can't eat every other surprise.
+{
+  const g = newGame('family', false)
+  g.mode = 'sandbox'
+  paintRun(g, 'lobby', 60, 179, 0)
+  paintRun(g, 'floor', 60, 179, 1)
+  if (!placeFacility(g, 'stairs', 64, 0)) fail('could not place stairs')
+  const factory = placeFacility(g, 'toyFactory', 110, 1)
+  if (!factory) fail('could not place the lone factory')
+  g.mode = 'family'
+  afterBuild(g)
+  if (!factory!.reachable) fail('the lone factory is not reachable, so this proves nothing')
+  for (let d = 1; d <= 30; d++) if (drawSurprise(g, d) === 'huggy') fail(`a factory with no room to hide over drew Huggy on day ${d}`)
+}
 
 for (let run = 0; run < RUNS; run++) {
   const seed = 5000 + run * 7919

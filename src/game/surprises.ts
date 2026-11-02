@@ -9,7 +9,7 @@ import { facilitiesOf, topFloor } from './world'
 import { escapeMonkey } from './zoo'
 import { dayIsClear, startGiant } from './giants'
 import { startDiscoFever } from './disco'
-import { releaseHuggy, startEntity, startUfo, startVip } from './sim'
+import { huggyCanHide, releaseHuggy, startEntity, startUfo, startVip } from './sim'
 import { DOORS, showAt, startMysteryBand } from './concert'
 
 export type SurpriseId = 'huggy' | 'monkey' | 'rush' | 'seek' | 'ufo' | 'ape' | 'dragon' | 'skywriter' | 'vip' | 'mysteryBand' | 'disco'
@@ -54,7 +54,7 @@ const lateNight = (g: Game) => {
 }
 
 export const SURPRISES: Surprise[] = [
-  { id: 'huggy', weight: 1, eligible: (g) => facilitiesOf(g, 'toyFactory').some((f) => f.reachable), at: () => 20 * 60, start: (g) => releaseHuggy(g) },
+  { id: 'huggy', weight: 1, eligible: (g) => facilitiesOf(g, 'toyFactory').some((f) => f.reachable) && huggyCanHide(g), at: () => 20 * 60, start: (g) => releaseHuggy(g) },
   { id: 'monkey', weight: 1, eligible: (g) => facilitiesOf(g, 'zoo').length > 0, at: () => 10 * 60, start: (g) => escapeMonkey(g) },
   // Rush and Seek share about one night a week, at an hour between 9pm and 4am.
   { id: 'rush', weight: 0.6, eligible: (g) => hotelRooms(g) >= 2, at: (g, d) => (21 + (surpriseHash(g, d, 7) % 8)) * 60, start: (g) => startEntity(g, 'rush') },
