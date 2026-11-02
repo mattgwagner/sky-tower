@@ -42,21 +42,27 @@ function rates(seeds: number, days: number) {
   const n: Record<string, number> = { quiet: 0 }
   const flags = structuredClone(g.flags)
   const time = g.time
+  let huggyGap = 0
   for (let seed = 1000; seed < 1000 + seeds; seed++) {
     g.flags.seed = seed
     g.flags.surprise = null
+    // steady state: as if Huggy was last out on day 0, not a fresh factory owed him tonight
+    g.flags.huggyLastOut = 0
     for (let d = 1; d <= days; d++) {
       g.time = d * 1440
+      const last = g.flags.huggyLastOut
       surpriseDay(g)
       const id = g.flags.surprise!.id
+      if (id === 'huggy') huggyGap = Math.max(huggyGap, d - last)
       const k = id ? GROUP[id] : 'quiet'
       n[k] = (n[k] ?? 0) + 1
     }
+    huggyGap = Math.max(huggyGap, days + 1 - g.flags.huggyLastOut)
   }
   g.flags = flags
   g.time = time
   const weeks = (seeds * days) / 7
-  return Object.fromEntries(Object.entries(n).map(([k, v]) => [k, v / weeks]))
+  return { week: Object.fromEntries(Object.entries(n).map(([k, v]) => [k, v / weeks])), huggyGap }
 }
 
 // What each surprise leaves behind, so a start that silently did nothing fails the check.
@@ -88,7 +94,7 @@ for (const s of SURPRISES) {
 }
 
 // Before the run: once a VIP is impressed, VIP days stop for good.
-const week = rates(400, 28)
+const { week, huggyGap } = rates(400, 28)
 
 const t0 = performance.now()
 const drawn: (SurpriseId | null)[] = []
@@ -116,13 +122,16 @@ for (const x of missingStarts) fail.push(`day ${x.day} drew ${x.id} but it never
 for (const grp of new Set(Object.values(GROUP))) {
   if (!drawn.some((id) => id && GROUP[id] === grp)) fail.push(`${grp} never drawn in ${DAYS} days`)
 }
-console.log('per week over 400 towers:', Object.entries(week).map(([k, v]) => `${k} ${v.toFixed(2)}`).join(' · '))
+console.log('per week over 400 towers:', Object.entries(week).map(([k, v]) => `${k} ${v.toFixed(2)}`).join(' · '), `· longest huggy wait ${huggyGap - 1} nights`)
 const near = (k: string, lo: number, hi: number) => {
   if (!(week[k]! >= lo && week[k]! <= hi)) fail.push(`${k} ${week[k]?.toFixed(2)} a week, want ${lo}..${hi}`)
 }
 near('quiet', 2.5, 3.5)
-near('huggy', 0.7, 1.3); near('monkey', 0.7, 1.3); near('rush/seek', 0.7, 1.3)
+// Huggy's pity night (#16) takes about a tenth of the draws, so the other weekly ones sit a little under 1.
+near('huggy', 1, 1.6); near('monkey', 0.6, 1.3); near('rush/seek', 0.6, 1.3)
 near('ufo', 0.3, 0.7); near('giants', 0.3, 0.7); near('vip', 0.1, 0.6); near('mysteryBand', 0.15, 0.5)
+// Huggy is out at least once in any 7 nights while there's a toy factory.
+if (huggyGap > 7) fail.push(`huggy went ${huggyGap - 1} nights in a row without getting out, want at most 6`)
 fail.push(...dud.map((x) => `start did nothing: ${x}`))
 
 console.log(`${surpriseDays} surprise days, ${DAYS - surpriseDays} quiet, in ${(ms / 1000).toFixed(1)}s`)

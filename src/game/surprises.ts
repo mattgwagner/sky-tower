@@ -30,6 +30,9 @@ const WEEK = 7
 /** At most this many surprise days a week, however much the tower has. The rest are quiet. */
 const MAX_PER_WEEK = 4
 
+/** Huggy gets out at least once in this many nights, so a kid hunting him isn't left waiting for weeks. */
+const HUGGY_EVERY = 7
+
 /** Night surprises still running after midnight, so the next day can't open with a dragon on top of them. */
 const LATE: SurpriseId[] = ['huggy', 'rush', 'seek']
 
@@ -74,6 +77,8 @@ const byId = (id: SurpriseId) => SURPRISES.find((s) => s.id === id)!
 /** Pick `day`'s surprise, or nothing. The same tower and day always draw the same thing. */
 export function drawSurprise(g: Game, day: number): SurpriseId | null {
   const pool = SURPRISES.filter((s) => s.eligible(g, day))
+  // pity: six nights without Huggy and the seventh is his, in place of whatever else would come
+  if (pool.some((s) => s.id === 'huggy') && day - (g.flags.huggyLastOut ?? -Infinity) >= HUGGY_EVERY) return 'huggy'
   const total = pool.reduce((a, s) => a + s.weight, 0)
   if (!total) return null
   const chance = Math.min(total, MAX_PER_WEEK) / WEEK
@@ -94,6 +99,7 @@ export function surpriseDay(g: Game) {
   if (g.flags.surprise?.day === day) return
   g.flags.lastSurprise = g.flags.surprise ?? null
   const id = drawSurprise(g, day)
+  if (id === 'huggy') g.flags.huggyLastOut = day
   g.flags.surprise = { id, day, at: id ? byId(id).at(g, day) : 0 }
 }
 
