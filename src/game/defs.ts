@@ -288,7 +288,7 @@ export function starRules(mode: Mode): Record<number, StarRule> {
       ],
     },
     4: { pop: p[3], needs: [{ id: 'metro', label: 'Build a Metro Station' }] },
-    5: { pop: p[4], needs: [{ id: 'cathedral', label: 'Build a Cathedral at the very top' }] },
+    5: { pop: p[4], needs: [{ id: 'cathedral', label: `Build a Cathedral on floor ${CATHEDRAL_TOP}` }] },
   }
 }
 

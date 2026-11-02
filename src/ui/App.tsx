@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { audioPrefs, play, unlockAudio } from '../audio'
-import { CATEGORIES, FACILITIES, RENT_LABELS, TRANSPORTS, isCommercial, isConnector, isHotel } from '../game/defs'
+import { CATEGORIES, CATHEDRAL_TOP, FACILITIES, RENT_LABELS, TRANSPORTS, isCommercial, isConnector, isHotel } from '../game/defs'
 import type { Category, FacilityKind, Mode, ToolId, TransportKind } from '../game/defs'
 import { bombDecision, setRent, starProgress } from '../game/sim'
 import type { Facility, Shaft } from '../game/state'
@@ -403,7 +403,7 @@ const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
   services: [
     { label: 'Keep it safe', tools: ['security', 'medical'] },
     { label: 'Keep it running', tools: ['recycling', 'parking', 'metro'] },
-    { label: 'The very top', tools: ['cathedral'] },
+    { label: `Up on floor ${CATHEDRAL_TOP}`, tools: ['cathedral'] },
   ],
 }
 
