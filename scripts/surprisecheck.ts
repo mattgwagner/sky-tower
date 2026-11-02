@@ -40,6 +40,7 @@ const GROUP: Record<SurpriseId, string> = {
 // Draws alone, over many seeds on this same tower: the long-run rate per week for each group.
 function rates(seeds: number, days: number) {
   const n: Record<string, number> = { quiet: 0 }
+  const seen = new Set<SurpriseId>()
   const flags = structuredClone(g.flags)
   const time = g.time
   let huggyWait = 0
@@ -52,6 +53,7 @@ function rates(seeds: number, days: number) {
       g.time = d * 1440
       surpriseDay(g)
       const id = g.flags.surprise!.id
+      if (id) seen.add(id)
       // draws alone never start him, so stand in for releaseHuggy marking the night
       if (id === 'huggy') {
         huggyWait = Math.max(huggyWait, d - g.flags.huggyLastOut! - 1)
@@ -65,7 +67,7 @@ function rates(seeds: number, days: number) {
   g.flags = flags
   g.time = time
   const weeks = (seeds * days) / 7
-  return { week: Object.fromEntries(Object.entries(n).map(([k, v]) => [k, v / weeks])), huggyWait }
+  return { week: Object.fromEntries(Object.entries(n).map(([k, v]) => [k, v / weeks])), huggyWait, seen }
 }
 
 // What each surprise leaves behind, so a start that silently did nothing fails the check.
@@ -97,7 +99,7 @@ for (const s of SURPRISES) {
 }
 
 // Before the run: once a VIP is impressed, VIP days stop for good.
-const { week, huggyWait } = rates(400, 28)
+const { week, huggyWait, seen } = rates(400, 28)
 
 const t0 = performance.now()
 const drawn: (SurpriseId | null)[] = []
@@ -133,6 +135,8 @@ near('quiet', 2.5, 3.5)
 // Huggy's pity night (#16) takes about a tenth of the draws, so the other weekly ones sit a little under 1.
 near('huggy', 1, 1.6); near('monkey', 0.6, 1.3); near('rush/seek', 0.6, 1.3)
 near('ufo', 0.3, 0.7); near('giants', 0.3, 0.7); near('vip', 0.1, 0.6); near('mysteryBand', 0.15, 0.5)
+// Huggy's pity nights take draws from everyone else: every id must still come up somewhere in 400 towers.
+for (const s of SURPRISES) if (!seen.has(s.id)) fail.push(`${s.id} never drawn in 400 towers`)
 // Huggy is out at least once in any 7 nights while there's a toy factory.
 if (huggyWait > 6) fail.push(`huggy went ${huggyWait} nights in a row without getting out, want at most 6`)
 fail.push(...dud.map((x) => `start did nothing: ${x}`))

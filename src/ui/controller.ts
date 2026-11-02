@@ -493,8 +493,8 @@ export class Controller {
   huntHuggy() {
     const hg = this.g.flags.huggy
     if (!hg) return
-    const off = (Math.floor(hg.x * 7) % 7) - 3
-    this.focus(Math.max(0, hg.floor + off), hg.x)
+    const off = [-3, -2, -1, 1, 2, 3][Math.floor(hg.x * 7) % 6]!
+    this.focus(hg.floor + off, hg.x)
   }
 
   /** Keep placing the current facility while the button is held and dragged sideways. */
