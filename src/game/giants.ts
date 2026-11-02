@@ -1,4 +1,5 @@
 // Giant visitors, on the days surprises.ts draws one. Drawing lives in render/giants.ts.
+import { TOWER_WIDTH } from './defs'
 import type { Game } from './state'
 import { dayOf, minuteOfDay } from './state'
 import { fx, log, topFloor } from './world'
@@ -49,7 +50,7 @@ function edgeTile(g: Game, floor: number) {
     const s = floorSpan(g, f - d) ?? (d ? floorSpan(g, f + d) : null)
     if (s) return s[1] + 1.4
   }
-  return 120
+  return TOWER_WIDTH / 2
 }
 
 export function apePlace(g: Game, phase: number): { floor: number; tile: number; pose: ApePose } {
@@ -107,7 +108,7 @@ export function giantsArrive(g: Game) {
   noted.set(g, key)
   seen++
   const span = floorSpan(g, topFloor(g))
-  const x = span ? (span[0] + span[1]) / 2 : 120
+  const x = span ? (span[0] + span[1]) / 2 : TOWER_WIDTH / 2
   log(g, NEWS[n.kind], 'event', topFloor(g), x)
   fx(g, x, topFloor(g) + 1, ROOF[n.kind], '#ffd43b')
 }

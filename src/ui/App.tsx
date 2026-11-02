@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { audioPrefs, play, unlockAudio } from '../audio'
-import { CATEGORIES, CATHEDRAL_TOP, FACILITIES, RENT_LABELS, TRANSPORTS, isCommercial, isConnector, isHotel } from '../game/defs'
+import { CATEGORIES, CATHEDRAL_TOP, FACILITIES, RENT_LABELS, TOWER_WIDTH, TRANSPORTS, isCommercial, isConnector, isHotel } from '../game/defs'
 import type { Category, FacilityKind, Mode, ToolId, TransportKind } from '../game/defs'
 import { bombDecision, setRent, starProgress } from '../game/sim'
 import type { Facility, Shaft } from '../game/state'
@@ -507,7 +507,7 @@ function News() {
   return (
     <div className="news">
       {items.map((m) => (
-        <button key={m.id} className={`msg ${m.kind}`} onClick={() => { if (m.floor !== undefined) ctl.focus(m.floor, m.x ?? 120) }}>
+        <button key={m.id} className={`msg ${m.kind}`} onClick={() => { if (m.floor !== undefined) ctl.focus(m.floor, m.x ?? TOWER_WIDTH / 2) }}>
           <small>{clockLabel(m.t)}</small> {m.text}
         </button>
       ))}
