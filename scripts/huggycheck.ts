@@ -1,7 +1,7 @@
 // Headless: Huggy's pity night. A tower with a toy factory and lots of other surprises must let Huggy
 // out at least once in every 7 nights over 8 weeks, and a save from before huggyLastOut still draws.
-import { step, afterBuild } from '../src/game/sim'
-import { dayOf, newGame } from '../src/game/state'
+import { afterBuild, nightOf, step } from '../src/game/sim'
+import { newGame } from '../src/game/state'
 import { drawSurprise } from '../src/game/surprises'
 import { addCar, paintRun, placeFacility, placeShaft } from '../src/game/world'
 
@@ -51,7 +51,7 @@ for (let run = 0; run < RUNS; run++) {
     step(g)
     // pin random fires: a burned factory isn't reachable and can't let Huggy out
     for (const f of g.facilities.values()) f.fire = 0
-    if (g.flags.huggy) out.add(dayOf(g.time) - (g.time % 1440 < 6 * 60 ? 1 : 0))
+    if (g.flags.huggy) out.add(nightOf(g))
   }
   // full nights 1..DAYS-1: every 7 in a row has Huggy out on at least one
   for (let d = 1; d + 6 < DAYS; d++) {

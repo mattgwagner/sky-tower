@@ -505,20 +505,14 @@ function Hint() {
 function News() {
   const g = ctl.g
   const items = g.log.slice(-5).reverse()
+  // only the newest "case is EMPTY" line, and only while he's still loose
+  const hunt = g.flags.huggy ? items.find((m) => m.text.startsWith(HUGGY_LOOSE))?.id : undefined
   return (
     <div className="news">
       {items.map((m) => (
-        m.text.startsWith(HUGGY_LOOSE) && g.flags.huggy
-          ? (
-            <button key={m.id} className={`msg ${m.kind}`} onClick={() => ctl.huntHuggy()}>
-              <small>{clockLabel(m.t)}</small> {m.text} <span className="hunt">🔍 Help me look</span>
-            </button>
-          )
-          : (
-            <button key={m.id} className={`msg ${m.kind}`} onClick={() => { if (m.floor !== undefined) ctl.focus(m.floor, m.x ?? TOWER_WIDTH / 2) }}>
-              <small>{clockLabel(m.t)}</small> {m.text}
-            </button>
-          )
+        <button key={m.id} className={`msg ${m.kind}`} onClick={() => { if (m.id === hunt) ctl.huntHuggy(); else if (m.floor !== undefined) ctl.focus(m.floor, m.x ?? TOWER_WIDTH / 2) }}>
+          <small>{clockLabel(m.t)}</small> {m.text}{m.id === hunt && <> <span className="hunt">🔍 Help me look</span></>}
+        </button>
       ))}
     </div>
   )

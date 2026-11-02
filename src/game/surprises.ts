@@ -99,7 +99,6 @@ export function surpriseDay(g: Game) {
   if (g.flags.surprise?.day === day) return
   g.flags.lastSurprise = g.flags.surprise ?? null
   const id = drawSurprise(g, day)
-  if (id === 'huggy') g.flags.huggyLastOut = day
   g.flags.surprise = { id, day, at: id ? byId(id).at(g, day) : 0 }
 }
 

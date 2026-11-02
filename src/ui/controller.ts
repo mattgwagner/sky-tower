@@ -485,9 +485,8 @@ export class Controller {
     const hg = this.g.flags.huggy
     if (!hg) return false
     const spot = huggyWorld(hg.floor, hg.x)
-    const hx = (spot.wx - this.cam.x) * this.cam.zoom + this.W / 2
-    const hy = (spot.wy - this.cam.y) * this.cam.zoom + this.H / 2
-    return Math.hypot(hx - sx, hy - sy) < Math.max(16, 9 * this.cam.zoom)
+    const p = worldToScreen(this.cam, this.W, this.H, spot.wx, spot.wy)
+    return Math.hypot(p.x - sx, p.y - sy) < Math.max(16, 9 * this.cam.zoom)
   }
 
   /** "Help me look": bring the camera near Huggy's floor, a few floors off so it's still a hunt. */

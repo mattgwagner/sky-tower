@@ -1212,7 +1212,7 @@ function trains(g: Game, m: number) {
 
 // ---------- spooky stuff: Huggy hide-and-seek, Rush and Seek ----------
 
-const nightOf = (g: Game) => dayOf(g.time) - (minuteOfDay(g.time) < at(6) ? 1 : 0)
+export const nightOf = (g: Game) => dayOf(g.time) - (minuteOfDay(g.time) < at(6) ? 1 : 0)
 const isNight = (m: number) => m >= at(20) || m < at(6)
 
 function hideHuggy(g: Game, factory: Facility) {
@@ -1231,6 +1231,7 @@ export function releaseHuggy(g: Game) {
   const factory = facilitiesOf(g, 'toyFactory').find((f) => f.reachable)
   if (!factory || g.flags.huggy || g.flags.huggyFound === nightOf(g)) return
   if (!hideHuggy(g, factory)) return
+  g.flags.huggyLastOut = dayOf(g.time)
   log(g, `${HUGGY_LOOSE} He's hiding in a vent somewhere in your tower. Find him and tap him!`, 'event')
   sound.play('spooky')
 }

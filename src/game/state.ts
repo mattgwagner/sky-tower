@@ -138,7 +138,7 @@ export interface Game {
     /** Huggy Wuggy's hiding spot (top floor of a room + tile x), or null when he's in his case */
     huggy?: { floor: number; x: number } | null
     huggyFound?: number
-    /** Day of the last midnight draw that let Huggy out; missing until a tower with a toy factory gets one */
+    /** Day Huggy last got out of his case; missing until he first does */
     huggyLastOut?: number
     /** a DOORS-style entity visiting a floor at night */
     entity?: { kind: 'rush' | 'seek'; floor: number; start: number; a: number; b: number } | null

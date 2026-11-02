@@ -1824,7 +1824,7 @@ export function huggyWorld(floor: number, x: number) {
 }
 
 /** Last hiding spot drawn, so a move to a new vent leaves a whoosh behind. */
-let huggyWas: { floor: number; x: number } | null = null
+let huggyWas: { g: Game; floor: number; x: number } | null = null
 let huggyWhoosh: { wx: number; wy: number; t: number } | null = null
 let whooshes = 0
 /** Dev counter: whooshes started, since the puff only lasts ~0.7s. */
@@ -1833,11 +1833,11 @@ const WHOOSH_MS = 700
 
 function drawHuggyVent(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: number) => Pt, z: number, now: number) {
   const hg = g.flags.huggy
-  if (hg && huggyWas && (hg.floor !== huggyWas.floor || hg.x !== huggyWas.x)) {
+  if (hg && huggyWas?.g === g && (hg.floor !== huggyWas.floor || hg.x !== huggyWas.x)) {
     huggyWhoosh = { ...huggyWorld(huggyWas.floor, huggyWas.x), t: now }
     whooshes++
   }
-  huggyWas = hg ? { ...hg } : null
+  huggyWas = hg ? { g, ...hg } : null
   if (huggyWhoosh) {
     // a few dusty puffs blowing out of the old vent, sized on screen so they read zoomed out
     const k = (now - huggyWhoosh.t) / WHOOSH_MS
@@ -1852,8 +1852,8 @@ function drawHuggyVent(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: n
     }
   }
   if (!hg) return
-  const top = S(hg.x * T, floorTop(hg.floor) + 2)
   const spot = huggyWorld(hg.floor, hg.x)
+  const top = S(spot.wx, spot.wy - 8)
   const head = S(spot.wx, spot.wy)
   // a blue glow pulsing out of the vent, in screen px so it shows on a zoomed-out tower too
   const r = 20 + Math.sin(now / 260) * 4
