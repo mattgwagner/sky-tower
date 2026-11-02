@@ -133,6 +133,7 @@ input[type='checkbox'] { accent-color: var(--accent); width: 18px; height: 18px;
 .msg.bad { border-left-color: var(--bad); }
 .msg.star { border-left-color: var(--accent); background: #3a3210; }
 .msg.event { border-left-color: #f783ac; }
+.msg .hunt { display: inline-block; margin-left: 4px; padding: 1px 8px; border-radius: 999px; background: #1c7ed6; color: #fff; font-weight: 700; white-space: nowrap; }
 @keyframes slidein { from { transform: translateX(30px); opacity: 0; } }
 
 /* inspector */

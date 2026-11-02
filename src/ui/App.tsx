@@ -2,7 +2,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { audioPrefs, play, unlockAudio } from '../audio'
 import { CATEGORIES, CATHEDRAL_TOP, FACILITIES, RENT_LABELS, TOWER_WIDTH, TRANSPORTS, isCommercial, isConnector, isHotel } from '../game/defs'
 import type { Category, FacilityKind, Mode, ToolId, TransportKind } from '../game/defs'
-import { bombDecision, setRent, starProgress } from '../game/sim'
+import { bombDecision, HUGGY_LOOSE, setRent, starProgress } from '../game/sim'
 import type { Facility, Shaft } from '../game/state'
 import type { SurpriseId } from '../game/surprises'
 import { clockLabel, dayOf, floorLabel, isWeekend, minuteOfDay, money, quarterOf, yearOf } from '../game/state'
@@ -14,6 +14,7 @@ import { holidayBadge } from '../game/holidays'
 import { marketPanel, marketPhase } from '../game/market'
 import { playgroundRainedOut, playgroundSwing } from '../game/playground'
 import { discoBeat, discoFlashCount, discoMode, discoStatus, danceOffNow, feverOn, feverSpin } from '../game/disco'
+import { huggyWhooshCount } from '../render/renderer'
 import { totalWaiting } from '../game/elevators'
 import { stickerProgress, stickersApi } from '../game/stickers'
 import { Controller } from './controller'
@@ -40,7 +41,7 @@ if (import.meta.env.DEV) {
   void Promise.all([import('../game/world'), import('../game/sim'), import('../render/sky-fx'), import('../game/surprises')]).then(([world, sim, sky, surprises]) => {
     // forceSurprise('ufo') starts that surprise now, for screenshots
     const forceSurprise = (id: SurpriseId) => surprises.forceSurprise(ctl.g, id)
-    w.api = { ...world, ...sim, ...sky, stickers: stickersApi, forceSurprise, playgroundSwing, discoMode, feverOn, feverSpin, danceOffNow, discoBeat, discoFlashCount }
+    w.api = { ...world, ...sim, ...sky, stickers: stickersApi, forceSurprise, playgroundSwing, discoMode, feverOn, feverSpin, danceOffNow, discoBeat, discoFlashCount, huggyWhooshCount }
   })
 }
 
@@ -507,9 +508,17 @@ function News() {
   return (
     <div className="news">
       {items.map((m) => (
-        <button key={m.id} className={`msg ${m.kind}`} onClick={() => { if (m.floor !== undefined) ctl.focus(m.floor, m.x ?? TOWER_WIDTH / 2) }}>
-          <small>{clockLabel(m.t)}</small> {m.text}
-        </button>
+        m.text.startsWith(HUGGY_LOOSE) && g.flags.huggy
+          ? (
+            <button key={m.id} className={`msg ${m.kind}`} onClick={() => ctl.huntHuggy()}>
+              <small>{clockLabel(m.t)}</small> {m.text} <span className="hunt">🔍 Help me look</span>
+            </button>
+          )
+          : (
+            <button key={m.id} className={`msg ${m.kind}`} onClick={() => { if (m.floor !== undefined) ctl.focus(m.floor, m.x ?? TOWER_WIDTH / 2) }}>
+              <small>{clockLabel(m.t)}</small> {m.text}
+            </button>
+          )
       ))}
     </div>
   )

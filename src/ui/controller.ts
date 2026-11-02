@@ -9,7 +9,7 @@ import { dragDrop } from '../game/slide'
 import { buildStarter } from '../game/starter'
 import { checkFacility, checkShaft, demolish, occupantAt, paintRun, placeFacility, placeShaft, topFloor } from '../game/world'
 import type { Camera, Overlay } from '../render/renderer'
-import { flashBuild, jumpscare, launchFireworks, personPos, render, screenToWorld, worldToScreen } from '../render/renderer'
+import { flashBuild, huggyWorld, jumpscare, launchFireworks, personPos, render, screenToWorld, worldToScreen } from '../render/renderer'
 import { registerPoke } from '../render/poke-fx'
 import { pokeFacility, pokeRider, pokeShaft } from '../game/poke'
 import { apeHit, pokeGiant } from '../game/giants'
@@ -352,12 +352,6 @@ export class Controller {
         this.emit()
         return
       }
-      const hg = this.g.flags.huggy
-      if (hg) {
-        const hx = (hg.x * T - this.cam.x) * this.cam.zoom + this.W / 2
-        const hy = ((-(hg.floor + 1) * FH + 10) - this.cam.y) * this.cam.zoom + this.H / 2
-        if (Math.hypot(hx - sx, hy - sy) < Math.max(16, 9 * this.cam.zoom)) { catchHuggy(this.g); this.emit(); return }
-      }
       const mk = this.g.flags.monkey
       if (mk) {
         const spot = looseMonkeyWorld(mk.floor, mk.x)
@@ -470,6 +464,8 @@ export class Controller {
       return
     }
     const sx = e.offsetX, sy = e.offsetY
+    // finding Huggy beats whatever tool is out: a kid tapping him wants him, not a new room
+    if (e.button === 0 && this.huggyAt(sx, sy)) { catchHuggy(this.g); this.drag = null; this.emit(); return }
     const w = screenToWorld(this.cam, this.W, this.H, sx, sy)
     const fk = this.isFacTool()
     const sk = this.isShaftTool()
@@ -482,6 +478,24 @@ export class Controller {
     else if (sk) this.drag = { kind: 'shaft', x: Math.round(w.tile - TRANSPORTS[sk].width / 2), f0: w.floor }
     else if (fk) { this.clickAt(sx, sy); this.drag = { kind: 'stamp', floor: w.floor } }
     this.hover(sx, sy)
+  }
+
+  /** Is (sx, sy) on loose Huggy? The target is at least 32 screen px across at any zoom. */
+  private huggyAt(sx: number, sy: number) {
+    const hg = this.g.flags.huggy
+    if (!hg) return false
+    const spot = huggyWorld(hg.floor, hg.x)
+    const hx = (spot.wx - this.cam.x) * this.cam.zoom + this.W / 2
+    const hy = (spot.wy - this.cam.y) * this.cam.zoom + this.H / 2
+    return Math.hypot(hx - sx, hy - sy) < Math.max(16, 9 * this.cam.zoom)
+  }
+
+  /** "Help me look": bring the camera near Huggy's floor, a few floors off so it's still a hunt. */
+  huntHuggy() {
+    const hg = this.g.flags.huggy
+    if (!hg) return
+    const off = (Math.floor(hg.x * 7) % 7) - 3
+    this.focus(Math.max(0, hg.floor + off), hg.x)
   }
 
   /** Keep placing the current facility while the button is held and dragged sideways. */

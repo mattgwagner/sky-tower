@@ -1223,12 +1223,15 @@ function hideHuggy(g: Game, factory: Facility) {
   return true
 }
 
+/** Start of the news line when Huggy gets out; the feed hangs its "Help me look" button on it. */
+export const HUGGY_LOOSE = '🧸 Huggy Wuggy\'s display case is EMPTY!'
+
 /** Huggy gets out of his case. Only on the nights surprises.ts draws him. */
 export function releaseHuggy(g: Game) {
   const factory = facilitiesOf(g, 'toyFactory').find((f) => f.reachable)
   if (!factory || g.flags.huggy || g.flags.huggyFound === nightOf(g)) return
   if (!hideHuggy(g, factory)) return
-  log(g, '🧸 Huggy Wuggy\'s display case is EMPTY! He\'s hiding in a vent somewhere in your tower. Find him and tap him!', 'event')
+  log(g, `${HUGGY_LOOSE} He's hiding in a vent somewhere in your tower. Find him and tap him!`, 'event')
   sound.play('spooky')
 }
 

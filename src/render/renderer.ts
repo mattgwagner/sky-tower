@@ -1818,24 +1818,78 @@ function drawHuggy(c: CanvasRenderingContext2D, x: number, yb: number, u: number
   for (let k = 0; k < 4; k++) R(-3.6 + k * 2, -30.4, 1.2, 1.4, '#fff')
 }
 
+/** Where Huggy's head hangs below his vent, in world px: the renderer's marker and the controller's tap share it. */
+export function huggyWorld(floor: number, x: number) {
+  return { wx: x * T, wy: floorTop(floor) + 10 }
+}
+
+/** Last hiding spot drawn, so a move to a new vent leaves a whoosh behind. */
+let huggyWas: { floor: number; x: number } | null = null
+let huggyWhoosh: { wx: number; wy: number; t: number } | null = null
+let whooshes = 0
+/** Dev counter: whooshes started, since the puff only lasts ~0.7s. */
+export const huggyWhooshCount = () => whooshes
+const WHOOSH_MS = 700
+
 function drawHuggyVent(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: number) => Pt, z: number, now: number) {
   const hg = g.flags.huggy
-  if (!hg || z < 0.5) return
+  if (hg && huggyWas && (hg.floor !== huggyWas.floor || hg.x !== huggyWas.x)) {
+    huggyWhoosh = { ...huggyWorld(huggyWas.floor, huggyWas.x), t: now }
+    whooshes++
+  }
+  huggyWas = hg ? { ...hg } : null
+  if (huggyWhoosh) {
+    // a few dusty puffs blowing out of the old vent, sized on screen so they read zoomed out
+    const k = (now - huggyWhoosh.t) / WHOOSH_MS
+    if (k >= 1) huggyWhoosh = null
+    else {
+      const p = S(huggyWhoosh.wx, huggyWhoosh.wy)
+      c.fillStyle = `rgba(233,236,239,${(1 - k) * 0.85})`
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2 + 0.4
+        c.beginPath(); c.arc(p.x + Math.cos(a) * 14 * k, p.y + Math.sin(a) * 10 * k, 3 + 5 * k, 0, Math.PI * 2); c.fill()
+      }
+    }
+  }
+  if (!hg) return
   const top = S(hg.x * T, floorTop(hg.floor) + 2)
-  // vent grate hanging open
-  c.fillStyle = '#495057'; c.fillRect(top.x - 6 * z, top.y, 12 * z, 2.5 * z)
-  c.fillStyle = '#212529'; for (let k = 0; k < 4; k++) c.fillRect(top.x - 5 * z + k * 3 * z, top.y + 0.5 * z, 1.5 * z, 1.5 * z)
-  c.save(); c.translate(top.x + 7 * z, top.y + 1 * z); c.rotate(0.9); c.fillStyle = '#868e96'; c.fillRect(0, 0, 10 * z, 1.5 * z); c.restore()
-  // Huggy dangles upside down out of the vent, peeking
-  const peek = 6 + Math.sin(now / 700) * 2
+  const spot = huggyWorld(hg.floor, hg.x)
+  const head = S(spot.wx, spot.wy)
+  // a blue glow pulsing out of the vent, in screen px so it shows on a zoomed-out tower too
+  const r = 20 + Math.sin(now / 260) * 4
+  const glow = c.createRadialGradient(head.x, head.y, 0, head.x, head.y, r)
+  glow.addColorStop(0, 'rgba(116,192,252,0.85)'); glow.addColorStop(1, 'rgba(28,126,214,0)')
+  c.fillStyle = glow; c.beginPath(); c.arc(head.x, head.y, r, 0, Math.PI * 2); c.fill()
+  if (z >= 0.5) {
+    // vent grate hanging open
+    c.fillStyle = '#495057'; c.fillRect(top.x - 6 * z, top.y, 12 * z, 2.5 * z)
+    c.fillStyle = '#212529'; for (let k = 0; k < 4; k++) c.fillRect(top.x - 5 * z + k * 3 * z, top.y + 0.5 * z, 1.5 * z, 1.5 * z)
+    c.save(); c.translate(top.x + 7 * z, top.y + 1 * z); c.rotate(0.9); c.fillStyle = '#868e96'; c.fillRect(0, 0, 10 * z, 1.5 * z); c.restore()
+    // Huggy dangles upside down out of the vent, peeking
+    const peek = 6 + Math.sin(now / 700) * 2
+    c.save()
+    c.beginPath(); c.rect(top.x - 20 * z, top.y + 2 * z, 40 * z, 30 * z); c.clip()
+    c.translate(top.x, top.y + 2 * z + (peek - 6) * z)
+    c.rotate(Math.PI)
+    drawHuggy(c, 0, 28 * z, z, now) // upside down: head and arms hang below the vent
+    c.restore()
+  } else {
+    // zoomed out: a long blue hand wiggling down out of the vent
+    c.save(); c.translate(head.x, head.y - 9); c.rotate(Math.sin(now / 180) * 0.35)
+    c.fillStyle = '#495057'; c.fillRect(-6, -2, 12, 3) // the vent
+    c.fillStyle = '#1c7ed6'; c.fillRect(-2, 0, 4, 9) // arm
+    c.fillRect(-5, 8, 10, 7) // palm
+    for (let k = 0; k < 3; k++) c.fillRect(-5 + k * 3.6, 14, 2.8, 5) // fingers
+    c.restore()
+  }
+  // a "?" bubble beside the vent: there's something in there!
+  const bx = head.x + Math.max(16, 10 * z), by = head.y - Math.max(12, 6 * z) + Math.sin(now / 300) * 1.5
   c.save()
-  c.beginPath(); c.rect(top.x - 20 * z, top.y + 2 * z, 40 * z, 30 * z); c.clip()
-  c.translate(top.x, top.y + 2 * z + (peek - 6) * z)
-  c.rotate(Math.PI)
-  drawHuggy(c, 0, 28 * z, z, now) // upside down: head and arms hang below the vent
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(bx, by, 8, 0, Math.PI * 2); c.fill()
+  c.strokeStyle = '#1c7ed6'; c.lineWidth = 1.5; c.stroke()
+  c.fillStyle = '#1c7ed6'; c.font = 'bold 12px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'
+  c.fillText('?', bx, by + 0.5)
   c.restore()
-  // a little sparkle so kids can spot him
-  if (Math.floor(now / 400) % 3 === 0) { c.fillStyle = '#ffe066'; c.fillRect(top.x + 9 * z, top.y + 4 * z, 1.5 * z, 1.5 * z) }
 }
 
 function drawToyFactory(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: number, h: number, z: number, now: number, m: number) {
