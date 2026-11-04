@@ -143,7 +143,7 @@ export function mathDrafts(g: Game, r: Roll): Draft[] {
   if (hotels.length) {
     const k = pickOf(hotels, 12)
     const rooms = facilitiesOf(g, k), each = hotelNight(g, k, rooms[0].rent), n = rooms.length
-    out.push({ type: 'math', skill: 'mul', emoji: '🛏️', kind: k, answer: n * each, hint: `${n} groups of ${money(each)}`,
+    out.push({ type: 'math', skill: 'mul', emoji: '🛏️', kind: k, dollars: true, answer: n * each, hint: `${n} groups of ${money(each)}`,
       text: `You have ${n} ${plural(FACILITIES[k].name, n).replace(/^\d+ /, '')}. Each one pays ${money(each)} a night. If they all fill up, how much do you make tonight?` })
   }
 
@@ -151,7 +151,7 @@ export function mathDrafts(g: Game, r: Roll): Draft[] {
   const offices = facilitiesOf(g, 'office').filter((f) => f.occupied)
   if (offices.length >= 2 && offices.length <= 12 && offices.every((f) => f.rent === offices[0].rent) && times(officeRent(g, offices[0].rent))) {
     const n = offices.length, each = officeRent(g, offices[0].rent)
-    out.push({ type: 'math', skill: 'mul', emoji: '💼', kind: 'office', answer: n * each, hint: `${n} groups of ${money(each)}`,
+    out.push({ type: 'math', skill: 'mul', emoji: '💼', kind: 'office', dollars: true, answer: n * each, hint: `${n} groups of ${money(each)}`,
       text: `${n} offices are rented. Each one pays ${money(each)} rent every 3 days. How much rent is that?` })
   }
 
@@ -184,7 +184,7 @@ export function mathDrafts(g: Game, r: Roll): Draft[] {
     const a = pickOf(priced, 15)
     const b = pickOf(priced.filter((k) => k !== a), 16)
     const ca = FACILITIES[a].cost, cb = FACILITIES[b].cost
-    out.push({ type: 'math', skill: 'money', emoji: '💵', answer: ca + cb, hint: `${ca / 1000} thousand + ${cb / 1000} thousand`,
+    out.push({ type: 'math', skill: 'money', emoji: '💵', dollars: true, answer: ca + cb, hint: `${ca / 1000} thousand + ${cb / 1000} thousand`,
       text: `${plural(FACILITIES[a].name, 1).replace(/^a/, 'A')} costs ${money(ca)} and ${plural(FACILITIES[b].name, 1)} costs ${money(cb)}. How much for both?` })
   }
 

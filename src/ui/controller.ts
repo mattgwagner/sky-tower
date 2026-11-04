@@ -14,6 +14,7 @@ import { registerPoke } from '../render/poke-fx'
 import { pokeFacility, pokeRider, pokeShaft } from '../game/poke'
 import { apeHit, pokeGiant } from '../game/giants'
 import { bump, stepStickers } from '../game/stickers'
+import { contractFx } from '../game/contracts'
 import type { Sticker, StickerSnap } from '../game/stickers'
 import { catchHuggy } from '../game/sim'
 import { catchMonkey } from '../game/zoo'
@@ -64,6 +65,8 @@ export class Controller {
   onBuildFail: ((reason: string) => void) | null = null
   /** Stickers waiting to toast, one at a time. */
   stickerQueue: Sticker[] = []
+  /** Build / earn contracts finished in the tower, waiting to toast. */
+  contractQueue: { id: number; text: string; paid: number }[] = []
   private stickerMinute = -1
   private seenStars = 0
   private wasSeeingUfo = false
@@ -71,6 +74,10 @@ export class Controller {
   constructor() {
     this.g = newGame('family', false)
     sound.play = (n) => play(n)
+    contractFx.done = (c, paid) => {
+      // a math answer cheers inside the board; only the ones finished out in the tower toast
+      if (c.type !== 'math') { this.contractQueue.push({ id: c.id, text: c.text, paid }); this.emit() }
+    }
   }
 
   emit() { this.listeners.forEach((l) => l()) }

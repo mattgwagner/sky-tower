@@ -219,6 +219,8 @@ export interface Contract {
   skill?: Skill
   answer?: number
   hint?: string
+  /** Answer is in dollars */
+  dollars?: boolean
   /** Answer is a clock time, typed as h:mm and stored as h*100+mm */
   clock?: boolean
   /** Got a wrong answer at least once */

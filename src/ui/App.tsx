@@ -19,6 +19,7 @@ import { totalWaiting } from '../game/elevators'
 import { stickerProgress, stickersApi } from '../game/stickers'
 import { Controller } from './controller'
 import { StickerAlbum, StickerToasts } from './Stickers'
+import { ContractBoard, ContractToasts } from './Contracts'
 import { personDoing, personName, personRole, personThought, petLine } from '../game/people-info'
 import type { Speed, TowerSummary } from './controller'
 import { makePostcard, savePostcard } from './postcard'
@@ -170,6 +171,7 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
   })
   const [menu, setMenu] = useState(false)
   const [album, setAlbum] = useState(false)
+  const [board, setBoard] = useState(false)
   const [postcard, setPostcard] = useState<HTMLCanvasElement | null>(null)
   const [cat, setCat] = useState<Category>(ctl.tool === 'lobby' ? 'build' : 'homes')
   const [celebrate, setCelebrate] = useState(0)
@@ -249,8 +251,9 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
   return (
     <div className="game">
       <canvas ref={canvasRef} className={`view tool-${ctl.tool}`} />
-      <TopBar onHelp={() => setHelp(true)} onMenu={() => setMenu(true)} onSnap={snap} onStickers={() => { play('click'); setAlbum(true) }} />
+      <TopBar onHelp={() => setHelp(true)} onMenu={() => setMenu(true)} onSnap={snap} onStickers={() => { play('click'); setAlbum(true) }} onContracts={() => { play('click'); setBoard(true) }} />
       <StickerToasts />
+      <ContractToasts />
       <Palette cat={cat} setCat={setCat} />
       <Goals />
       <News />
@@ -293,6 +296,7 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
       )}
       {help && <Help onClose={() => setHelp(false)} />}
       {album && <StickerAlbum onClose={() => setAlbum(false)} />}
+      {board && <ContractBoard onClose={() => setBoard(false)} />}
       {menu && (
         <Modal onClose={() => setMenu(false)}>
           <h2>Menu</h2>
@@ -302,6 +306,7 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
               <input value={g.name ?? ''} maxLength={28} placeholder="The Mega Tower" onChange={(e) => { g.name = e.target.value; ctl.emit() }} />
             </label>
             <button onClick={snap}>📸 Postcard of my tower</button>
+            <button onClick={() => { setMenu(false); setBoard(true); play('click') }}>📋 Contracts <span className="sticker-count">{g.contracts.open.length}</span></button>
             <button onClick={() => { setMenu(false); setAlbum(true); play('click') }}>📒 Stickers <span className="sticker-count">{stick.have}/{stick.total}</span></button>
             <button onClick={() => { const ok = ctl.save(); setMenu(false); setToast({ text: ok ? `💾 Saved “${g.name}”!` : '⚠️ Couldn\'t save. Try deleting an old tower.', id: Date.now() }) }}>💾 Save now</button>
             <button onClick={() => { ctl.toggleMusic() }}>{audioPrefs.music ? '🎵 Music: on' : '🎵 Music: off'}</button>
@@ -328,7 +333,7 @@ function Stars({ n }: { n: number }) {
   return <span className="stars">{'★'.repeat(n)}<span className="dim">{'★'.repeat(5 - n)}</span></span>
 }
 
-function TopBar({ onHelp, onMenu, onSnap, onStickers }: { onHelp: () => void; onMenu: () => void; onSnap: () => void; onStickers: () => void }) {
+function TopBar({ onHelp, onMenu, onSnap, onStickers, onContracts }: { onHelp: () => void; onMenu: () => void; onSnap: () => void; onStickers: () => void; onContracts: () => void }) {
   const g = ctl.g
   const stick = stickerProgress(g)
   const m = minuteOfDay(g.time)
@@ -362,6 +367,7 @@ function TopBar({ onHelp, onMenu, onSnap, onStickers }: { onHelp: () => void; on
       <button className={`icon ${ctl.ov.moodView ? 'on' : ''}`} title="Happiness view (M)" onClick={() => { ctl.ov.moodView = !ctl.ov.moodView; ctl.emit() }}>😊</button>
       <button className="icon" title="Postcard of my tower" onClick={onSnap}>📸</button>
       <button className="icon" title={audioPrefs.music ? 'Music on' : 'Music off'} onClick={() => ctl.toggleMusic()}>{audioPrefs.music ? '🎵' : '🎶'}</button>
+      <button className="sticker-btn" title="Contracts" onClick={onContracts}>📋 <span className="sticker-count">{g.contracts.open.length}</span></button>
       <button className="sticker-btn" title="Sticker book" onClick={onStickers}>📒 <span className="sticker-count">{stick.have}/{stick.total}</span></button>
       <button className="icon" title="How to play" onClick={onHelp}>❓</button>
       <button className="icon" title="Menu" onClick={onMenu}>☰</button>
