@@ -31,6 +31,7 @@ export function earn(g: Game, amount: number) {
   const v = Math.round(amount * mult)
   g.money += v
   g.stats.income += v
+  g.contracts.earnedToday += v
   return v
 }
 

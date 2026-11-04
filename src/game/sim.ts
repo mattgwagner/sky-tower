@@ -23,6 +23,7 @@ import { discoAfterWeekend, discoFx, discoMinute, discoPerHour } from './disco'
 import { marketRush } from './market'
 import { concertDoors, concertMinute, concertOpen, concertPerHour, concertStay } from './concert'
 import { bump } from './stickers'
+import { contractsDay, contractsHour, contractsMinute } from './contracts'
 import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
 
 export { giantCount, giantNow, giantsArrive } from './giants'
@@ -531,6 +532,11 @@ const FUN_HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
   playground: [[at(8), at(19)]],
   disco: [[at(16), at(24)], [at(0), at(1)]], // same windows as DISCO_HOURS; weekends add 1–2am in isOpen
 }
+/** Opening windows for a kind, in minutes after midnight. Empty when it never closes or has none. */
+export function hoursOf(k: FacilityKind): [number, number][] {
+  return HOURS[k] ?? FUN_HOURS[k] ?? []
+}
+
 const LAUNCH = at(12)
 
 function stayFor(g: Game, k: FacilityKind) {
@@ -1116,6 +1122,7 @@ function minuteTick(g: Game) {
   }
   surpriseMinute(g)
   ufoMinute(g)
+  contractsMinute(g)
   if (m % 60 === 0) hourTick(g, m)
   giantsArrive(g)
 }
@@ -1144,6 +1151,7 @@ function hourTick(g: Game, m: number) {
   stepHoliday(g, m, holidaySim)
   zooHour(g, m)
   frogsHour(g, m)
+  contractsHour(g, m)
 }
 
 const holidaySim: HolidaySim = { newPerson, startTrip, evict, schedule }
@@ -1470,6 +1478,7 @@ function dayTick(g: Game) {
     if (p.kind === 'worker' || p.kind === 'resident' || p.kind === 'maid') planDay(g, p, false)
     p.mood *= 0.6
   }
+  contractsDay(g)
   if (day > 0 && day % DAYS_PER_QUARTER === 0) quarterTick(g)
   surpriseDay(g)
 }

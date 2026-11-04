@@ -192,7 +192,56 @@ export interface Game {
   stickers: string[]
   /** Pokes, pizzas sold, riders, and other totals nothing else tracked. */
   counters: Record<string, number>
+  /** The contracts board. Old saves omit this. */
+  contracts: ContractBook
   name?: string
+}
+
+export type Skill = 'mul' | 'add' | 'sub' | 'money' | 'time'
+export type ContractType = 'build' | 'earn' | 'pop' | 'above' | 'math'
+
+export interface Contract {
+  id: number
+  type: ContractType
+  /** Day it was drawn */
+  day: number
+  /** Last day it can still be finished. Math contracts have none. */
+  until?: number
+  reward: number
+  emoji: string
+  text: string
+  kind?: FacilityKind
+  /** build: how many more; base is how many there were at the draw */
+  n?: number
+  base?: number
+  /** earn: dollars today. pop: people. above: the floor to beat. */
+  goal?: number
+  skill?: Skill
+  answer?: number
+  hint?: string
+  /** Answer is a clock time, typed as h:mm and stored as h*100+mm */
+  clock?: boolean
+  /** Got a wrong answer at least once */
+  missed?: boolean
+}
+
+export interface ContractBook {
+  open: Contract[]
+  /** Day the board last drew; -1 before the first morning */
+  lastDay: number
+  nextId: number
+  done: number
+  /** Math contracts right on the first try, in a row */
+  streak: number
+  best: number
+  /** First-try misses per skill, so picks lean on what he finds hard */
+  misses: Partial<Record<Skill, number>>
+  earnedToday: number
+  earnedYesterday: number
+}
+
+export function newContractBook(): ContractBook {
+  return { open: [], lastDay: -1, nextId: 1, done: 0, streak: 0, best: 0, misses: {}, earnedToday: 0, earnedYesterday: 0 }
 }
 
 export const START_MONEY = 2_000_000
@@ -221,6 +270,7 @@ export function newGame(mode: Mode, disasters: boolean, name = ''): Game {
     starCelebration: 0,
     stickers: [],
     counters: {},
+    contracts: newContractBook(),
   }
 }
 
@@ -293,6 +343,7 @@ export function deserialize(json: string): Game {
     ...s,
     stickers: s.stickers ?? [],
     counters: s.counters ?? {},
+    contracts: s.contracts ?? newContractBook(),
     floors: new Map(s.floors.map(([f, r]) => [f, Int32Array.from(r)])),
     facilities: new Map(s.facilities.map((f) => [f.id, f])),
     shafts: new Map(s.shafts.map((x) => [x.id, x])),
