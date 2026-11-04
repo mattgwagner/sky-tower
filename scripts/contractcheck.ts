@@ -183,7 +183,7 @@ if (placed !== build.n) fail(`placed ${placed} of ${build.n} ${build.kind}`)
 const spent = money0 - b.money
 contractsMinute(b)
 if (b.contracts.open.includes(bc)) fail('build contract not done after building')
-if (b.money + spent - money0 !== Math.round(bc.reward * 1.25)) fail(`build paid ${b.money + spent - money0}, reward ${bc.reward}`)
+if (b.money + spent - money0 !== bc.reward) fail(`build paid ${b.money + spent - money0}, reward ${bc.reward}`)
 if (b.contracts.done !== 1) fail('done count')
 if (!stepStickers(b).some((s) => s.id === 'contract-1')) fail('First Contract sticker')
 

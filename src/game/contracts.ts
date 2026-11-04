@@ -9,7 +9,7 @@ import { dayOf, minuteOfDay } from './state'
 import { defineSticker } from './stickers'
 import { surpriseHash } from './surprises'
 import { hoursOf, starProgress, TRAIN_EVERY } from './sim'
-import { earn, facilitiesOf, log, topFloor, unlocked } from './world'
+import { facilitiesOf, log, topFloor, unlocked } from './world'
 
 export type { Contract, ContractBook, ContractType, Skill }
 
@@ -208,7 +208,7 @@ export function mathDrafts(g: Game, r: Roll): Draft[] {
     const nxt = left + TRAIN_EVERY
     // 12-hour, as he'd type it off a clock face: 3:00pm is 300
     const hhmm = (m: number) => ((Math.floor(m / 60) % 12) || 12) * 100 + (m % 60)
-    out.push({ type: 'math', skill: 'time', emoji: '🚇', clock: true, answer: hhmm(nxt), hint: `Trains come at :00 and :30. Which one comes after ${clockText(hhmm(now))}?`,
+    out.push({ type: 'math', skill: 'time', emoji: '🚇', clock: true, answer: hhmm(nxt), hint: `Trains come every ${TRAIN_EVERY} minutes. Which one comes after ${clockText(hhmm(now))}?`,
       text: `Metro trains come every ${TRAIN_EVERY} minutes, starting at 5:00. It's ${clockText(hhmm(now))} now. When's the next train?` })
   }
   return out
@@ -258,11 +258,12 @@ export function contractProgress(g: Game, c: Contract): { have: number; need: nu
 function finish(g: Game, c: Contract) {
   const book = g.contracts
   book.open = book.open.filter((o) => o.id !== c.id)
-  const v = earn(g, c.reward)
-  book.earnedToday -= v // the reward isn't something the tower earned
+  // paid as shown on the card: no family bonus, and not counted as the tower's earnings
+  g.money += c.reward
+  g.stats.income += c.reward
   book.done++
-  log(g, `📋 Contract done: ${c.type === 'math' ? 'math question' : c.text}! +${money(v)}`, 'good')
-  contractFx.done(c, v)
+  log(g, `📋 Contract done: ${c.type === 'math' ? 'math question' : c.text}! +${money(c.reward)}`, 'good')
+  contractFx.done(c, c.reward)
 }
 
 /** Called every game minute. Pays out any build / earn contract that's met. */
@@ -276,8 +277,11 @@ export function contractsMinute(g: Game) {
 }
 
 export function contractsDay(g: Game) {
-  g.contracts.earnedYesterday = g.contracts.earnedToday
-  g.contracts.earnedToday = 0
+  const book = g.contracts
+  book.earnedYesterday = book.earnedToday
+  book.earnedToday = 0
+  // a missed deadline just drops off, no penalty
+  book.open = book.open.filter((c) => c.until === undefined || c.until >= dayOf(g.time))
 }
 
 /** Turn the number pad's text into the stored answer form. Clock times compare on digits. */

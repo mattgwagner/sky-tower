@@ -97,10 +97,12 @@ export function ContractBoard({ onClose }: { onClose: () => void }) {
         ) : (
           <p>No contracts right now. A new one shows up every morning!</p>
         )}
-        <p className="contract-note">
-          {open.length >= MAX_OPEN ? 'Board is full. Finish one to make room.' : 'A new contract every morning.'}
-          {book.done > 0 && <> · {book.done} done</>}
-        </p>
+        {open.length > 0 && (
+          <p className="contract-note">
+            {open.length >= MAX_OPEN ? 'Board is full. Finish one to make room.' : 'A new contract every morning.'}
+            {book.done > 0 && <> · {book.done} done</>}
+          </p>
+        )}
         <div className="row"><button onClick={onClose}>Close</button></div>
       </div>
     </div>
