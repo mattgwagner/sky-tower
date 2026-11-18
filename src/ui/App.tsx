@@ -25,6 +25,8 @@ import { personDoing, personName, personRole, personThought, petLine } from '../
 import type { Speed, TowerSummary } from './controller'
 import { makePostcard, savePostcard } from './postcard'
 
+const SAVE_FAILED = '⚠️ Couldn\'t save. Try deleting an old tower.'
+
 function ago(t: number) {
   const m = Math.round((Date.now() - t) / 60000)
   if (m < 1) return 'just now'
@@ -171,6 +173,7 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
     return true
   })
   const [menu, setMenu] = useState(false)
+  const [quitUnsaved, setQuitUnsaved] = useState(false)
   const [album, setAlbum] = useState(false)
   const [board, setBoard] = useState(false)
   const [postcard, setPostcard] = useState<HTMLCanvasElement | null>(null)
@@ -215,6 +218,7 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
     window.addEventListener('beforeunload', () => ctl.save())
     ctl.confirmDemolish = (id) => setConfirm(id)
     ctl.onBuildFail = (text) => setToast({ text, id: Date.now() })
+    ctl.onSaveFail = () => setToast({ text: SAVE_FAILED, id: Date.now() })
     return () => {
       cancelAnimationFrame(raf); ro.disconnect()
       c.removeEventListener('pointerdown', pd); c.removeEventListener('pointermove', pm); c.removeEventListener('pointerup', pu)
@@ -309,11 +313,13 @@ function GameScreen({ onQuit }: { onQuit: () => void }) {
             <button onClick={snap}>📸 Postcard of my tower</button>
             <button onClick={() => { setMenu(false); setBoard(true); play('click') }}>📋 Contracts <span className="sticker-count">{g.contracts.open.length}</span></button>
             <button onClick={() => { setMenu(false); setAlbum(true); play('click') }}>📒 Stickers <span className="sticker-count">{stick.have}/{stick.total}</span></button>
-            <button onClick={() => { const ok = ctl.save(); setMenu(false); setToast({ text: ok ? `💾 Saved “${g.name}”!` : '⚠️ Couldn\'t save. Try deleting an old tower.', id: Date.now() }) }}>💾 Save now</button>
+            <button onClick={() => { const ok = ctl.save(); setMenu(false); setToast({ text: ok ? `💾 Saved “${g.name}”!` : SAVE_FAILED, id: Date.now() }) }}>💾 Save now</button>
             <button onClick={() => { ctl.toggleMusic() }}>{audioPrefs.music ? '🎵 Music: on' : '🎵 Music: off'}</button>
             <button onClick={() => { ctl.toggleSfx() }}>{audioPrefs.sfx ? '🔊 Sounds: on' : '🔇 Sounds: off'}</button>
             <button onClick={() => { g.disasters = !g.disasters; ctl.emit() }}>{g.disasters ? '🔥 Disasters: on' : '🛡️ Disasters: off'}</button>
-            <button onClick={() => { ctl.save(); setMenu(false); onQuit() }}>🏠 Save & go to title</button>
+            {quitUnsaved
+              ? <button onClick={() => { setMenu(false); onQuit() }}>🏠 Go to title anyway</button>
+              : <button onClick={() => { if (ctl.save()) { setMenu(false); onQuit() } else setQuitUnsaved(true) }}>🏠 Save & go to title</button>}
           </div>
         </Modal>
       )}

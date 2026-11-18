@@ -5,6 +5,7 @@ import type { FacilityKind, Mode, ToolId, TransportKind } from '../game/defs'
 import { afterBuild, evict, sound, step, ufoTime, ufoX } from '../game/sim'
 import type { Facility, Game } from '../game/state'
 import { deserialize, newGame, serialize } from '../game/state'
+import { isPacked, pack, unpack } from '../game/savecodec'
 import { dragDrop } from '../game/slide'
 import { buildStarter } from '../game/starter'
 import { checkFacility, checkShaft, demolish, occupantAt, paintRun, placeFacility, placeShaft, topFloor } from '../game/world'
@@ -63,6 +64,8 @@ export class Controller {
   H = 0
   confirmDemolish: ((id: number) => void) | null = null
   onBuildFail: ((reason: string) => void) | null = null
+  /** A save the browser refused (usually: storage full). */
+  onSaveFail: (() => void) | null = null
   /** Stickers waiting to toast, one at a time. */
   stickerQueue: Sticker[] = []
   /** Build / earn contracts finished in the tower, waiting to toast. */
@@ -105,14 +108,25 @@ export class Controller {
     try {
       const old = localStorage.getItem(LEGACY_KEY)
       if (old) {
-        const g = deserialize(old)
+        const g = deserialize(unpack(old))
         const id = newId()
-        localStorage.setItem(towerKey(id), old)
+        localStorage.setItem(towerKey(id), pack(unpack(old)))
         writeIndex([...readIndex(), this.summary(id, g, g.name?.trim() || 'My First Tower')])
         localStorage.removeItem(LEGACY_KEY)
       }
     } catch { /* unreadable old save: leave it alone */ }
+    this.packOldSaves()
     return readIndex().sort((a, b) => b.updated - a.updated)
+  }
+
+  /** Rewrite plain-JSON saves from before compression so they stop filling storage. */
+  private packOldSaves() {
+    for (const t of readIndex()) {
+      try {
+        const s = localStorage.getItem(towerKey(t.id))
+        if (s && !isPacked(s)) localStorage.setItem(towerKey(t.id), pack(s))
+      } catch { /* leave that one as it is */ }
+    }
   }
 
   private summary(id: string, g: Game, name = g.name?.trim() || 'My Tower'): TowerSummary {
@@ -130,7 +144,7 @@ export class Controller {
     try {
       const s = localStorage.getItem(towerKey(id))
       if (!s) return false
-      this.g = deserialize(s)
+      this.g = deserialize(unpack(s))
       this.towerId = id
       this.lastStars = this.g.stars
       this.resetStickerUi()
@@ -145,11 +159,14 @@ export class Controller {
   save(): boolean {
     if (!this.towerId) return false
     try {
-      localStorage.setItem(towerKey(this.towerId), serialize(this.g))
+      localStorage.setItem(towerKey(this.towerId), pack(serialize(this.g)))
       const list = readIndex().filter((t) => t.id !== this.towerId)
       writeIndex([...list, this.summary(this.towerId, this.g)])
       return true
-    } catch { return false }
+    } catch {
+      this.onSaveFail?.()
+      return false
+    }
   }
 
   private resetStickerUi() {
