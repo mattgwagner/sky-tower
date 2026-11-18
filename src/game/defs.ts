@@ -83,6 +83,12 @@ export type FacilityKind =
   | 'precinct'
   | 'clanky'
   | 'readingRoom'
+  | 'doorHall'
+  | 'karaoke'
+  | 'mortimerShop'
+  | 'lightsOutHall'
+  | 'lampHall'
+  | 'mathWorkshop'
 
 export type TransportKind = 'elevator' | 'serviceElevator' | 'expressElevator' | 'partyElevator'
 
@@ -238,6 +244,18 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'Chef Clanky spins pizza dough for lunch and dinner. He stays in the kitchen.' },
   readingRoom: { kind: 'readingRoom', name: 'Creakwood Reading Room', emoji: '🏮', category: 'crossover', width: 22, height: 2, cost: 200000, stars: 1, pop: 6,
     blurb: 'Parchment notes, a lantern, and Mumbles the sheet ghost, who moves the chairs overnight.' },
+  doorHall: { kind: 'doorHall', name: 'Door Hall', emoji: '🚪', category: 'crossover', width: 24, height: 2, cost: 250000, stars: 2, pop: 6,
+    blurb: 'A hallway of numbered doors. Every few minutes one opens… and somebody peeks out.' },
+  karaoke: { kind: 'karaoke', name: 'Crooner\'s Karaoke', emoji: '🎙️', category: 'crossover', width: 16, height: 1, cost: 150000, stars: 1, pop: 4,
+    blurb: 'A little karaoke lounge. Crooner sings at the top of every hour. Sing along, kid!' },
+  mortimerShop: { kind: 'mortimerShop', name: 'Mortimer\'s Shop', emoji: '🧦', category: 'crossover', width: 12, height: 1, cost: 100000, stars: 1, pop: 2,
+    blurb: 'Mmmph! Batteries, skeleton keys, mega flashlights and lucky socks.' },
+  lightsOutHall: { kind: 'lightsOutHall', name: 'Lights-Out Hall', emoji: '🔦', category: 'crossover', width: 20, height: 2, cost: 220000, stars: 2, pop: 6,
+    blurb: 'A dark hallway lit only by flashlights. Giggles is hiding in here somewhere.' },
+  lampHall: { kind: 'lampHall', name: 'Lamp Hall', emoji: '💡', category: 'crossover', width: 18, height: 1, cost: 160000, stars: 1, pop: 4,
+    blurb: 'Swinging lamps. When the lights flicker… HIDE!' },
+  mathWorkshop: { kind: 'mathWorkshop', name: 'Math Maker\'s Workshop', emoji: '🔨', category: 'crossover', width: 20, height: 1, cost: 180000, stars: 1, pop: 4,
+    blurb: 'Sawdust and sparks. At noon he paints a free tile of floor next door, if there\'s room.' },
 }
 
 export interface TransportDef {
@@ -323,6 +341,7 @@ export const SPEND: Partial<Record<FacilityKind, number>> = {
   concertHall: 1200,
   disco: 300,
   ghostDepot: 200, precinct: 40, clanky: 400, readingRoom: 80,
+  doorHall: 400, karaoke: 250, mortimerShop: 400, lightsOutHall: 400, lampHall: 300, mathWorkshop: 300,
 }
 export const SHOP_CAPACITY: Partial<Record<FacilityKind, number>> = {
   fastFood: 14, restaurant: 18, shop: 8, cinema: 60, partyHall: 40,
@@ -333,6 +352,7 @@ export const SHOP_CAPACITY: Partial<Record<FacilityKind, number>> = {
   concertHall: 90,
   disco: 40,
   ghostDepot: 24, precinct: 10, clanky: 12, readingRoom: 16,
+  doorHall: 24, karaoke: 12, mortimerShop: 8, lightsOutHall: 20, lampHall: 14, mathWorkshop: 12,
 }
 
 /** Places to eat, by meal. */
@@ -348,6 +368,7 @@ export const ATTRACTIONS: FacilityKind[] = [
   'concertHall',
   'disco',
   'ghostDepot', 'precinct', 'readingRoom',
+  'doorHall', 'karaoke', 'mortimerShop', 'lightsOutHall', 'lampHall', 'mathWorkshop',
 ]
 
 export function isHotel(k: FacilityKind) {

@@ -92,8 +92,10 @@ function verifyMath(g: Game, d: Draft) {
   } else if (d.emoji === '➖') {
     if (nums[0] !== g.pop || d.answer !== nums[0] - nums[1]) fail(`subtract ${text} = ${d.answer}`)
   } else if (d.emoji === '💵') {
-    const names = Object.values(FACILITIES).filter((f) => text.includes(` ${f.name} costs $${f.cost.toLocaleString('en-US')}`))
-    if (names.length !== 2 || d.answer !== names[0].cost + names[1].cost) fail(`money ${text} = ${d.answer}`)
+    // Split on "and" so a name inside another ("Shop" in "Mortimer's Shop") can't match twice.
+    const parts = /^An? (.+) costs \$[\d,]+ and an? (.+) costs \$[\d,]+\./.exec(text)
+    const names = parts ? [parts[1], parts[2]].map((n) => Object.values(FACILITIES).find((f) => f.name === n)) : []
+    if (!names[0] || !names[1] || d.answer !== names[0].cost + names[1].cost) fail(`money ${text} = ${d.answer}`)
   } else if (d.emoji === '🕒') {
     // count the open hours on a weekday by asking the sim
     const f = facilitiesOf(g, d.kind!)[0]

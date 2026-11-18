@@ -97,6 +97,12 @@ const FUN_THOUGHTS: Partial<Record<string, string[]>> = {
   playground: ['Swings first!', 'Last one up is a rotten egg', 'I can see my house from here!'],
   concertHall: ['ENCORE! ENCORE!', 'I got front row!', 'The drummer is SO loud', 'Cats can play jazz??'],
   disco: ['Watch my moves!', 'I\'m doing the robot 🤖', 'My feet are tired but I can\'t stop'],
+  doorHall: ['Which door is next?', 'Did that door just MOVE?', 'Shh, Grumble is napping'],
+  karaoke: ['My turn on the mic! 🎤', 'Crooner is the best', 'I only know the chorus'],
+  mortimerShop: ['I need a lucky sock 🧦', 'Mmmph! (That\'s Mortimer for hi)', 'Batteries! I knew it'],
+  lightsOutHall: ['Where\'s Giggles?', 'Point the flashlight over there! 🔦', 'I heard a giggle…'],
+  lampHall: ['The lamps are swinging…', 'If they flicker, HIDE', 'That was close!'],
+  mathWorkshop: ['Sawdust everywhere!', 'He\'s hammering so fast 🔨', 'I want to measure stuff'],
 }
 
 const PARTY_THOUGHTS = ['This is the BEST elevator', 'I rode it three times on purpose']

@@ -19,6 +19,7 @@ import { drawPlayground } from './playground'
 import { drawConcertHall } from './concert'
 import { drawDisco, drawFeverLights } from './disco'
 import { drawClanky, drawGhostDepot, drawPrecinct, drawReadingRoom } from './crossover'
+import { drawCarried, drawCrossover } from './crossover-a'
 import { feverOn, feverSpin } from '../game/disco'
 import { pokeWobble } from './poke-fx'
 import { drawHolidayAmbient, drawHolidayDecor, drawHolidayWear, holidaySky } from './holidays'
@@ -410,6 +411,7 @@ function drawBareFloor(c: CanvasRenderingContext2D, p: { x: number; y: number },
 const NO_CROWD = new Set<FacilityKind>([
   'lobby', 'parking', 'market', 'playground', 'disco',
   'ghostDepot', 'precinct', 'clanky', 'readingRoom',
+  'doorHall', 'karaoke', 'mortimerShop', 'lightsOutHall', 'lampHall', 'mathWorkshop',
 ])
 
 function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: number, y: number) => { x: number; y: number }, z: number, m: number, now: number, ov: Overlay) {
@@ -650,6 +652,7 @@ function drawPeople(c: CanvasRenderingContext2D, g: Game, S: (x: number, y: numb
         c.restore()
       } else drawPersonAt(c, s.x, s.y, z, personColor(p.shirt), Math.floor(p.x * 1.5) % 2, p.mood, p.shirt)
       drawHolidayWear(c, g, p, s.x, s.y, z)
+      drawCarried(c, g, p, s.x, s.y, z)
       const pet = hasPet(p)
       if (pet && z >= 0.6) {
         const tx = p.leg < p.legs.length ? p.legs[p.leg].x : p.goalX
@@ -1394,6 +1397,14 @@ function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: nu
     case 'precinct': return drawPrecinct(c, g, f, p, w, h, z, now)
     case 'clanky': return drawClanky(c, g, f, p, w, h, z, now)
     case 'readingRoom': return drawReadingRoom(c, g, f, p, w, h, z, now)
+    case 'doorHall':
+    case 'karaoke':
+    case 'mortimerShop':
+    case 'lightsOutHall':
+    case 'lampHall':
+    case 'mathWorkshop':
+      if (hidingOn(g, f.floor)) return
+      return drawCrossover(c, g, f, p, w, h, z, now, (x, y, shirt, frame) => drawPersonAt(c, x, y, z, personColor(shirt), frame, 0))
   }
 }
 

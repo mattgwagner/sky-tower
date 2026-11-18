@@ -24,6 +24,7 @@ import { marketRush } from './market'
 import { concertDoors, concertMinute, concertOpen, concertPerHour, concertStay } from './concert'
 import { clankyPerHour, depotPerHour, precinctPerHour, readingPerHour } from './crossover'
 import { bump } from './stickers'
+import { crossLeave, crossMinute, crossPerHour, isCrossoverA } from './crossover-a'
 import { contractsDay, contractsHour, contractsMinute } from './contracts'
 import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
 
@@ -536,6 +537,12 @@ const FUN_HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
   precinct: [[at(9), at(19)]],
   clanky: [[at(11), at(14)], [at(17), at(21)]],
   readingRoom: [[at(9), at(20)]],
+  doorHall: [[at(10), at(22)]],
+  karaoke: [[at(12), at(23)]],
+  mortimerShop: [[at(10), at(21)]],
+  lightsOutHall: [[at(14), at(24)], [at(0), at(1)]],
+  lampHall: [[at(12), at(24)]],
+  mathWorkshop: [[at(9), at(18)]],
 }
 /** Opening windows for a kind, in minutes after midnight. Empty when it never closes or has none. */
 export function hoursOf(k: FacilityKind): [number, number][] {
@@ -576,6 +583,12 @@ function stayFor(g: Game, k: FacilityKind) {
     case 'precinct': return rnd(15, 30)
     case 'clanky': return rnd(25, 45)
     case 'readingRoom': return rnd(40, 80)
+    case 'doorHall': return rnd(25, 45)
+    case 'karaoke': return rnd(30, 60)
+    case 'mortimerShop': return rnd(8, 15)
+    case 'lightsOutHall': return rnd(25, 50)
+    case 'lampHall': return rnd(20, 40)
+    case 'mathWorkshop': return rnd(20, 40)
     default: return rnd(20, 40)
   }
 }
@@ -662,6 +675,7 @@ function spawnVisitors(g: Game) {
     else if (f.kind === 'precinct') perHour = precinctPerHour()
     else if (f.kind === 'clanky') perHour = clankyPerHour(m)
     else if (f.kind === 'readingRoom') perHour = readingPerHour(isWeekend(g.time))
+    else if (isCrossoverA(f.kind)) perHour = crossPerHour(g, f.kind)
     perHour *= holidayRush(g, f.kind)
     if (perHour <= 0) continue
     const doors = f.kind === 'concertHall' ? concertDoors(g) : 1
@@ -776,6 +790,7 @@ function doAct(g: Game, p: Person, act: string) {
       goShopping(g, p, ['shop', 'cinema', 'candy', ...DINNER, ...ATTRACTIONS.filter((k) => k !== 'rocketPad')])
       return
     case 'leaveShop':
+      crossLeave(g, p)
       goBack(g, p)
       return
     case 'trick':
@@ -1357,6 +1372,7 @@ function funEvents(g: Game, m: number) {
   // Wired on the first minute, after every module has finished loading.
   if (!discoWired) { discoWired = true; discoFx.play = (name) => sound.play(name) }
   discoMinute(g, m)
+  crossMinute(g, m)
   const countdown: Record<number, string> = { [LAUNCH - 15]: '3…', [LAUNCH - 10]: '2…', [LAUNCH - 5]: '1…' }
   for (const f of g.facilities.values()) {
     if (!f.reachable || f.fire) continue

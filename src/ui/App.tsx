@@ -15,6 +15,7 @@ import { marketPanel, marketPhase } from '../game/market'
 import { playgroundRainedOut, playgroundSwing } from '../game/playground'
 import { discoBeat, discoFlashCount, discoMode, discoStatus, danceOffNow, feverOn, feverSpin } from '../game/disco'
 import { clankyStatus, depotStatus, precinctStatus, readingStatus } from '../game/crossover'
+import { crossLeave, doorPeek, lampFlicker, makerWalk } from '../game/crossover-a'
 import { huggyWhooshCount } from '../render/renderer'
 import { totalWaiting } from '../game/elevators'
 import { stickerProgress, stickersApi } from '../game/stickers'
@@ -45,7 +46,7 @@ if (import.meta.env.DEV) {
   void Promise.all([import('../game/world'), import('../game/sim'), import('../render/sky-fx'), import('../game/surprises')]).then(([world, sim, sky, surprises]) => {
     // forceSurprise('ufo') starts that surprise now, for screenshots
     const forceSurprise = (id: SurpriseId) => surprises.forceSurprise(ctl.g, id)
-    w.api = { ...world, ...sim, ...sky, stickers: stickersApi, forceSurprise, playgroundSwing, discoMode, feverOn, feverSpin, danceOffNow, discoBeat, discoFlashCount, huggyWhooshCount }
+    w.api = { ...world, ...sim, ...sky, stickers: stickersApi, forceSurprise, playgroundSwing, discoMode, feverOn, feverSpin, danceOffNow, discoBeat, discoFlashCount, huggyWhooshCount, crossLeave, doorPeek, lampFlicker, makerWalk }
   })
 }
 
@@ -388,6 +389,9 @@ function toolInfo(t: ToolId) {
   return { name: d.name, emoji: d.emoji, cost: d.cost, stars: d.stars, blurb: d.blurb, per: '+' }
 }
 
+/** Tab labels too long for the narrow tab column get a soft hyphen, so they break as "Cross-overs" instead of spilling out. */
+const TAB_LABEL: Partial<Record<Category, string>> = { crossover: 'Cross\u00ADovers' }
+
 const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
   build: [
     { label: 'Floors', tools: ['lobby', 'floor'] },
@@ -423,6 +427,10 @@ const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
     { label: 'Midnight Line', tools: ['ghostDepot'] },
     { label: 'Comic Cop', tools: ['precinct', 'clanky'] },
     { label: 'Creakwood', tools: ['readingRoom'] },
+    { label: 'Door Codes', tools: ['doorHall', 'karaoke'] },
+    { label: 'Midnight Hotel', tools: ['mortimerShop', 'lightsOutHall'] },
+    { label: 'Night Shift', tools: ['lampHall'] },
+    { label: 'Math Maker', tools: ['mathWorkshop'] },
   ],
 }
 
@@ -446,7 +454,7 @@ function Palette({ cat, setCat }: { cat: Category; setCat: (c: Category) => void
           return (
             <button key={c.id} role="tab" aria-selected={cat === c.id} className={`cat ${c.id} ${cat === c.id ? 'on' : ''}`} onClick={() => { setCat(c.id); play('click') }} title={c.blurb}>
               <span className="cat-emoji">{c.emoji}</span>
-              <span className="cat-name">{c.name}</span>
+              <span className="cat-name">{TAB_LABEL[c.id] ?? c.name}</span>
               <small>{locked ? `${n - locked} of ${n}` : n} {n === 1 ? 'thing' : 'things'}</small>
             </button>
           )
@@ -710,6 +718,7 @@ function Help({ onClose }: { onClose: () => void }) {
         <p><b>🐸 Frogs!</b> The Rainforest frogs sing every night at 7pm, and they go extra hoppy on rainy days.</p>
         <p><b>🎤 Concert Hall.</b> A different band every night at 7:30pm (Sunday is a 2pm matinee). Fill every seat for a SOLD OUT show!</p>
         <p><b>🪩 Disco.</b> A light-up dance floor. Kids' disco until 7, night club after, and a dance-off at 10. Tap the DJ!</p>
+        <p><b>🔀 Crossovers.</b> Rooms from your other games, grouped by game: Door Codes, Midnight Hotel, Night Shift, Math Maker, Midnight Line, Comic Cop and Creakwood. Same characters, now in your tower. Tap them in Look mode!</p>
         <p><b>9. Stars.</b> Hit the population goal and build what the goal card asks for. Each star unlocks new buildings. The Cathedral on top earns the TOWER rating.</p>
         <p className="keys">Controls: drag to move around · scroll or pinch to zoom · Space pause · 1–4 speed · B demolish · Esc stop building · M happiness view</p>
       </div>

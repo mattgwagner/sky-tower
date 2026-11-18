@@ -8,6 +8,7 @@ import { TRANSPORTS } from './defs'
 import { trainPhase } from './sim'
 import { monkeyOn } from './zoo'
 import { discoPoke } from './disco'
+import { crossPoke, isCrossoverA } from './crossover-a'
 import { fx } from './world'
 
 interface Poke { says: string[]; color?: string; sfx?: Sfx }
@@ -77,6 +78,12 @@ const POKES: Partial<Record<FacilityKind, Poke>> = {
   precinct: { says: ['Woof! Case closed!', 'Stay back from the cell', 'That poster is spelled right'], color: '#f4c542', sfx: 'woof' },
   clanky: { says: ['Spin the dough!', 'Pizza time!', '*whirr*'], color: '#d6453b', sfx: 'pop' },
   readingRoom: { says: ['Boo! …sorry.', 'The chairs moved', 'Hold the lantern up'], color: '#ffd23f', sfx: 'spooky' },
+  doorHall: { says: ['Hoo goes there? 🦉'], color: '#f5c542', sfx: 'boing' },
+  karaoke: { says: ['Is this thing on? 🎤'], color: '#5fb4e8', sfx: 'party' },
+  mortimerShop: { says: ['Mmmph! Everything\'s for sale.'], color: '#7dff9a', sfx: 'spooky' },
+  lightsOutHall: { says: ['You found me! 👻'], color: '#bfefff', sfx: 'twinkle' },
+  lampHall: { says: ['When the lights flicker… HIDE! 💡'], color: '#ffcf7a', sfx: 'flicker' },
+  mathWorkshop: { says: ['Measure twice, hammer once! ✏️'], color: '#9ff5d5', sfx: 'click' },
 }
 
 const lastPoke = new Map<number, number>()
@@ -100,6 +107,7 @@ export function pokeFacility(g: Game, f: Facility, now: number, tile?: number, f
   if (now - last < 350) return null
   lastPoke.set(f.id, now)
   if (f.kind === 'disco') return discoPoke(g, f, now, tile ?? f.x + 4, floor ?? f.floor)
+  if (isCrossoverA(f.kind)) return crossPoke(g, f, now, tile ?? f.x + f.width / 2, floor ?? f.floor)
   if (f.kind === 'fazbear') {
     const night = minuteOfDay(g.time) < 6 * 60
     const says = night ? ['JUMPSCARE! 😱', 'Hurr hurr hurr…', 'Was that Foxy?! 🦊', 'Check the cameras! 📹', 'Close the door!! 🚪']
