@@ -14,6 +14,7 @@ import { holidayBadge } from '../game/holidays'
 import { marketPanel, marketPhase } from '../game/market'
 import { playgroundRainedOut, playgroundSwing } from '../game/playground'
 import { discoBeat, discoFlashCount, discoMode, discoStatus, danceOffNow, feverOn, feverSpin } from '../game/disco'
+import { clankyStatus, depotStatus, precinctStatus, readingStatus } from '../game/crossover'
 import { huggyWhooshCount } from '../render/renderer'
 import { totalWaiting } from '../game/elevators'
 import { stickerProgress, stickersApi } from '../game/stickers'
@@ -412,6 +413,11 @@ const TOOL_GROUPS: Record<Category, { label?: string; tools: ToolId[] }[]> = {
     { label: 'Keep it running', tools: ['recycling', 'parking', 'metro'] },
     { label: `Up on floor ${CATHEDRAL_TOP}`, tools: ['cathedral'] },
   ],
+  crossover: [
+    { label: 'Midnight Line', tools: ['ghostDepot'] },
+    { label: 'Comic Cop', tools: ['precinct', 'clanky'] },
+    { label: 'Creakwood', tools: ['readingRoom'] },
+  ],
 }
 
 function Palette({ cat, setCat }: { cat: Category; setCat: (c: Category) => void }) {
@@ -541,6 +547,12 @@ function FacPanel({ f }: { f: Facility }) {
   if (f.kind === 'rainforest') status = rainforestStatus(g, f) ?? status
   if (f.kind === 'concertHall') status = concertStatus(g, f) ?? status
   if (f.kind === 'disco') status = discoStatus(g, f) ?? status
+  if (f.reachable && !f.fire) {
+    if (f.kind === 'ghostDepot') status = depotStatus(g.time)
+    else if (f.kind === 'precinct') status = precinctStatus()
+    else if (f.kind === 'clanky') status = clankyStatus(minuteOfDay(g.time))
+    else if (f.kind === 'readingRoom') status = readingStatus(g.time)
+  }
   return (
     <div className="panel">
       <div className="panel-head">

@@ -7,6 +7,7 @@ import { paintConcertHall } from './concert'
 import { paintMarket } from './market'
 import { paintPlayground } from './playground'
 import { paintDisco } from './disco'
+import { paintClanky, paintGhostDepot, paintPrecinct, paintReadingRoom } from './crossover'
 
 export const T = 8 // px per tile
 export const FH = 32 // px per floor
@@ -987,6 +988,7 @@ Object.assign(painters, { market: paintMarket })
 Object.assign(painters, { playground: paintPlayground })
 Object.assign(painters, { concertHall: paintConcertHall })
 Object.assign(painters, { disco: paintDisco })
+Object.assign(painters, { ghostDepot: paintGhostDepot, precinct: paintPrecinct, clanky: paintClanky, readingRoom: paintReadingRoom })
 
 export const TOY_CASE = [12, 26] as const
 export const TOY_BELT = [50, 140] as const

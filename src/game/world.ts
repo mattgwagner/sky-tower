@@ -93,6 +93,7 @@ export function checkFacility(g: Game, kind: FacilityKind, x: number, floor: num
   if (x < 0 || x + w > TOWER_WIDTH) return { ok: false, cost: 0, reason: 'Outside the lot' }
   if (floor < MIN_FLOOR || floor + h - 1 > MAX_FLOOR) return { ok: false, cost: 0, reason: 'Too high or too deep' }
   if (def.underground === 'only' && floor + h - 1 >= 0) return { ok: false, cost: 0, reason: 'Must be underground' }
+  if (kind === 'ghostDepot' && floor < 0) return { ok: false, cost: 0, reason: 'Above ground only' }
   if (kind === 'lobby' && !isLobbyFloor(floor)) return { ok: false, cost: 0, reason: 'Lobbies go on floors 0, 15, 30, 45…' }
   if (kind === 'cathedral' && floor + h - 1 !== CATHEDRAL_TOP) return { ok: false, cost: 0, reason: `Must top out on floor ${CATHEDRAL_TOP}` }
   if (kind === 'megaSlide' && (h < SLIDE_MIN || h > SLIDE_MAX)) return { ok: false, cost: 0, reason: `Slides drop ${SLIDE_MIN} to ${SLIDE_MAX} floors` }

@@ -79,12 +79,16 @@ export type FacilityKind =
   | 'playground'
   | 'concertHall'
   | 'disco'
+  | 'ghostDepot'
+  | 'precinct'
+  | 'clanky'
+  | 'readingRoom'
 
 export type TransportKind = 'elevator' | 'serviceElevator' | 'expressElevator' | 'partyElevator'
 
 export type ToolId = FacilityKind | TransportKind | 'bulldoze' | 'inspect'
 
-export type Category = 'build' | 'homes' | 'hotel' | 'food' | 'shops' | 'fun' | 'services'
+export type Category = 'build' | 'homes' | 'hotel' | 'food' | 'shops' | 'fun' | 'services' | 'crossover'
 
 export interface FacilityDef {
   kind: FacilityKind
@@ -226,6 +230,14 @@ export const FACILITIES: Record<FacilityKind, FacilityDef> = {
     blurb: 'A big stage with a different band every night. Sunday is a 2pm matinee. ENCORE!' },
   disco: { kind: 'disco', name: 'Disco', emoji: '🪩', category: 'fun', width: 28, height: 2, cost: 220000, stars: 2, pop: 10,
     blurb: 'A light-up dance floor. Kids\' disco till 7, then a night club. A little noisy!' },
+  ghostDepot: { kind: 'ghostDepot', name: 'Ghost Train Depot', emoji: '🚂', category: 'crossover', width: 30, height: 2, cost: 400000, stars: 2, pop: 8, underground: 'no',
+    blurb: 'A foggy platform. A bone car, a pumpkin tender and a lantern caboose sit on the siding. The Midnight Express rolls through at midnight.' },
+  precinct: { kind: 'precinct', name: "Biscuit's Precinct", emoji: '🐶', category: 'crossover', width: 16, height: 1, cost: 120000, stars: 1, pop: 4,
+    blurb: 'Officer Biscuit at his desk, comic posters on the wall, and a robo-rat in a little cell. Visitors drop by to say hi.' },
+  clanky: { kind: 'clanky', name: "Chef Clanky's Kitchen", emoji: '👨‍🍳', category: 'crossover', width: 14, height: 1, cost: 140000, stars: 1, pop: 4,
+    blurb: 'Chef Clanky spins pizza dough for lunch and dinner. He stays in the kitchen.' },
+  readingRoom: { kind: 'readingRoom', name: 'Creakwood Reading Room', emoji: '🏮', category: 'crossover', width: 22, height: 2, cost: 200000, stars: 1, pop: 6,
+    blurb: 'Parchment notes, a lantern, and Mumbles the sheet ghost, who moves the chairs overnight.' },
 }
 
 export interface TransportDef {
@@ -263,6 +275,7 @@ export const CATEGORIES: { id: Category; name: string; emoji: string; blurb: str
   { id: 'shops', name: 'Shops', emoji: '🛍️', blurb: 'Stores, books, movies and parties. Visitors come to spend.' },
   { id: 'fun', name: 'Fun', emoji: '🎪', blurb: 'Splash, bounce, roar and blast off. Visitors love it.' },
   { id: 'services', name: 'Services', emoji: '🏥', blurb: 'What a big tower needs to earn more stars.' },
+  { id: 'crossover', name: 'Crossovers', emoji: '🔀', blurb: 'Rooms from your other games. Same characters, now in your tower.' },
 ]
 
 export type Mode = 'family' | 'classic' | 'sandbox'
@@ -309,6 +322,7 @@ export const SPEND: Partial<Record<FacilityKind, number>> = {
   iceCream: 200, arcade: 350, pool: 250, aquarium: 550, hauntedHouse: 450, dinoMuseum: 650, rocketPad: 1000, zoo: 500, rainforest: 500, playground: 100,
   concertHall: 1200,
   disco: 300,
+  ghostDepot: 200, precinct: 40, clanky: 400, readingRoom: 80,
 }
 export const SHOP_CAPACITY: Partial<Record<FacilityKind, number>> = {
   fastFood: 14, restaurant: 18, shop: 8, cinema: 60, partyHall: 40,
@@ -318,11 +332,12 @@ export const SHOP_CAPACITY: Partial<Record<FacilityKind, number>> = {
   iceCream: 10, arcade: 16, pool: 20, aquarium: 40, hauntedHouse: 24, dinoMuseum: 50, rocketPad: 40, zoo: 36, rainforest: 30, playground: 20,
   concertHall: 90,
   disco: 40,
+  ghostDepot: 24, precinct: 10, clanky: 12, readingRoom: 16,
 }
 
 /** Places to eat, by meal. */
-export const LUNCH: FacilityKind[] = ['fastFood', 'restaurant', 'pizza', 'tacos', 'sushi', 'market']
-export const DINNER: FacilityKind[] = ['restaurant', 'fastFood', 'pizza', 'sushi', 'tacos', 'fazbear', 'market']
+export const LUNCH: FacilityKind[] = ['fastFood', 'restaurant', 'pizza', 'tacos', 'sushi', 'market', 'clanky']
+export const DINNER: FacilityKind[] = ['restaurant', 'fastFood', 'pizza', 'sushi', 'tacos', 'fazbear', 'market', 'clanky']
 export const BREAKFAST: FacilityKind[] = ['pancakes', 'donuts', 'market']
 export const FOOD: FacilityKind[] = [...LUNCH, ...BREAKFAST, 'candy', 'fazbear']
 
@@ -332,6 +347,7 @@ export const ATTRACTIONS: FacilityKind[] = [
   'trampoline', 'climbing', 'miniGolf', 'bowling', 'rollerRink', 'bookstore', 'library', 'toyFactory', 'indigoPark', 'zoo', 'rainforest', 'playground',
   'concertHall',
   'disco',
+  'ghostDepot', 'precinct', 'readingRoom',
 ]
 
 export function isHotel(k: FacilityKind) {

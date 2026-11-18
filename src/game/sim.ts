@@ -22,6 +22,7 @@ import { frogsHour } from './frogs'
 import { discoAfterWeekend, discoFx, discoMinute, discoPerHour } from './disco'
 import { marketRush } from './market'
 import { concertDoors, concertMinute, concertOpen, concertPerHour, concertStay } from './concert'
+import { clankyPerHour, depotPerHour, precinctPerHour, readingPerHour } from './crossover'
 import { bump } from './stickers'
 import { contractsDay, contractsHour, contractsMinute } from './contracts'
 import { demolish, earn, facilitiesOf, fx, lobbyEntrances, log, spend, today, topFloor } from './world'
@@ -531,6 +532,10 @@ const FUN_HOURS: Partial<Record<FacilityKind, [number, number][]>> = {
   market: [[at(7), at(22)]],
   playground: [[at(8), at(19)]],
   disco: [[at(16), at(24)], [at(0), at(1)]], // same windows as DISCO_HOURS; weekends add 1–2am in isOpen
+  ghostDepot: [[at(18), at(24)], [at(0), at(1)]],
+  precinct: [[at(9), at(19)]],
+  clanky: [[at(11), at(14)], [at(17), at(21)]],
+  readingRoom: [[at(9), at(20)]],
 }
 /** Opening windows for a kind, in minutes after midnight. Empty when it never closes or has none. */
 export function hoursOf(k: FacilityKind): [number, number][] {
@@ -567,6 +572,10 @@ function stayFor(g: Game, k: FacilityKind) {
     case 'playground': return rnd(25, 50)
     case 'concertHall': return concertStay(g)
     case 'disco': return rnd(40, 90)
+    case 'ghostDepot': return rnd(20, 40)
+    case 'precinct': return rnd(15, 30)
+    case 'clanky': return rnd(25, 45)
+    case 'readingRoom': return rnd(40, 80)
     default: return rnd(20, 40)
   }
 }
@@ -649,6 +658,10 @@ function spawnVisitors(g: Game) {
     else if (f.kind === 'playground') perHour = playgroundPerHour(g)
     else if (f.kind === 'concertHall') perHour = concertPerHour(g)
     else if (f.kind === 'disco') perHour = discoPerHour(g)
+    else if (f.kind === 'ghostDepot') perHour = depotPerHour(m)
+    else if (f.kind === 'precinct') perHour = precinctPerHour()
+    else if (f.kind === 'clanky') perHour = clankyPerHour(m)
+    else if (f.kind === 'readingRoom') perHour = readingPerHour(isWeekend(g.time))
     perHour *= holidayRush(g, f.kind)
     if (perHour <= 0) continue
     const doors = f.kind === 'concertHall' ? concertDoors(g) : 1
@@ -874,7 +887,7 @@ function refreshEnvironment(g: Game) {
         const v = r[i]
         if (v <= 0 || v === f.id) continue
         const o = g.facilities.get(v)
-        if (g.shafts.has(v) || (o && ((isCommercial(o.kind) && o.kind !== 'library') || isConnector(o.kind) || o.kind === 'office'))) { f.noisy = true; break }
+        if (g.shafts.has(v) || (o && ((isCommercial(o.kind) && o.kind !== 'library' && o.kind !== 'readingRoom') || isConnector(o.kind) || o.kind === 'office'))) { f.noisy = true; break }
       }
     }
   }
@@ -1374,6 +1387,20 @@ function funEvents(g: Game, m: number) {
   }
   roofMinute(g, m)
   concertMinute(g, m)
+  if (m === 0) {
+    const depots = facilitiesOf(g, 'ghostDepot').filter((f) => f.reachable && !f.fire)
+    if (depots.length) sound.play('train')
+    for (const f of depots) {
+      fx(g, f.x + 8, f.floor + 1, '👻 Whoooosh!', '#7dffb0')
+      log(g, '👻 The Midnight Express rolled through Ghost Train Depot and left a weird crate.', 'event', f.floor, f.x + 8)
+    }
+  }
+  if (m === at(6)) {
+    for (const f of facilitiesOf(g, 'readingRoom')) {
+      if (!f.reachable || f.fire) continue
+      fx(g, f.x + 6, f.floor + 1, 'The chairs moved!', '#f4f2ff')
+    }
+  }
 }
 
 function roofMinute(g: Game, m: number) {

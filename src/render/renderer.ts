@@ -18,6 +18,7 @@ import { drawMarket } from './market'
 import { drawPlayground } from './playground'
 import { drawConcertHall } from './concert'
 import { drawDisco, drawFeverLights } from './disco'
+import { drawClanky, drawGhostDepot, drawPrecinct, drawReadingRoom } from './crossover'
 import { feverOn, feverSpin } from '../game/disco'
 import { pokeWobble } from './poke-fx'
 import { drawHolidayAmbient, drawHolidayDecor, drawHolidayWear, holidaySky } from './holidays'
@@ -405,6 +406,12 @@ function drawBareFloor(c: CanvasRenderingContext2D, p: { x: number; y: number },
   c.stroke()
 }
 
+/** These paint their own occupants (or have none), so the generic visitor row would be wrong. */
+const NO_CROWD = new Set<FacilityKind>([
+  'lobby', 'parking', 'market', 'playground', 'disco',
+  'ghostDepot', 'precinct', 'clanky', 'readingRoom',
+])
+
 function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: number, y: number) => { x: number; y: number }, z: number, m: number, now: number, ov: Overlay) {
   const def = FACILITIES[f.kind]
   const top = floorTop(f.floor + f.height - 1)
@@ -452,7 +459,7 @@ function drawFacility(c: CanvasRenderingContext2D, g: Game, f: Facility, S: (x: 
   }
   if (wob) c.restore()
   // people inside
-  if (z >= 0.75 && f.inside > 0 && f.kind !== 'lobby' && f.kind !== 'parking' && f.kind !== 'market' && f.kind !== 'playground' && f.kind !== 'disco' && !hidingOn(g, f.floor)) {
+  if (z >= 0.75 && f.inside > 0 && !NO_CROWD.has(f.kind) && !hidingOn(g, f.floor)) {
     const n = Math.min(f.inside, Math.max(1, Math.floor(f.width / 3)))
     const slot = (f.width * T) / (n + 1)
     for (let i = 0; i < n; i++) {
@@ -1383,6 +1390,10 @@ function drawFun(c: CanvasRenderingContext2D, g: Game, f: Facility, p: Pt, w: nu
       drawDisco(c, g, f, p, w, h, z, now)
       return
     }
+    case 'ghostDepot': return drawGhostDepot(c, g, f, p, z, now)
+    case 'precinct': return drawPrecinct(c, g, f, p, w, h, z, now)
+    case 'clanky': return drawClanky(c, g, f, p, w, h, z, now)
+    case 'readingRoom': return drawReadingRoom(c, g, f, p, w, h, z, now)
   }
 }
 

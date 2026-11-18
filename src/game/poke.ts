@@ -73,6 +73,10 @@ const POKES: Partial<Record<FacilityKind, Poke>> = {
   playground: { says: ['WHEEEE! 🎠', 'Push me higher!', 'Tag, you\'re it!', 'I\'m the king of the slide!'], color: '#ffd43b', sfx: 'boing' },
   concertHall: { says: ['Is this thing on? 🎤', 'One, two, three, FOUR! 🎸', 'Shhh, the show\'s starting'], color: '#ff8787', sfx: 'party' },
   disco: { says: ['DROP THE BEAT! 🎧', 'Bubbles! 🫧', 'Everybody FREEZE! … ok go'], color: '#da77f2', sfx: 'party' },
+  ghostDepot: { says: ['All aboard…', 'The lantern swings', 'Next train: midnight'], color: '#7dffb0', sfx: 'train' },
+  precinct: { says: ['Woof! Case closed!', 'Stay back from the cell', 'That poster is spelled right'], color: '#f4c542', sfx: 'woof' },
+  clanky: { says: ['Spin the dough!', 'Pizza time!', '*whirr*'], color: '#d6453b', sfx: 'pop' },
+  readingRoom: { says: ['Boo! …sorry.', 'The chairs moved', 'Hold the lantern up'], color: '#ffd23f', sfx: 'spooky' },
 }
 
 const lastPoke = new Map<number, number>()
